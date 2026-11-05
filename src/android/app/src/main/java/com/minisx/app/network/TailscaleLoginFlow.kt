@@ -54,6 +54,12 @@ class TailscaleLoginFlow(
     private val publish: (TailscaleStatus) -> Unit = {},
     /** Restarts the node so tsnet asks the control server for a new sign-in URL. */
     private val freshLogin: suspend () -> Unit = {},
+    /**
+     * Asks tsnet to make a sign-in page. A fresh node never does it on its own (it is still starting when
+     * tsnet looks), so the flow asks once the node is waiting for a login, and again every few seconds while
+     * there is still no page.
+     */
+    private val requestLogin: suspend () -> Unit = {},
     private val urlPollMs: Long = 400,
     private val urlTimeoutMs: Long = 20_000,
     private val loginPollMs: Long = 1_000,
@@ -112,6 +118,7 @@ class TailscaleLoginFlow(
         job = scope.launch {
             var started = now()
             var restarted = false
+            var lastRequestAt = -REQUEST_EVERY_MS
             while (true) {
                 val st = status()
                 if (st.isLoggedIn) {
@@ -130,6 +137,12 @@ class TailscaleLoginFlow(
                     freshLogin()
                     started = now()
                     continue
+                }
+                if (url == null && st.needsLogin && now() - lastRequestAt >= REQUEST_EVERY_MS) {
+                    lastRequestAt = now()
+                    AppLogger.info(TAG, "[Net][TS] login: node waits for a login but has no page; requesting one")
+                    runCatching { requestLogin() }
+                        .onFailure { AppLogger.warning(TAG, "[Net][TS] login: request failed: ${it.message?.take(120)}") }
                 }
                 if (url != null && !stale) {
                     synchronized(opened) {
@@ -213,6 +226,7 @@ class TailscaleLoginFlow(
 
     private companion object {
         const val TAG = "Network"
+        const val REQUEST_EVERY_MS = 4_000L
         val LOGIN_LINK = Regex("""(login\.tailscale\.com/a/)[A-Za-z0-9]+""")
     }
 }

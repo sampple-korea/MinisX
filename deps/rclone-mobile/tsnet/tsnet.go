@@ -171,6 +171,29 @@ func Start(authKey, hostname, stateDir string) error {
 	return nil
 }
 
+// StartLogin asks the node for an interactive sign-in; its AuthURL then shows up in Status.
+//
+// tsnet runs StartLoginInteractive by itself only when the backend is ALREADY in NeedsLogin at the instant
+// Start returns. A node that has never been signed in is usually still in NoState then (the control server
+// has not been asked yet), so no sign-in was ever requested and AuthURL stayed empty for good: the app's
+// "Log In with Browser" waited for a page that nobody was making. Calling this once the state is
+// NeedsLogin (and again if the page is still missing) makes the page.
+func StartLogin() error {
+	mu.Lock()
+	s := srv
+	mu.Unlock()
+	if s == nil {
+		return errors.New("tsnet: the node is not running")
+	}
+	lc, err := s.LocalClient()
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return lc.StartLoginInteractive(ctx)
+}
+
 // Stop closes the SOCKS listener (if any) and the node. The state file stays,
 // so the next Start logs back in without the user.
 func Stop() error {

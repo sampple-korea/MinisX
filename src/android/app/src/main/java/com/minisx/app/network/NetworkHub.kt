@@ -451,6 +451,7 @@ object NetworkHub {
             // control server for a fresh one (with a fresh node key: an
             // unfinished login never persists one).
             freshLogin = { apply(restartNode = true).join() },
+            requestLogin = { TailscaleNode.startLogin() },
         )
     }
 

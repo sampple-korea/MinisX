@@ -109,6 +109,12 @@ object TailscaleNode {
         }
     }
 
+    /** Asks the node for a sign-in page (its `authURL` then appears in [status]). See tsnet.StartLogin. */
+    fun startLogin() {
+        call(Gomobile.tsStartLogin())
+        AppLogger.info(TAG, "[Net][TS] sign-in page requested")
+    }
+
     /** Accepts (true) or ignores subnet routes peers advertise. */
     fun setAcceptRoutes(on: Boolean) {
         call(Gomobile.tsSetAcceptRoutes(on))

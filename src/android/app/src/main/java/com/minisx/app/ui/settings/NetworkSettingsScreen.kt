@@ -1010,14 +1010,20 @@ private fun openSignInPage(context: android.content.Context, url: String): Boole
             OAuthTabLauncher.launch(context, uri)
             com.minisx.app.logging.AppLogger.info("Network", "[Net][TS] login: sign-in page opened in a Custom Tab ($provider)")
             return true
-        } catch (_: android.content.ActivityNotFoundException) {
+        } catch (e: Exception) {
+            // Any failure of the tab (no activity, a context that is not an Activity, a refused launch): the plain
+            // browser intent below is the next try.
+            com.minisx.app.logging.AppLogger.warning("Network", "[Net][TS] login: Custom Tab failed (${e.javaClass.simpleName}); trying the default browser")
         }
     }
     return try {
-        context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri))
-        com.minisx.app.logging.AppLogger.info("Network", "[Net][TS] login: no Custom Tabs provider, sign-in page opened with ACTION_VIEW")
+        context.startActivity(
+            android.content.Intent(android.content.Intent.ACTION_VIEW, uri).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        com.minisx.app.logging.AppLogger.info("Network", "[Net][TS] login: sign-in page opened with ACTION_VIEW")
         true
-    } catch (_: android.content.ActivityNotFoundException) {
+    } catch (e: Exception) {
+        com.minisx.app.logging.AppLogger.warning("Network", "[Net][TS] login: no app could open the page (${e.javaClass.simpleName})")
         false
     }
 }

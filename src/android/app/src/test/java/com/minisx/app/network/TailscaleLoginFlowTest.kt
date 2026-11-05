@@ -34,6 +34,9 @@ class TailscaleLoginFlowTest {
         val published = mutableListOf<TailscaleStatus>()
         val opened = mutableListOf<String>()
         var restarts = 0
+        var loginRequests = 0
+        /** What asking for a page does to the node (nothing by default: the page never comes). */
+        var onRequestLogin: () -> Unit = {}
         /** What the node reports after a restart (a fresh sign-in URL by default). */
         var afterRestart: () -> TailscaleStatus = {
             TailscaleStatus(running = true, backendState = "NeedsLogin", authURL = "https://login.tailscale.com/a/fresh$restarts")
@@ -44,6 +47,7 @@ class TailscaleLoginFlowTest {
             returnToApp = { returns++ },
             publish = { published += it },
             freshLogin = { restarts++; current = afterRestart() },
+            requestLogin = { loginRequests++; onRequestLogin() },
             clock = { scope.testScheduler.currentTime },
         )
 
@@ -255,5 +259,35 @@ class TailscaleLoginFlowTest {
         ))
         assertEquals("You are logged out. The last login error was: x", st.loginError)
         assertEquals(null, TailscaleStatus.parse(org.json.JSONObject("""{"running":true}""")).loginError)
+    }
+
+    @Test
+    fun `a node that waits for a login but makes no page is asked for one, and the page opens`() = runTest {
+        val h = Harness(this)
+        h.current = needsLogin
+        h.onRequestLogin = { h.current = withUrl }
+        h.flow.begin()
+        runCurrent()
+        assertEquals(1, h.loginRequests)
+        advanceTimeBy(1_000)
+        assertEquals(listOf(withUrl.authURL), h.opened)
+    }
+
+    @Test
+    fun `without a page the request is repeated every few seconds, not on every poll`() = runTest {
+        val h = Harness(this)
+        h.current = needsLogin
+        h.flow.begin()
+        advanceTimeBy(9_000)
+        assertTrue("asked ${h.loginRequests} times", h.loginRequests in 2..3)
+    }
+
+    @Test
+    fun `a node that is not waiting for a login is not asked`() = runTest {
+        val h = Harness(this)
+        h.current = TailscaleStatus(running = true, backendState = "Starting")
+        h.flow.begin()
+        advanceTimeBy(3_000)
+        assertEquals(0, h.loginRequests)
     }
 }

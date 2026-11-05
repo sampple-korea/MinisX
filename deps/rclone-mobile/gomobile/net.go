@@ -102,6 +102,11 @@ func TsStart(authKey, hostname, stateDir string) string {
 	return envelope("", tsnet.Start(authKey, hostname, stateDir))
 }
 
+// TsStartLogin asks the node for an interactive sign-in page (see tsnet.StartLogin).
+func TsStartLogin() string {
+	return envelope("", tsnet.StartLogin())
+}
+
 // TsSetAcceptRoutes accepts or ignores subnet routes that peers advertise.
 func TsSetAcceptRoutes(on bool) string {
 	return envelope("", tsnet.SetAcceptRoutes(on))
