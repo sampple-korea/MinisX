@@ -136,6 +136,9 @@
     <string name="restore_eta_minutes">about %1$d min %2$d s left</string>
     <string name="overlay_streaming">Generating…</string>
     <string name="quota_header_left">Quota left: %1$s</string>
+    <string name="advisor_setting_title">Advisor</string>
+    <string name="advisor_setting_off">Off</string>
+    <string name="advisor_setting_footer">Pick a stronger model the agent can consult. It sees the whole conversation and answers with advice; the agent is told to ask it before substantive work and before declaring a task done. Each consultation is one extra model call.</string>
     <string name="overlay_thinking">Thinking…</string>
     <string name="bg_live_thinking">Thinking · %1$s</string>
     <plurals name="bg_live_agents_running">

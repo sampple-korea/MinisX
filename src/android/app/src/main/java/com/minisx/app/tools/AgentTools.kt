@@ -50,6 +50,9 @@ object AgentTools {
         // not a sub agent, an interactive run). Not in the list = does not
         // exist: no schema, no prompt line, no retries on it. Last, as on iOS.
         userAskExposed: Boolean = false,
+        // The advisor: a stronger model the agent may consult. Present only while the user has
+        // picked an advisor model, never for a sub agent.
+        advisorEnabled: Boolean = false,
     ): List<AgentToolDefinition> = buildList {
         add(shellExecuteDefinition())
         add(FileReadTool.definition())
@@ -67,6 +70,7 @@ object AgentTools {
             add(subAgentTaskDefinition(rosterNames))
         }
         if (userAskExposed && !isHelper) add(com.minisx.app.agent.userask.UserAskPromptText.definition())
+        if (advisorEnabled && !isHelper) add(com.minisx.app.agent.advisor.Advisor.definition())
     }
 
     /**

@@ -665,6 +665,7 @@ class ChatViewModel(
          * the summary's distilled form. Mirrors iOS `compactKeepRecentUserTurns`.
          */
         private const val COMPACT_KEEP_RECENT_USER_TURNS = 3
+        private const val ADVISOR_TIMEOUT_MS = 180_000L
         /// Max per-tool-call retained `accumulated` JSON snapshots from
         /// `ToolInputDelta`. Drained on preflight failure for diagnosis.
         private const val TOOL_INPUT_CHUNK_RING_MAX = 10
@@ -2520,7 +2521,57 @@ class ChatViewModel(
             // would reject.
             rosterNames = providerRepository.subAgents.map { it.name },
             userAskExposed = userAskExposedThisRun,
+            advisorEnabled = advisorEntry() != null,
         )
+
+    /** The model entry the user chose as advisor, or null while the advisor is off or its model is gone. */
+    private fun advisorEntry(): com.minisx.app.data.model.ModelEntry? {
+        val id = com.minisx.app.agent.advisor.AdvisorSettings.entryId(context) ?: return null
+        return providerRepository.config.value.modelEntries.find { it.id == id }
+    }
+
+    /**
+     * The `advisor` tool: forward the conversation so far to the advisor model and return its advice.
+     * Read-only for the agent: it changes nothing and costs one extra model call.
+     */
+    private suspend fun executeAdvisorTool(argsJson: String): ToolExecutionResult {
+        val title = runCatching { JSONObject(argsJson).optString("tool_title", "") }.getOrDefault("")
+            .ifBlank { "Consult the advisor" }
+        fun fail(msg: String) = ToolExecutionResult("Advisor unavailable: $msg Continue without it.", false, toolTitle = title)
+        if (isHelper) return fail("sub agents cannot consult the advisor.")
+        val entry = advisorEntry() ?: return fail("no advisor model is configured (Settings > Agent tools > Advisor).")
+        val instance = providerRepository.instance(entry.providerInstanceId) ?: return fail("its provider was removed.")
+        if (!providerRepository.hasAnyCredential(instance)) return fail("its provider is not signed in.")
+        val apiKey = providerRepository.usableApiKey(instance) ?: ""
+        val provider = ProviderFactory.create(
+            instance, apiKey, entry.model, context, sessionId = activeSessionId, overrides = entry.overrides,
+        )
+        val transcript = com.minisx.app.agent.advisor.Advisor.transcript(agentHistory.toList())
+        val advice = StringBuilder()
+        return try {
+            withTimeout(ADVISOR_TIMEOUT_MS) {
+                provider.streamMessage(
+                    messages = listOf(
+                        LLMMessage(role = LLMMessage.Role.USER, content = com.minisx.app.agent.advisor.Advisor.userMessage(transcript)),
+                    ),
+                    systemPrompt = com.minisx.app.agent.advisor.Advisor.SYSTEM_PROMPT,
+                    maxTokens = com.minisx.app.agent.advisor.Advisor.MAX_OUTPUT_TOKENS,
+                    temperature = null,
+                    imageParts = emptyList(),
+                    tools = emptyList(),
+                    thinkingLevel = ThinkingLevel.MEDIUM,
+                ).collect { chunk -> if (chunk is LLMStreamChunk.Text) advice.append(chunk.text) }
+            }
+            val text = advice.toString().trim()
+            if (text.isEmpty()) fail("it returned no text.")
+            else ToolExecutionResult(text, true, toolTitle = title)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            if (e is kotlinx.coroutines.TimeoutCancellationException) fail("it did not answer within ${ADVISOR_TIMEOUT_MS / 1000}s.") else throw e
+        } catch (e: Exception) {
+            AppLogger.warning(TAG, "[Advisor] call failed: ${e.javaClass.simpleName}: ${e.message?.take(200)}")
+            fail("the call failed (${e.message?.take(120) ?: e.javaClass.simpleName}).")
+        }
+    }
 
     /**
      * [T-sub-agents-resume] Restart sub agent runs the app lost when it was
@@ -14217,6 +14268,7 @@ class ChatViewModel(
                     )
                 }
             "memory_get" -> executeMemoryGetTool(argsJson)
+            com.minisx.app.agent.advisor.Advisor.TOOL_NAME -> executeAdvisorTool(argsJson)
             // [T-port-user-ask] Card in the chat, then wait for the user.
             // [T-user-ask-exposure-guard] A run that does not offer the tool (the
             // setting is off, a helper / sub agent, a scheduled or other headless
@@ -16529,6 +16581,11 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
 
         return buildString {
             append(base)
+            // The advisor guidance only while the tool exists (same rule as the other tool lines).
+            if (!isHelper && advisorEntry() != null) {
+                append("\n\n")
+                append(com.minisx.app.agent.advisor.Advisor.PROMPT_SECTION)
+            }
             if (skillFragment != null) {
                 append("\n\n")
                 append(skillFragment)
