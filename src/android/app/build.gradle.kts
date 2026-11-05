@@ -203,6 +203,17 @@ android {
         noCompress += listOf("tar.gz", "proot-aarch64")
     }
 
+    // License / notice / index files that many libraries ship in META-INF are not used at run time; leaving them
+    // out shortens the Java-resource merge (about 30 s of a release build) and the APK.
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/DEPENDENCIES", "META-INF/INDEX.LIST", "META-INF/LICENSE*", "META-INF/NOTICE*",
+                "META-INF/AL2.0", "META-INF/LGPL2.1", "META-INF/*.md", "META-INF/*.txt",
+            )
+        }
+    }
+
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
@@ -270,8 +281,12 @@ for (buildType in listOf("debug", "release", "perf")) {
         }
         into(layout.buildDirectory.dir("outputs/apk/$buildType"))
     }
-    tasks.matching { it.name == "assembleGithub$cap" || it.name == "packageGithub$cap" }
-        .configureEach { finalizedBy(copyLegacy) }
+    // The release APK is read from its flavoured path (CI does), and copying it to the pre-flavor path cost ~25 s of
+    // every release build, so only debug and perf keep the legacy copy.
+    if (buildType != "release") {
+        tasks.matching { it.name == "assembleGithub$cap" || it.name == "packageGithub$cap" }
+            .configureEach { finalizedBy(copyLegacy) }
+    }
     tasks.register("install$cap") {
         group = "install"
         description = "Installs the github $buildType build (alias of installGithub$cap)."
