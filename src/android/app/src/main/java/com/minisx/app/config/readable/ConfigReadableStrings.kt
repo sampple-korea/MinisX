@@ -10,9 +10,9 @@ import com.minisx.app.R
  * resource name.
  *
  * Adding a key: add it here and to strings_config_readable.xml in values,
- * values-zh and values-zh-rTW (plus any locale iOS translates it into).
+ * values-ko (the app ships only English and Korean).
  * ConfigReadableKeysTest fails on a key used in the config sources that is
- * missing here, or on one without a Chinese translation.
+ * missing here, or on one without a Korean translation.
  */
 object ConfigReadableStrings {
     val ids: Map<String, Int> = mapOf(
@@ -62,7 +62,7 @@ object ConfigReadableStrings {
         "Azure OpenAI mode" to R.string.cfgr_azure_openai_mode,
         "Background notifications" to R.string.cfgr_background_notifications,
         "Base URL: %@" to R.string.cfgr_base_url_x,
-        "Chinese" to R.string.cfgr_chinese,
+        "Korean" to R.string.cfgr_korean,
         "Container DNS mode" to R.string.cfgr_container_dns_mode,
         "Container custom DNS servers" to R.string.cfgr_container_custom_dns_servers,
         "Context limit (tokens)" to R.string.cfgr_context_limit_tokens,

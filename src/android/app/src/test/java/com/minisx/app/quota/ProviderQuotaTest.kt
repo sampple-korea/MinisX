@@ -585,7 +585,7 @@ class ProviderQuotaTest {
             for (name in wide) assertTrue("$folder lacks $name", text.contains("name=\"$name\""))
         }
         for (folder in listOf("values-ko")) {
-            assertTrue(java.io.File(res, "$folder/strings.xml").readText().contains("name=\"quota_status_rate_limited\""))
+            assertTrue(java.io.File(res, folder).listFiles { f -> f.name.endsWith(".xml") }!!.any { it.readText().contains("name=\"quota_status_rate_limited\"") })
         }
     }
 }

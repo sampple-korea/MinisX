@@ -301,7 +301,7 @@ class EnvVarDisableTest {
         assertFalse(base.any { "restart" in it })
         assertTrue(base.containsAll(setOf("env_var_action_disable", "env_var_action_enable", "mcp_form_env_disabled_warning")))
         val dirs = res.listFiles()!!.filter { File(it, "strings_envvar_state.xml").exists() }.map { it.name }
-        assertEquals(23, dirs.size)
+        assertEquals(2, dirs.size)
         for (d in dirs) assertEquals(d, base, names(d))
         val screen = ProductionSources.read("ui/settings/EnvironmentVariablesScreen.kt")
         assertFalse(screen.contains("restart_hint"))

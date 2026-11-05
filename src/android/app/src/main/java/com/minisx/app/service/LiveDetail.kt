@@ -87,6 +87,10 @@ internal object LiveDetails {
         }
     }
 
+    /** The line as shown: a command reads like a shell prompt. */
+    fun display(detail: LiveDetail): String =
+        if (detail.kind == LiveDetailKind.COMMAND) "$ " + detail.text else detail.text
+
     /** `/a/very/long/path/to/file.kt` → `…/to/file.kt`: the last two components say enough. */
     fun shortPath(path: String): String {
         val parts = path.trimEnd('/').split('/').filter { it.isNotEmpty() }

@@ -136,6 +136,11 @@
     <string name="restore_eta_minutes">about %1$d min %2$d s left</string>
     <string name="overlay_streaming">Generating…</string>
     <string name="overlay_thinking">Thinking…</string>
+    <string name="bg_live_thinking">Thinking · %1$s</string>
+    <plurals name="bg_live_agents_running">
+        <item quantity="one">%d sub agent running</item>
+        <item quantity="other">%d sub agents running</item>
+    </plurals>
     <!-- T-android-overlay-finalize item 3 — completion fallback labels -->
     <string name="overlay_completion_completed">Completed</string>
     <string name="overlay_completion_failed">Failed</string>

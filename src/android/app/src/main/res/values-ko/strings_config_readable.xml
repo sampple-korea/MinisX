@@ -11,7 +11,7 @@
     <string name="cfgr_audio_input">오디오 입력</string>
     <string name="cfgr_audio_output">오디오 출력</string>
     <string name="cfgr_automatic">자동</string>
-    <string name="cfgr_chinese">중국어</string>
+    <string name="cfgr_korean">한국어</string>
     <string name="cfgr_custom">사용자 정의</string>
     <string name="cfgr_custom_user_agent">사용자 지정 User-Agent</string>
     <string name="cfgr_dark">다크</string>

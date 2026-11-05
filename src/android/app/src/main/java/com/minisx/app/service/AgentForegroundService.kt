@@ -1351,6 +1351,14 @@ class AgentForegroundService : Service() {
         val firingCounter = SessionActivityTracker.scheduledFiring.value
             ?.takeIf { it.sessionId in SessionActivityTracker.activeSessions.value }
             ?.runCounter
+        // [T-live-detail] What the agent is doing right now (reasoning tail,
+        // command, file, sub agent task), and how many sub agents are running.
+        val liveLine = SessionActivityTracker.liveDetail.value?.let { LiveDetails.display(it) }
+        val runningAgents = com.minisx.app.agent.jobs.AgentJobRegistry.jobs.value.values
+            .count { it.state == com.minisx.app.agent.jobs.AgentJobState.RUNNING }
+        val agentsLine = if (runningAgents > 0) {
+            resources.getQuantityString(R.plurals.bg_live_agents_running, runningAgents, runningAgents)
+        } else null
         val collapsedText = when (phase) {
             // Completed is a RESTING state: the chronometer is off, so the
             // total run time has to stay in the text or it would vanish.
@@ -1366,12 +1374,15 @@ class AgentForegroundService : Service() {
             AgentPhase.TOOL -> getString(
                 R.string.bg_service_notification_text_running,
                 sessionLabel,
-                withRunCounter(humanizeToolStatus(toolStatus, toolName), firingCounter),
+                withRunCounter(liveLine ?: humanizeToolStatus(toolStatus, toolName), firingCounter),
             )
             AgentPhase.THINKING -> getString(
                 R.string.bg_service_notification_text_running,
                 sessionLabel,
-                withRunCounter(getString(R.string.overlay_thinking), firingCounter),
+                withRunCounter(
+                    liveLine?.let { getString(R.string.bg_live_thinking, it) } ?: getString(R.string.overlay_thinking),
+                    firingCounter,
+                ),
             )
             AgentPhase.GENERATING -> getString(
                 R.string.bg_service_notification_text_running,
@@ -1392,6 +1403,8 @@ class AgentForegroundService : Service() {
                 getString(R.string.user_ask_waiting),
             )
         }
+        // The expanded notification adds the sub agent count under the status line.
+        val expandedText = if (agentsLine != null) collapsedText + "\n" + agentsLine else collapsedText
         val clock = notificationClockFor(
             phase = phase,
             runStartWallMs = runStartWallMs,
@@ -1465,7 +1478,7 @@ class AgentForegroundService : Service() {
             .setSmallIcon(smallIcon)
             .setContentTitle(titleText)
             .setContentText(collapsedText)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(collapsedText))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(expandedText))
             .setOngoing(true)
             // [T-android-notification-chronometer] Let the system render the
             // clock. SystemUI binds a real Chronometer view for this, so it

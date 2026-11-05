@@ -47,7 +47,7 @@
     <string name="cfgr_azure_openai_mode">Azure OpenAI mode</string>
     <string name="cfgr_background_notifications">Background notifications</string>
     <string name="cfgr_base_url_x">Base URL: %1$s</string>
-    <string name="cfgr_chinese">Chinese</string>
+    <string name="cfgr_korean">Korean</string>
     <string name="cfgr_container_dns_mode">Container DNS mode</string>
     <string name="cfgr_container_custom_dns_servers">Container custom DNS servers</string>
     <string name="cfgr_context_limit_tokens">Context limit (tokens)</string>

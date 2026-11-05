@@ -11953,6 +11953,9 @@ class ChatViewModel(
                         // Deduped inside the tracker, so per-token cost is
                         // one StateFlow read.
                         SessionActivityTracker.setThinking(true)
+                        // [T-live-detail] The newest part of the reasoning, for the
+                        // notification line (throttled inside the tracker).
+                        SessionActivityTracker.publishReasoning { turnThinking.toString() }
                         // Update thinking block in UI
                         val thinkIdx = allToolBlocks.indexOfFirst { it.kind == "thinking" && it.id == "thinking_$turn" }
                         if (thinkIdx < 0) {
@@ -13464,6 +13467,11 @@ class ChatViewModel(
                             toolName = name,
                             isRunning = true,
                             toolTitle = dispatchToolTitle,
+                        )
+                        // [T-live-detail] What the tool works on (the command, the
+                        // file, the page, the sub agent's task) for the notification.
+                        SessionActivityTracker.publishToolDetail(
+                            com.minisx.app.service.LiveDetails.forTool(name, args),
                         )
                         // JSON repair (T-tool-json-repair b2c4f8a6): salvage truncated /
                         // type-mismatched / typo'd args BEFORE preflight rejects them.

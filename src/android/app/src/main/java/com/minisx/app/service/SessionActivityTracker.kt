@@ -178,6 +178,40 @@ object SessionActivityTracker {
     val isThinking: StateFlow<Boolean> = _isThinking.asStateFlow()
 
     /**
+     * What the agent is doing right now in one short line (the tail of its
+     * reasoning, the command a script runs, the file a tool works on, the task
+     * a sub agent was given), for the ongoing notification / Live Update. Null
+     * when there is nothing to say. See [LiveDetails].
+     */
+    private val _liveDetail = MutableStateFlow<LiveDetail?>(null)
+    internal val liveDetail: StateFlow<LiveDetail?> = _liveDetail.asStateFlow()
+
+    @Volatile
+    private var lastReasoningPublishedAtMs = 0L
+
+    private fun setLiveDetail(detail: LiveDetail?) {
+        if (_liveDetail.value == detail) return
+        _liveDetail.value = detail
+        if (_activeSessions.value.isNotEmpty()) updateService()
+    }
+
+    /**
+     * Called with the reasoning text accumulated so far, at token rate; only
+     * every [LiveDetails.REASONING_MIN_INTERVAL_MS] does it build an excerpt and
+     * touch the notification.
+     */
+    internal fun publishReasoning(accumulated: () -> String) {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastReasoningPublishedAtMs < LiveDetails.REASONING_MIN_INTERVAL_MS) return
+        val excerpt = LiveDetails.reasoningExcerpt(accumulated()) ?: return
+        lastReasoningPublishedAtMs = now
+        setLiveDetail(LiveDetail(LiveDetailKind.REASONING, excerpt))
+    }
+
+    /** The line for the tool that just started, or null to clear it. */
+    internal fun publishToolDetail(detail: LiveDetail?) = setLiveDetail(detail)
+
+    /**
      * T-overlay-glyph-typed-outcome: typed outcome of the most recently
      * completed tool call. Replaces the old text-sniffing heuristic in
      * [ToolOverlayController] (which read stale "Running: foo" status
@@ -701,6 +735,7 @@ object SessionActivityTracker {
         _currentSessionId.value = sessionId
         _lastReplyExcerpt.value = null
         _isThinking.value = false
+        _liveDetail.value = null
         _lastToolName.value = null
         _lastToolTitle.value = null
         _lastToolStatus.value = null
@@ -929,7 +964,10 @@ object SessionActivityTracker {
         _isToolRunning.value = isRunning
         // A tool call ends the thinking stretch for status purposes even if
         // the provider interleaves more reasoning later — the tool row wins.
-        if (isRunning) _isThinking.value = false
+        if (isRunning) {
+            _isThinking.value = false
+            if (_liveDetail.value?.kind == LiveDetailKind.REASONING) _liveDetail.value = null
+        }
         // [T-overlay-glyph-typed-outcome] Starting a new tool clears the
         // previous outcome so the overlay glyph (which reads
         // lastToolOutcome) does not leak the prior result into the new
@@ -981,6 +1019,7 @@ object SessionActivityTracker {
     fun setThinking(thinking: Boolean) {
         if (_isThinking.value == thinking) return
         _isThinking.value = thinking
+        if (!thinking && _liveDetail.value?.kind == LiveDetailKind.REASONING) _liveDetail.value = null
         if (_activeSessions.value.isNotEmpty()) {
             updateService()
         }
@@ -1005,6 +1044,7 @@ object SessionActivityTracker {
         _currentToolName.value = null
         _currentToolTitle.value = null
         _isToolRunning.value = false
+        _liveDetail.value = null
         _lastToolOutcome.value = outcome
         if (_activeSessions.value.isNotEmpty()) {
             updateService()
