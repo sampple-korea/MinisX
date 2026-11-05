@@ -143,7 +143,7 @@ def background(size):
 
 def full_icon(size, palette):
     bg = background(size).convert("RGBA")
-    bg.alpha_composite(draw_glyph(size, 0.37, palette))
+    bg.alpha_composite(draw_glyph(size, 0.30, palette))
     out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     out.paste(bg, (0, 0), squircle_mask(size))
     return out
@@ -161,7 +161,7 @@ def save(img, *parts):
 def monochrome_xml():
     # themed icons are clipped to a circle of radius 33 around (54, 54) in the 108 viewport
     back, front = pieces()
-    k = 31.0 / far(unary_union([back, front]))
+    k = 25.0 / far(unary_union([back, front]))
     parts = []
     for g in (back, front):
         for p in polys(g):
@@ -191,9 +191,9 @@ def main():
     for name, d in DENS.items():
         fg = round(108 * d)
         leg = round(48 * d)
-        # the launcher layer is inset 15% by the adaptive-icon xml, so 0.44 of the layer here is
-        # 0.31 on screen: inside the 66dp circular safe zone.
-        glyph = draw_glyph(fg, 0.44, palette)
+        # the launcher layer is inset 15% by the adaptive-icon xml, so 0.33 of the layer here is
+        # about 0.23 on screen, which leaves a generous margin inside the launcher mask.
+        glyph = draw_glyph(fg, 0.33, palette)
         for folder, fname in ((f"mipmap-{name}", "ic_launcher_foreground.png"),
                               (f"mipmap-night-{name}", "ic_launcher_foreground.png"),
                               (f"mipmap-{name}", "ic_launcher_foreground_dark.png"),
