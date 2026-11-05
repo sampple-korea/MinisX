@@ -19,16 +19,16 @@ class ContextPolicyUserCapTest {
     @Test
     fun `user cap of 32K keeps auto-compact available`() {
         val policy = ContextPolicy.forUserCap(32_000)
-        assertEquals(27_200, policy.compactThreshold) // 85%
+        assertEquals(28_800, policy.compactThreshold) // 90% (Codex)
         assertEquals(22_400, policy.offloadThreshold) // 70%
         assertEquals(17_600, policy.offloadTarget) // 55%
         assertFalse(policy.exhaustedOnly)
         assertTrue(policy.manualCompactAllowed)
         assertEquals(
             ContextPolicy.CheckResult.NEEDS_COMPACT,
-            policy.check(27_200, 32_000),
+            policy.check(28_800, 32_000),
         )
-        assertEquals(ContextPolicy.CheckResult.OK, policy.check(27_199, 32_000))
+        assertEquals(ContextPolicy.CheckResult.OK, policy.check(28_799, 32_000))
     }
 
     /**
@@ -45,10 +45,10 @@ class ContextPolicyUserCapTest {
     @Test
     fun `user cap of 128K compacts proportionally`() {
         val policy = ContextPolicy.forUserCap(128_000)
-        assertEquals(108_800, policy.compactThreshold) // 85%
+        assertEquals(115_200, policy.compactThreshold) // 90% (Codex)
         assertEquals(
             ContextPolicy.CheckResult.NEEDS_COMPACT,
-            policy.check(108_800, 128_000),
+            policy.check(115_200, 128_000),
         )
     }
 

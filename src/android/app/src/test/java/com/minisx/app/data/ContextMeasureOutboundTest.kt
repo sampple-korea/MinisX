@@ -114,7 +114,14 @@ class ContextMeasureOutboundTest {
     // estimate × providerFactor for whatever is actually sent.
 
     private val window = 128_000
-    private val policy = ContextPolicy.forContextWindow(window)
+    // The flow below does not depend on where exactly the line is, so it keeps the one it was written against.
+    private val policy = ContextPolicy(
+        offloadThreshold = window - 40_000,
+        offloadTarget = window - 60_000,
+        compactThreshold = window - 20_000,
+        exhaustedOnly = false,
+        manualCompactAllowed = true,
+    )
     private val providerFactor = 1.4
     private val fixed = 9_000
 

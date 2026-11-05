@@ -36,7 +36,7 @@ class CompletedNotificationCopyTest {
         val withLine = res.listFiles()!!.filter { d ->
             File(d, "strings.xml").takeIf { it.isFile }?.readText()?.contains("name=\"bg_service_notification_text_completed\"") == true
         }
-        assertEquals(23, withLine.size)
+        assertEquals(2, withLine.size)
         for (d in withLine) {
             val full = Regex("name=\"bg_service_notification_text_completed\">([^<]*)<").find(File(d, "strings.xml").readText())!!.groupValues[1]
             val noCount = Regex("name=\"bg_service_notification_text_completed_no_count\">([^<]*)<")

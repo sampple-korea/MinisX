@@ -526,7 +526,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
             val prefs = remember { getAppearancePrefs(this) }
             var themeMode by remember { mutableIntStateOf(prefs.getInt(KEY_THEME_MODE, 0)) }
             var appBaseLevel by remember { mutableIntStateOf(prefs.getInt(KEY_FONT_APP_BASE, 0)) }
-            var accentKey by remember { mutableStateOf(prefs.getString(com.minisx.app.ui.settings.KEY_THEME_ACCENT, null)) }
+            var accentKey by remember { androidx.compose.runtime.mutableStateOf<String?>(prefs.getString(com.minisx.app.ui.settings.KEY_THEME_ACCENT, null)) }
 
             DisposableEffect(prefs) {
                 val listener = SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->

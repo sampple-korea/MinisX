@@ -69,10 +69,11 @@ object AgentTools {
         if (!isHelper && delegateEnabled) {
             add(subAgentTaskDefinition(rosterNames))
         }
-        if (userAskExposed && !isHelper) add(com.minisx.app.agent.userask.UserAskPromptText.definition())
-        if (advisorEnabled && !isHelper) add(com.minisx.app.agent.advisor.Advisor.definition())
         // Like Codex's plan tool: a checklist the model keeps up to date (sub agents work on one step).
         if (!isHelper) add(com.minisx.app.agent.plan.PlanTool.definition())
+        if (advisorEnabled && !isHelper) add(com.minisx.app.agent.advisor.Advisor.definition())
+        // Last, as on iOS.
+        if (userAskExposed && !isHelper) add(com.minisx.app.agent.userask.UserAskPromptText.definition())
     }
 
     /**

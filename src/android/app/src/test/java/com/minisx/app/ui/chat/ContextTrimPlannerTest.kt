@@ -513,12 +513,13 @@ class ContextTrimPlannerTest {
     // ── [T-ctx-trim-trigger-margin] ─────────────────────────────────────
 
     @Test
-    fun `a capped group's compaction line equals the hard watermark, so the trigger keeps its own margin`() {
+    fun `a capped group's compaction line is Codex's 90 percent, past the hard watermark, so the watermark decides`() {
         // 128K cap, ~21K fixed, an output cap of 32K: the reserve is 15% of the window.
         val wm = ContextTrimPlanner.watermarks(128_000, 21_000, 32_000)!!
         val line = ContextPolicy.forUserCap(128_000).compactThreshold
-        assertEquals(108_800, line)
-        assertEquals("the line IS the hard watermark", line, wm.hard)
+        assertEquals(115_200, line)
+        assertEquals(108_800, wm.hard)
+        assertTrue("the line alone is past hard", line > wm.hard)
         val trigger = ContextTrimPlanner.trigger(line, wm)
         assertEquals(wm.trigger, trigger)
         assertEquals(21_000 + ((108_800 - 21_000) * 0.9).toInt(), trigger)
@@ -529,7 +530,7 @@ class ContextTrimPlannerTest {
     fun `on a native 1M window the compaction line is above the hard watermark and no longer decides`() {
         val wm = ContextTrimPlanner.watermarks(1_000_000, 21_000, 128_000)!!
         val line = ContextPolicy.forContextWindow(1_000_000).compactThreshold
-        assertEquals(980_000, line)
+        assertEquals(900_000, line)
         assertTrue("the line alone is past hard", line > wm.hard)
         assertEquals(wm.trigger, ContextTrimPlanner.trigger(line, wm))
     }

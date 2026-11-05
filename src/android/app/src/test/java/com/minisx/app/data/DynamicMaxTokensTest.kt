@@ -147,11 +147,11 @@ class DynamicMaxTokensTest {
     // ── case 3: fifth tool turn crosses 85% ────────────────────────────────
 
     @Test
-    fun `the 5th tool iteration crossing 85 percent compacts mid-loop and the next check measures the result`() {
+    fun `the 5th tool iteration crossing 90 percent compacts mid-loop and the next check measures the result`() {
         val window = 128_000
         val g = InLoopGuard(ContextPolicy.forUserCap(window), window)
         g.compactTo = { 40_000 }                   // summary + kept tail
-        val readings = listOf(60_000, 72_000, 85_000, 100_000, 110_000) // 85% of 128k = 108,800
+        val readings = listOf(60_000, 72_000, 85_000, 100_000, 116_000) // 90% of 128k = 115,200
         val actions = readings.map { g.measured = it; g.check() }
         assertEquals(listOf(Action.PROCEED, Action.PROCEED, Action.PROCEED, Action.PROCEED, Action.COMPACTED), actions)
         // [T-ctx-measure-outbound] No free pass needed: the next check measures
@@ -165,11 +165,11 @@ class DynamicMaxTokensTest {
     // ── case 4: 32k user cap on a 1M model ─────────────────────────────────
 
     @Test
-    fun `a 32k cap on a 1M model compacts at 27200`() {
+    fun `a 32k cap on a 1M model compacts at 28800`() {
         val p = ContextPolicy.forUserCap(32_000)
-        assertEquals(27_200, p.compactThreshold)
-        assertEquals(ContextPolicy.CheckResult.NEEDS_COMPACT, p.check(27_200, 32_000))
-        assertEquals(ContextPolicy.CheckResult.OK, p.check(27_199, 32_000))
+        assertEquals(28_800, p.compactThreshold)
+        assertEquals(ContextPolicy.CheckResult.NEEDS_COMPACT, p.check(28_800, 32_000))
+        assertEquals(ContextPolicy.CheckResult.OK, p.check(28_799, 32_000))
     }
 
     // ── drift guard ────────────────────────────────────────────────────────

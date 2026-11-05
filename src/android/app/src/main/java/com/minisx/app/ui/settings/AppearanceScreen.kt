@@ -283,7 +283,7 @@ fun AppearanceScreen(
             footer = stringResource(R.string.appearance_accent_footer),
         ) {
             var accentKey by remember { mutableStateOf(prefs.getString(KEY_THEME_ACCENT, null) ?: com.minisx.app.ui.theme.ThemeAccent.DEFAULT.key) }
-            val dark = androidx.compose.foundation.isSystemInDarkTheme()
+            val dark = com.minisx.app.ui.theme.LocalChatPalette.current.isDark
             androidx.compose.foundation.layout.Row(
                 modifier = Modifier
                     .fillMaxWidth()

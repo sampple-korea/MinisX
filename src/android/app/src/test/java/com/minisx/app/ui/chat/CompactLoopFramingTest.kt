@@ -202,10 +202,9 @@ class CompactLoopFramingTest {
         assertTrue(vm.contains("append(\"Compact this conversation into a context summary:\\n\\n\")"))
         assertTrue(vm.contains("append(\"\\n\\n---\\nEND OF CONVERSATION TO COMPACT.\\n\\n\")"))
         assertTrue(vm.contains("Do NOT continue the conversation above — summarize it."))
-        assertTrue(vm.contains("NOT as an ongoing goal or todo list."))
-        // System prompt: past events, no carried-over objectives (old-task bleed).
-        assertTrue(vm.contains("Do not invent ongoing objectives or carry-over tasks from old turns"))
-        assertTrue(vm.contains("NOT a \"todo\" or \"pending\" list"))
+        // System prompt: Codex's own handoff-summary prompt, and its summary prefix in the wrapper.
+        assertTrue(vm.contains("You are performing a CONTEXT CHECKPOINT COMPACTION. Create a handoff summary for another LLM that will resume the task."))
+        assertTrue(vm.contains("Another language model started to solve this problem and produced a summary of its thinking process."))
         // Summary wrapper at read time: newest user instruction wins.
         assertTrue(vm.contains("The user's most recent message (below or in the next turn) takes precedence"))
         assertTrue(vm.contains("do not resume the old plan from this summary"))
