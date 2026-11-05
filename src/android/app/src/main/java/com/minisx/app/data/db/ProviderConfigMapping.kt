@@ -109,6 +109,7 @@ fun ProviderConfig.toSnapshot(
             isEnabled = if (inst.isEnabled) 1 else 0,
             sortOrder = idx,
             createdAt = inst.createdAt,
+            poolAccountIds = inst.poolAccountIds.joinToString(","),
         )
     }
 
@@ -239,6 +240,7 @@ fun ProviderConfigSnapshot.toProviderConfig(jsonForBlobs: Json): ProviderConfig 
             customUserAgent = row.customUserAgent,
             useResponsesAPI = row.useResponsesAPI != 0,
             azureMode = row.azureMode != 0,
+            poolAccountIds = row.poolAccountIds.split(',').filter { it.isNotBlank() },
             // [GH#68] Safe parse: null (pre-migration rows) or an unknown
             // name from a future build falls back to auto / no cache rather
             // than throwing and wiping the whole provider load.

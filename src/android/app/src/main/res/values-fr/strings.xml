@@ -1143,7 +1143,7 @@
     <string name="add_provider_configure_provider">Configurer %1$s</string>
     <string name="add_provider_auto_append_v1_quoted">Ajouter automatiquement \"/v1\"</string>
     <string name="add_models_to_group_add_count">Ajouter (%1$d)</string>
-    <string name="provider_detail_https_api_example_placeholder">https://api.example.com</string>
+    <string name="provider_detail_https_api_example_placeholder">https://</string>
     <string name="provider_detail_models_count_header">Modèles (%1$d)</string>
     <string name="provider_detail_delete_provider_confirm">Êtes-vous sûr de vouloir supprimer \"%1$s\" ? Cette action est irréversible.</string>
     <string name="provider_detail_delete_model_confirm">Êtes-vous sûr de vouloir supprimer \"%1$s\" ? Cette action est irréversible.</string>

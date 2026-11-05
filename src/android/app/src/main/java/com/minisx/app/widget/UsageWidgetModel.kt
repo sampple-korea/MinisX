@@ -15,6 +15,8 @@ data class UsageLimit(
     val resetsAt: Long?,
     /** Just the window ("5h", "7d"): what the widget shows in its rows, where [label] would not fit. */
     val window: String = label,
+    /** How many accounts this figure pools (1 = a single account). */
+    val accounts: Int = 1,
 )
 
 /** What a usage widget shows. Only quota figures: no credentials, prompts or account names. */

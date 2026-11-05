@@ -34,4 +34,8 @@ data class ProviderInstanceEntity(
     @ColumnInfo(name = "is_enabled") val isEnabled: Int = 1,
     @ColumnInfo(name = "sort_order") val sortOrder: Int = 0,
     @ColumnInfo(name = "created_at") val createdAt: Long,
+    // [T-codex-account-pool] Storage ids of the extra ChatGPT accounts under this provider, joined by
+    // ','. NOT NULL DEFAULT '' so MIGRATION_4_5's ALTER backfills existing rows to "none". Without this
+    // column the list was dropped by the first save and the added account never showed.
+    @ColumnInfo(name = "pool_account_ids") val poolAccountIds: String = "",
 )

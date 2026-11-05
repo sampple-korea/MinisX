@@ -1239,7 +1239,7 @@
     <string name="add_provider_configure_provider">Postavi %1$s</string>
     <string name="add_provider_auto_append_v1_quoted">Automatski dodaj \"/v1\"</string>
     <string name="add_models_to_group_add_count">Dodaj (%1$d)</string>
-    <string name="provider_detail_https_api_example_placeholder">https://api.example.com</string>
+    <string name="provider_detail_https_api_example_placeholder">https://</string>
     <string name="provider_detail_models_count_header">Modeli (%1$d)</string>
     <string name="provider_detail_delete_provider_confirm">Jeste li sigurni da želite izbrisati \"%1$s\"? To se ne može poništiti.</string>
     <string name="provider_detail_delete_model_confirm">Jeste li sigurni da želite izbrisati \"%1$s\"? Ova se radnja ne može poništiti.</string>

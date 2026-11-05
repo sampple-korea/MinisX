@@ -1145,7 +1145,7 @@
     <string name="add_provider_configure_provider">Настроить %1$s</string>
     <string name="add_provider_auto_append_v1_quoted">Автодобавление \"/v1\"</string>
     <string name="add_models_to_group_add_count">Добавить (%1$d)</string>
-    <string name="provider_detail_https_api_example_placeholder">https://api.example.com</string>
+    <string name="provider_detail_https_api_example_placeholder">https://</string>
     <string name="provider_detail_models_count_header">Модели (%1$d)</string>
     <string name="provider_detail_delete_provider_confirm">Вы уверены, что хотите удалить \"%1$s\"? Это действие необратимо.</string>
     <string name="provider_detail_delete_model_confirm">Вы уверены, что хотите удалить \"%1$s\"? Это действие необратимо.</string>

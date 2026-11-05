@@ -13,4 +13,5 @@
     <string name="usage_widget_no_data">아직 사용량 정보가 없어요. ↻ 를 눌러 확인하세요.</string>
     <string name="usage_widget_resets">%1$s 초기화</string>
     <string name="usage_widget_updated">%1$s 갱신</string>
+    <string name="usage_widget_accounts">계정 %1$d개 합산</string>
 </resources>

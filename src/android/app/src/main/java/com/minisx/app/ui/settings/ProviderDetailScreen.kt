@@ -304,7 +304,14 @@ fun ProviderDetailScreen(
                         value = customBaseURL,
                         onValueChange = { customBaseURL = it },
                         singleLine = true,
-                        placeholder = stringResource(R.string.provider_detail_https_api_example_placeholder),
+                        // The provider's own official address, not a made-up example host.
+                        placeholder = when (instance.providerType) {
+                            ProviderType.gemini -> "https://generativelanguage.googleapis.com/v1beta"
+                            ProviderType.anthropic -> "https://api.anthropic.com"
+                            ProviderType.xAI -> "https://api.x.ai"
+                            ProviderType.openAI, ProviderType.openAIResponses -> "https://api.openai.com"
+                            else -> stringResource(R.string.provider_detail_https_api_example_placeholder)
+                        },
                         fieldModifier = Modifier.bringIntoViewOnFocus(),
                     )
                 }

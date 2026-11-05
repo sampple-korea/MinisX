@@ -589,8 +589,9 @@ private fun ColumnScope.ApiKeyConfigSection(
         val defaultUrl = when (providerType) {
             ProviderType.gemini -> "https://generativelanguage.googleapis.com/v1beta"
             ProviderType.anthropic -> "https://api.anthropic.com"
-            ProviderType.openAI -> "https://api.openai.com"
-            else -> "https://api.example.com"
+            ProviderType.openAI, ProviderType.openAIResponses -> "https://api.openai.com"
+            ProviderType.xAI -> "https://api.x.ai"
+            else -> "https://"
         }
         // T-mimo-anthropic-endpoint-android: Anthropic third-party
         // compatible services (e.g. Mimo) frequently host the Anthropic

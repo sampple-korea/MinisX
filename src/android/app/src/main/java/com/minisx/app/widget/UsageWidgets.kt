@@ -154,7 +154,7 @@ abstract class UsageWidget(
         Spacer(GlanceModifier.width(8.dp))
         Column(GlanceModifier.defaultWeight(), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "$name · ${top.window}", maxLines = 1,
+                "$name · ${windowText(context, top)}", maxLines = 1,
                 style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
             )
             Spacer(GlanceModifier.height(3.dp))
@@ -176,6 +176,9 @@ abstract class UsageWidget(
             )
         }
     }
+
+    private fun windowText(context: Context, limit: UsageLimit): String =
+        if (limit.accounts > 1) "${limit.window} · ${context.getString(R.string.usage_widget_accounts, limit.accounts)}" else limit.window
 
     @Composable
     private fun Message(text: String) {
@@ -199,7 +202,7 @@ abstract class UsageWidget(
             )
             Spacer(GlanceModifier.width(6.dp))
             Text(
-                top.window, maxLines = 1,
+                windowText(context, top), maxLines = 1,
                 style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp),
                 modifier = GlanceModifier.padding(bottom = 4.dp),
             )
@@ -268,7 +271,14 @@ class KimiUsageWidgetReceiver : GlanceAppWidgetReceiver() {
 class RefreshUsageAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val instanceId = parameters[INSTANCE]
-        if (instanceId != null) QuotaStore.refresh(instanceId, forced = true, reason = "widget-refresh")
+        if (instanceId != null) {
+            QuotaStore.refresh(instanceId, forced = true, reason = "widget-refresh")
+            // [T-codex-account-pool] ...and the extra accounts of that provider, so the pooled figure moves too.
+            val app = context.applicationContext as MinisApp
+            app.providerRepository.instance(instanceId)?.takeIf { it.poolAccountIds.isNotEmpty() }?.let {
+                PooledCodexUsage.extraAccountLimits(context, it.id, it.poolAccountIds, force = true)
+            }
+        }
         UsageWidgets.updateAll(context)
     }
 
@@ -302,7 +312,7 @@ object UsageWidgets {
     }
 
     /** The model for [vendor]: the enabled provider of that kind with the most usable windows. */
-    suspend fun load(context: Context, vendor: QuotaVendor): UsageWidgetModel {
+    suspend fun load(context: Context, vendor: QuotaVendor, forceExtras: Boolean = false): UsageWidgetModel {
         val app = context.applicationContext as MinisApp
         QuotaStore.awaitLoaded()
         app.providerRepository.awaitConfigLoaded()
@@ -319,7 +329,15 @@ object UsageWidgets {
                 Triple(inst, UsageWidgetModel.limitsOf(pools, now, QuotaStore.freshnessPolicy), pools)
             }
             .maxByOrNull { it.second.size } ?: return UsageWidgetModel(UsageWidgetModel.State.NO_PROVIDER)
-        val (inst, limits, pools) = best
+        val (inst, ownLimits, pools) = best
+        // [T-codex-account-pool] A ChatGPT provider with several accounts shows what is left across all
+        // of them, not just the first one.
+        val limits = if (vendor == QuotaVendor.codexSubscription && inst.poolAccountIds.isNotEmpty()) {
+            val extras = PooledCodexUsage.extraAccountLimits(context, inst.id, inst.poolAccountIds, force = forceExtras)
+            PooledCodexUsage.combine(listOf(ownLimits) + extras.values)
+        } else {
+            ownLimits
+        }
         if (limits.isEmpty()) return UsageWidgetModel(UsageWidgetModel.State.NO_DATA, instanceId = inst.id)
         val updated = pools.flatMap { it.windows }.maxOfOrNull { it.observedAt } ?: 0L
         return UsageWidgetModel(UsageWidgetModel.State.READY, limits, updated, inst.id)
