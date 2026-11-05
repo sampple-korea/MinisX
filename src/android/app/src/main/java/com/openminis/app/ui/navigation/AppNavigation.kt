@@ -134,6 +134,8 @@ object Routes {
     const val FILE_BROWSER = "file_browser"
     const val FILE_PREVIEW = "file_preview"
     const val ENV_VARS = "env_vars"
+    /** [T-android-biolock] Settings → Biometric Lock. */
+    const val BIOMETRIC_LOCK = "biometric_lock"
     const val NETWORK = "network"
     // [FEAT-261021-04] The other pages of Settings > Network.
     const val NETWORK_TAILSCALE = "network_tailscale"
@@ -632,15 +634,18 @@ fun AppNavigation(
             arguments = listOf(navArgument("sessionId") { type = NavType.StringType }),
         ) { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
-            ChatSplitScaffoldRoute(
-                initialSessionId = sessionId,
-                navController = navController,
-                chatRepository = chatRepository,
-                providerRepository = providerRepository,
-                memoryRepository = memoryRepository,
-                skillRepository = skillRepository,
-                mcpRepository = mcpRepository,
-            )
+            // [T-android-biolock] A locked chat shows the lock cover instead of the chat.
+            com.openminis.app.lock.SessionLockGate(sessionId) {
+                ChatSplitScaffoldRoute(
+                    initialSessionId = sessionId,
+                    navController = navController,
+                    chatRepository = chatRepository,
+                    providerRepository = providerRepository,
+                    memoryRepository = memoryRepository,
+                    skillRepository = skillRepository,
+                    mcpRepository = mcpRepository,
+                )
+            }
         }
 
         composable(Routes.SETTINGS) {
@@ -651,6 +656,7 @@ fun AppNavigation(
                 onRootfsClick = { navController.safeNavigate(Routes.STORAGE) },
                 onBackupClick = { navController.safeNavigate(Routes.BACKUP) },
                 onEnvVarsClick = { navController.safeNavigate(Routes.ENV_VARS) },
+                onBiometricLockClick = { navController.safeNavigate(Routes.BIOMETRIC_LOCK) },
                 onNetworkClick = { navController.safeNavigate(Routes.NETWORK) },
                 onTailscaleClick = { navController.safeNavigate(Routes.NETWORK_TAILSCALE) },
                 onProxiesClick = { navController.safeNavigate(Routes.NETWORK_PROXIES) },
@@ -1310,6 +1316,10 @@ fun AppNavigation(
         }
         composable(Routes.CONTAINER_DNS) {
             com.openminis.app.ui.sandbox.ContainerDnsScreen(onBack = { navController.safePopBackStack() })
+        }
+
+        composable(Routes.BIOMETRIC_LOCK) {
+            com.openminis.app.ui.settings.BiometricLockScreen(onBack = { navController.safePopBackStack() })
         }
 
         composable(Routes.ENV_VARS) {

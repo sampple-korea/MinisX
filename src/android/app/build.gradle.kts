@@ -508,6 +508,11 @@ dependencies {
     implementation("com.google.mlkit:language-id:17.0.6")
     implementation("com.google.mlkit:entity-extraction:16.0.0-beta6")
 
+    // [T-android-biolock] BiometricPrompt for the app lock and locked chats (port of iOS
+    // Face ID Protection). 1.1.0 is the stable line: 1.2.x is alpha and asks for
+    // a newer compileSdk. Pulls androidx.fragment, which FragmentActivity needs.
+    implementation("androidx.biometric:biometric:1.1.0")
+
     // Testing — JVM unit tests
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")

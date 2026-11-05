@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Router
@@ -106,6 +107,8 @@ fun SettingsScreen(
     // the route yet.
     onSoulClick: () -> Unit = {},
     onPermissionsClick: () -> Unit = {},
+    // [T-android-biolock] Biometric Lock (app lock + locked chats).
+    onBiometricLockClick: () -> Unit = {},
     onUsageClick: () -> Unit = {},
     onAppearanceClick: () -> Unit = {},
     onLogsClick: () -> Unit = {},
@@ -334,6 +337,14 @@ fun SettingsScreen(
                     title = stringResource(R.string.settings_section_permissions),
                     subtitle = stringResource(R.string.settings_permissions_subtitle),
                     onClick = onPermissionsClick,
+                    showDivider = true,
+                )
+                SettingsItem(
+                    icon = Icons.Outlined.Fingerprint,
+                    iconColor = Color(0xFF34C759),
+                    title = stringResource(R.string.biolock_settings_title),
+                    subtitle = stringResource(R.string.biolock_settings_subtitle),
+                    onClick = onBiometricLockClick,
                     showDivider = false,
                 )
             }

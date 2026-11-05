@@ -45,6 +45,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import com.openminis.app.lock.findFragmentActivity
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.History
@@ -2330,6 +2332,42 @@ private fun SessionItemContent(
                         )
                     },
                 )
+                // [T-android-biolock] Lock / remove the biometric lock for this chat.
+                val lockCtx = androidx.compose.ui.platform.LocalContext.current
+                val lockScope = androidx.compose.runtime.rememberCoroutineScope()
+                val lockVersionMenu by com.openminis.app.lock.SessionLockStore.version.collectAsState()
+                val chatLocked = remember(lockVersionMenu, session.id) {
+                    com.openminis.app.lock.SessionLockStore.isLocked(session.id)
+                }
+                if (remember { com.openminis.app.lock.BiometricAuth.isAvailable(lockCtx) }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(if (chatLocked) R.string.biolock_menu_unlock else R.string.biolock_menu_lock)) },
+                        onClick = {
+                            showContextMenu = false
+                            val activity = lockCtx.findFragmentActivity() ?: return@DropdownMenuItem
+                            lockScope.launch {
+                                val ok = com.openminis.app.lock.BiometricAuth.authenticate(
+                                    activity,
+                                    title = lockCtx.getString(
+                                        if (chatLocked) R.string.biolock_prompt_remove else R.string.biolock_prompt_enable,
+                                    ),
+                                    cancelLabel = lockCtx.getString(R.string.biolock_cancel),
+                                )
+                                if (!ok) return@launch
+                                if (chatLocked) {
+                                    com.openminis.app.lock.SessionLockStore.unlockPermanently(session.id)
+                                } else {
+                                    com.openminis.app.lock.SessionLockStore.lock(session.id)
+                                    // A lock does nothing while the master switch is off.
+                                    com.openminis.app.lock.SessionLockStore.globalEnabled = true
+                                    // The owner just authenticated: keep it open for now.
+                                    com.openminis.app.lock.SessionLockStore.noteUnlock(session.id)
+                                }
+                            }
+                        },
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    )
+                }
                 // Export submenu (JSON / Plain Text)
                 var showExportSub by remember { mutableStateOf(false) }
                 DropdownMenuItem(
@@ -3083,6 +3121,11 @@ private fun SessionRow(
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val timeText = remember(session.updatedAt, ctx) { relativeDate(ctx, session.updatedAt) }
     val rowHaptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    // [T-android-biolock] A locked chat hides its title and preview until unlocked.
+    val lockVersion by com.openminis.app.lock.SessionLockStore.version.collectAsState()
+    val lockHidden = remember(lockVersion, session.id) {
+        com.openminis.app.lock.SessionLockStore.isVisuallyLocked(session.id)
+    }
 
     // [T-android-sessionrow-press-indication] The long-press path uses raw
     // detectTapGestures (it needs the press OFFSET to anchor the context
@@ -3254,8 +3297,8 @@ private fun SessionRow(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
-            val titleText = session.title ?: "New Chat"
-            if (searchQuery.isNotBlank()) {
+            val titleText = if (lockHidden) stringResource(R.string.biolock_row_title) else (session.title ?: "New Chat")
+            if (searchQuery.isNotBlank() && !lockHidden) {
                 Text(
                     text = highlightedAnnotatedString(titleText, searchQuery),
                     fontSize = 16.sp,
@@ -3277,7 +3320,7 @@ private fun SessionRow(
             // During an active search, prefer the matched message snippet
             // (content hit) over the generic lastMessage preview. Falls back
             // to lastMessage when match was title-only (snippet is null).
-            if (searchQuery.isNotBlank() && searchSnippet != null) {
+            if (searchQuery.isNotBlank() && searchSnippet != null && !lockHidden) {
                 Text(
                     text = highlightedAnnotatedString(searchSnippet, searchQuery),
                     fontSize = 14.sp,
@@ -3287,7 +3330,7 @@ private fun SessionRow(
                 )
             } else {
                 Text(
-                    text = session.lastMessage ?: "No messages yet",
+                    text = if (lockHidden) stringResource(R.string.biolock_row_preview) else (session.lastMessage ?: "No messages yet"),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

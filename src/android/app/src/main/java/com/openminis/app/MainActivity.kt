@@ -54,7 +54,7 @@ import com.openminis.app.ui.theme.MinisTheme
 
 private const val KEY_CURRENT_CHAT_SESSION_ID = "minis.current_chat_session_id"
 
-class MainActivity : ComponentActivity() {
+class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     private var navController: NavHostController? = null
 
@@ -517,6 +517,10 @@ class MainActivity : ComponentActivity() {
                 ?: DeepLinkAction.Unknown
         }
 
+        // [T-android-biolock] Load the lock state before the first frame, so a locked
+        // app never flashes its content.
+        com.openminis.app.lock.SessionLockStore.init(this)
+
         setContent {
             val prefs = remember { getAppearancePrefs(this) }
             var themeMode by remember { mutableIntStateOf(prefs.getInt(KEY_THEME_MODE, 0)) }
@@ -621,6 +625,9 @@ class MainActivity : ComponentActivity() {
                 // [FEAT-261021-05] A proxy or Tailscale that keeps failing:
                 // a floating banner over every screen (iOS ContentView).
                 com.openminis.app.ui.settings.NetworkAlertBannerHost(navController)
+
+                // [T-android-biolock] Topmost: covers everything while the app lock is engaged.
+                com.openminis.app.lock.AppLockOverlay()
             }
         }
     }
@@ -656,6 +663,28 @@ class MainActivity : ComponentActivity() {
      * activation (cold or warm) — that's exactly the user expectation
      * the issue is reporting on.
      */
+    override fun onResume() {
+        super.onResume()
+        com.openminis.app.lock.SessionLockStore.onForeground()
+        // Hide the app from the recents screen while an app lock is set (Android 13+;
+        // before that the lock cover paints over the snapshot instead).
+        if (Build.VERSION.SDK_INT >= 33) {
+            setRecentsScreenshotEnabled(
+                !getSharedPreferences("session_lock", MODE_PRIVATE).getBoolean("faceIDAppLockEnabled", false),
+            )
+        }
+    }
+
+    override fun onPause() {
+        com.openminis.app.lock.SessionLockStore.notePaused()
+        super.onPause()
+    }
+
+    override fun onStop() {
+        com.openminis.app.lock.SessionLockStore.noteAppBackgrounded()
+        super.onStop()
+    }
+
     override fun onStart() {
         super.onStart()
         if (!hasResumedFromBackground) {

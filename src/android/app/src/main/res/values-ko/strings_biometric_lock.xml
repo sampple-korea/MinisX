@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="biolock_settings_title">생체 인증 잠금</string>
+    <string name="biolock_settings_subtitle">앱과 개별 대화를 잠급니다</string>
+    <string name="biolock_section_app">앱 잠금</string>
+    <string name="biolock_section_app_footer">Minis를 열 때마다 지문, 얼굴 또는 화면 잠금으로 확인합니다. 켜 두면 최근 앱 화면에서 내용이 가려집니다.</string>
+    <string name="biolock_app_lock">Minis 잠금</string>
+    <string name="biolock_app_relock">다시 잠금</string>
+    <string name="biolock_section_chats">잠긴 대화</string>
+    <string name="biolock_section_chats_footer">목록에서 대화를 길게 눌러 \'대화 잠금\'을 선택하세요. 잠긴 대화는 잠금을 풀기 전까지 제목과 미리보기가 가려집니다.</string>
+    <string name="biolock_chats_enable">잠긴 대화 보호</string>
+    <string name="biolock_chat_relock">다시 잠금 시점</string>
+    <string name="biolock_unavailable">시스템 설정에서 지문, 얼굴 인식 또는 화면 잠금을 설정해야 사용할 수 있습니다.</string>
+    <string name="biolock_idle_exit">나갈 때</string>
+    <string name="biolock_idle_30s">30초</string>
+    <string name="biolock_idle_1m">1분</string>
+    <string name="biolock_idle_5m">5분</string>
+    <string name="biolock_idle_10m">10분</string>
+    <string name="biolock_idle_15m">15분</string>
+    <string name="biolock_idle_1h">1시간</string>
+    <string name="biolock_idle_never">안 함</string>
+    <string name="biolock_prompt_enable">생체 인증 잠금 켜기</string>
+    <string name="biolock_prompt_app">Minis 잠금 해제</string>
+    <string name="biolock_prompt_chat">이 대화 잠금 해제</string>
+    <string name="biolock_prompt_remove">이 대화의 잠금 해제</string>
+    <string name="biolock_cancel">취소</string>
+    <string name="biolock_app_locked_title">Minis가 잠겨 있습니다</string>
+    <string name="biolock_chat_locked_title">이 대화는 잠겨 있습니다</string>
+    <string name="biolock_unlock">잠금 해제</string>
+    <string name="biolock_row_title">잠긴 대화</string>
+    <string name="biolock_row_preview">잠금을 풀면 볼 수 있습니다</string>
+    <string name="biolock_menu_lock">대화 잠금</string>
+    <string name="biolock_menu_unlock">잠금 해제</string>
+</resources>

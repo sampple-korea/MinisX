@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- [T-android-biolock] Biometric lock for the app and individual chats (port of iOS Face ID Protection). -->
+    <string name="biolock_settings_title">Biometric Lock</string>
+    <string name="biolock_settings_subtitle">Lock the app and individual chats</string>
+    <string name="biolock_section_app">App Lock</string>
+    <string name="biolock_section_app_footer">Ask for your fingerprint, face or screen lock whenever Minis opens. Hides Minis in the app switcher while on.</string>
+    <string name="biolock_app_lock">Lock Minis</string>
+    <string name="biolock_app_relock">Re-lock</string>
+    <string name="biolock_section_chats">Locked Chats</string>
+    <string name="biolock_section_chats_footer">Long-press a chat in the list and choose Lock Chat. A locked chat hides its title and preview until you unlock it.</string>
+    <string name="biolock_chats_enable">Protect locked chats</string>
+    <string name="biolock_chat_relock">Re-lock after</string>
+    <string name="biolock_unavailable">Set up a fingerprint, face unlock or a screen lock in the system Settings to use this.</string>
+    <string name="biolock_idle_exit">When I leave</string>
+    <string name="biolock_idle_30s">30 seconds</string>
+    <string name="biolock_idle_1m">1 minute</string>
+    <string name="biolock_idle_5m">5 minutes</string>
+    <string name="biolock_idle_10m">10 minutes</string>
+    <string name="biolock_idle_15m">15 minutes</string>
+    <string name="biolock_idle_1h">1 hour</string>
+    <string name="biolock_idle_never">Never</string>
+    <string name="biolock_prompt_enable">Turn on biometric lock</string>
+    <string name="biolock_prompt_app">Unlock Minis</string>
+    <string name="biolock_prompt_chat">Unlock this chat</string>
+    <string name="biolock_prompt_remove">Remove this chat\'s lock</string>
+    <string name="biolock_cancel">Cancel</string>
+    <string name="biolock_app_locked_title">Minis is locked</string>
+    <string name="biolock_chat_locked_title">This chat is locked</string>
+    <string name="biolock_unlock">Unlock</string>
+    <string name="biolock_row_title">Locked chat</string>
+    <string name="biolock_row_preview">Unlock to view</string>
+    <string name="biolock_menu_lock">Lock Chat</string>
+    <string name="biolock_menu_unlock">Remove Lock</string>
+</resources>
