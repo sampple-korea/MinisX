@@ -4,8 +4,8 @@
     <string name="biolock_settings_title">Biometric Lock</string>
     <string name="biolock_settings_subtitle">Lock the app and individual chats</string>
     <string name="biolock_section_app">App Lock</string>
-    <string name="biolock_section_app_footer">Ask for your fingerprint, face or screen lock whenever Minis opens. Hides Minis in the app switcher while on.</string>
-    <string name="biolock_app_lock">Lock Minis</string>
+    <string name="biolock_section_app_footer">Ask for your fingerprint, face or screen lock whenever MinisX opens. Hides MinisX in the app switcher while on.</string>
+    <string name="biolock_app_lock">Lock MinisX</string>
     <string name="biolock_app_relock">Re-lock</string>
     <string name="biolock_section_chats">Locked Chats</string>
     <string name="biolock_section_chats_footer">Long-press a chat in the list and choose Lock Chat. A locked chat hides its title and preview until you unlock it.</string>
@@ -21,11 +21,11 @@
     <string name="biolock_idle_1h">1 hour</string>
     <string name="biolock_idle_never">Never</string>
     <string name="biolock_prompt_enable">Turn on biometric lock</string>
-    <string name="biolock_prompt_app">Unlock Minis</string>
+    <string name="biolock_prompt_app">Unlock MinisX</string>
     <string name="biolock_prompt_chat">Unlock this chat</string>
     <string name="biolock_prompt_remove">Remove this chat\'s lock</string>
     <string name="biolock_cancel">Cancel</string>
-    <string name="biolock_app_locked_title">Minis is locked</string>
+    <string name="biolock_app_locked_title">MinisX is locked</string>
     <string name="biolock_chat_locked_title">This chat is locked</string>
     <string name="biolock_unlock">Unlock</string>
     <string name="biolock_row_title">Locked chat</string>

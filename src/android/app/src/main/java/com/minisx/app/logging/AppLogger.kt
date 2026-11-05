@@ -241,7 +241,7 @@ object AppLogger {
             // bytes in a file that is already large enough to have needed
             // tag-level suppression at the logcat command line, and makes any
             // frequency read off these logs wrong by 2x.
-            if (tag.startsWith("Minis.") || tag == "AppLogger" ||
+            if (tag.startsWith("MinisX.") || tag == "AppLogger" ||
                 tag == "System.out" || tag == "System.err"
             ) {
                 return
@@ -397,7 +397,7 @@ object AppLogger {
 
     private fun log(level: String, category: String, message: String) {
         // Also output to logcat
-        val logcatTag = "Minis.$category"
+        val logcatTag = "MinisX.$category"
         when (level) {
             "ERROR" -> Log.e(logcatTag, message)
             "WARN" -> Log.w(logcatTag, message)

@@ -92,7 +92,7 @@ object OAuthForegroundGate {
         AppLogger.info(
             tag,
             "[OAuth] callback arrived with the app in the background ($state) — " +
-                "holding the token exchange until Minis is foreground (background network is blocked)",
+                "holding the token exchange until MinisX is foreground (background network is blocked)",
         )
         val started = System.currentTimeMillis()
         val arrived = withTimeoutOrNull(MAX_WAIT_MS) {

@@ -100,7 +100,7 @@ class OAuthForegroundExchangeTest {
             "'You can close this tab' after only receiving the code is what made this look done",
             server.contains("You can close this tab"),
         )
-        assertTrue(server.contains("Return to Minis to finish signing in."))
+        assertTrue(server.contains("Return to MinisX to finish signing in."))
     }
 
     // ── The screen shows progress and failure ──────────────────────────────

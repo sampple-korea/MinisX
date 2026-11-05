@@ -44,7 +44,7 @@ object RealtimeProtocol {
             .put("name", TOOL_RUN_TASK)
             .put(
                 "description",
-                "Have the Minis agent do real work on this phone: run shell commands, read or edit files, browse the " +
+                "Have the MinisX agent do real work on this phone: run shell commands, read or edit files, browse the " +
                     "web, use device tools, check or change settings. Pass one clear, self-contained request. " +
                     "Returns the agent's final answer, which you then summarise out loud in a sentence or two.",
             )
@@ -140,7 +140,7 @@ object RealtimeProtocol {
         runCatching { JSONObject(arguments).optString("request") }.getOrNull()?.trim()?.takeIf { it.isNotEmpty() }
 
     fun defaultInstructions(language: String?): String = buildString {
-        append("You are the voice of Minis, an AI agent that lives on the user's Android phone and can really do things there. ")
+        append("You are the voice of MinisX, an AI agent that lives on the user's Android phone and can really do things there. ")
         append("Speak briefly and naturally: one or two sentences, no lists, no markdown. ")
         append("Answer simple questions and chat yourself. Whenever the user wants something done on the phone or in the ")
         append("sandbox (files, shell, web, calendar, health data, settings, anything that needs a tool), call ")

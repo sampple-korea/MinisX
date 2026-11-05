@@ -119,7 +119,7 @@ class MediaOffloadHandler(private val context: Context) : NativeOffloadHandler {
                 OffloadPermissionManager.SettingsGateRequest(
                     id = "notification_access",
                     title = "Notification access needed",
-                    message = "Minis needs Notification access to see and control what is playing. Open Settings and enable \"Minis\" under Notification access.",
+                    message = "MinisX needs Notification access to see and control what is playing. Open Settings and enable \"MinisX\" under Notification access.",
                     settingsAction = MinisNotificationListenerService.SETTINGS_ACTION,
                     requiresPackageUri = false,
                     positiveLabel = "Open Settings",

@@ -91,7 +91,7 @@ class ChatShareWiringTest {
 
         val header = ProductionSources.read("ui/chat/share/ChatExportHeader.kt")
         assertTrue("ringed round avatar, title, model · date, brand",
-            header.contains(".clip(CircleShape)") && header.contains("text = \"Open Minis\"") &&
+            header.contains(".clip(CircleShape)") && header.contains("text = \"Open MinisX\"") &&
                 header.contains("parts.joinToString(\" · \")") && header.contains("if (i < parts.lastIndex) \"\$part ·\" else part"))
         val both = chatExportSubtitle(" GPT-5 ", 1_790_000_000_000L, java.util.Locale.US)
         assertTrue("model first (trimmed), then a medium date with the time",

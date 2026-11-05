@@ -238,7 +238,7 @@ class OpenRouterVoiceRoutingTest {
             )
             assertTrue(req.url.toString().endsWith("/api/v1/audio/speech"))
             assertEquals("https://github.com/OpenMinis/OpenMinis", req.header("HTTP-Referer"))
-            assertEquals("Minis App", req.header("X-Title"))
+            assertEquals("MinisX App", req.header("X-Title"))
             assertEquals("Bearer sk-test", req.header("Authorization"))
             val buf = Buffer()
             req.body!!.writeTo(buf)

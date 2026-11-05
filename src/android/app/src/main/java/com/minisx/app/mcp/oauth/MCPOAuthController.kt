@@ -228,7 +228,7 @@ class MCPOAuthController(
                         // until the 300 s timeout (A3 device test, bug 1).
                         stopWatching = watchDismissal {
                             if (callbackServer === srv) {
-                                AppLogger.info(TAG, "[Authorize] '$server' Minis is back without an answer - the page was closed")
+                                AppLogger.info(TAG, "[Authorize] '$server' MinisX is back without an answer - the page was closed")
                                 srv.stop()
                             }
                         }

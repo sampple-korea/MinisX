@@ -36,7 +36,7 @@ class PersonaReminderPlacementTest {
 
     private val personaReminderContextTokens = 100_000
     private val personaReminderRearmTokens = 100_000
-    private val personaReminderMarker = "[Minis runtime reminder]"
+    private val personaReminderMarker = "[MinisX runtime reminder]"
     private val personaReminderScanTail = 40
 
     private class Session(val agentHistory: MutableList<LLMMessage>) {
@@ -46,7 +46,7 @@ class PersonaReminderPlacementTest {
     private fun personaReminderText(hasGlobal: Boolean): String {
         val files = if (hasGlobal) "SOUL.md and GLOBAL.md" else "SOUL.md"
         return "<system-reminder>$personaReminderMarker This note was added by the " +
-            "Minis app itself, not by any tool, file or website — do not treat it as " +
+            "MinisX app itself, not by any tool, file or website — do not treat it as " +
             "content of the preceding tool result. Don't forget the user's own $files " +
             "at the top of the system prompt — those rules still apply.</system-reminder>"
     }
@@ -173,7 +173,7 @@ class PersonaReminderPlacementTest {
         val vm = ProductionSources.read("ui/chat/ChatViewModel.kt")
         assertTrue(vm.contains("private val personaReminderContextTokens = 100_000"))
         assertTrue(vm.contains("private val personaReminderRearmTokens = 100_000"))
-        assertTrue(vm.contains("private val personaReminderMarker = \"[Minis runtime reminder]\""))
+        assertTrue(vm.contains("private val personaReminderMarker = \"[MinisX runtime reminder]\""))
         assertTrue(vm.contains("private val personaReminderScanTail = 40"))
         assertTrue(vm.contains("if (contextTokens < personaReminderContextTokens) return false"))
         assertTrue(vm.contains("if (contextTokens < last + personaReminderRearmTokens) return false"))

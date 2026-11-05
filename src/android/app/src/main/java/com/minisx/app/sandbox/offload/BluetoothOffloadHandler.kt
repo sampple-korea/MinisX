@@ -123,7 +123,7 @@ class BluetoothOffloadHandler(private val context: Context) : NativeOffloadHandl
         return OffloadEnvelope.error(
             TOOL, action, "permission_denied",
             "Bluetooth permission denied (${still.joinToString { it.substringAfterLast('.') }}). " +
-                "Ask the user to allow Nearby devices for Minis in Settings → Apps → Minis → Permissions.",
+                "Ask the user to allow Nearby devices for MinisX in Settings → Apps → MinisX → Permissions.",
             args, 126,
         )
     }

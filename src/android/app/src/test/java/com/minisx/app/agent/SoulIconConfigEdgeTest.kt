@@ -73,7 +73,7 @@ class SoulIconConfigEdgeTest {
 
     @Test
     fun `plain text is refused`() {
-        for (v in listOf("hello", "abc123", "Minis", "n/a", "null", "undefined")) {
+        for (v in listOf("hello", "abc123", "Minis", "MinisX", "n/a", "null", "undefined")) {
             assertEquals("'$v'", Branch.IMAGE_SOURCE, branch(v))
             assertTrue("'$v' must be refused", refusedAsImage(v))
         }
@@ -181,7 +181,7 @@ class SoulIconConfigEdgeTest {
             val back = SoulMDParser.parse(text)
             assertEquals(v, back.metadata.icon)
             // The other keys must survive untouched.
-            assertEquals("Minis", back.metadata.name)
+            assertEquals("MinisX", back.metadata.name)
             assertEquals("auto", back.metadata.lang)
             assertEquals("body", back.body.trim())
         }

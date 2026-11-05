@@ -77,7 +77,7 @@ object ScheduledInAppTimer {
             sleepUntil(due.at)
             tried += due.tryKey
             if (!canFire()) {
-                AppLogger.info(TAG, "task=${due.task.id} due, Minis in background - left to its alarm")
+                AppLogger.info(TAG, "task=${due.task.id} due, MinisX in background - left to its alarm")
                 continue
             }
             // Just before the slot, so the claim takes the run this wait was for.

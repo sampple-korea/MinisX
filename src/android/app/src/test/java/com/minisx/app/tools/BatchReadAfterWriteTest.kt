@@ -135,7 +135,7 @@ class BatchReadAfterWriteTest {
     fun `read_image says which failure it was`() {
         val p = "/var/minis/workspace/q-1.png"
         assertEquals(
-            "Error: '$p' is not a readable Minis path. Use a path under /var/minis/ (e.g. /var/minis/workspace/chart.png) or a minis:// URL.",
+            "Error: '$p' is not a readable MinisX path. Use a path under /var/minis/ (e.g. /var/minis/workspace/chart.png) or a minis:// URL.",
             ReadImageTool.failureText(p, resolved = false, file = null),
         )
         assertEquals(

@@ -387,7 +387,7 @@ object ExecutionCoordinator {
             }
             is GlobalShellThrottle.Outcome.QueueTimedOut -> CommandResult(
                 output = "Not run: waited ${outcome.waitedMs / 1000}s for Android's per-app process limit to " +
-                    "free up (${outcome.lastLiveCount} Minis processes running, budget " +
+                    "free up (${outcome.lastLiveCount} MinisX processes running, budget " +
                     "${GlobalShellThrottle.PROCESS_BUDGET}), or for the shell to start. Nothing was executed; " +
                     "retry once other commands or background processes have finished.",
                 exitCode = 124,

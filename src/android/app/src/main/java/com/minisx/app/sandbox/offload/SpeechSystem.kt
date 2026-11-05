@@ -316,7 +316,7 @@ internal class AndroidSpeechSystem(private val context: Context) : SpeechSystem 
                 OffloadPermissionManager.SettingsGateRequest(
                     id = Manifest.permission.RECORD_AUDIO,
                     title = "Microphone permission needed",
-                    message = "Minis needs microphone permission to transcribe speech. Open Settings to allow it.",
+                    message = "MinisX needs microphone permission to transcribe speech. Open Settings to allow it.",
                     settingsAction = Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                     requiresPackageUri = true,
                     positiveLabel = "Open Settings",

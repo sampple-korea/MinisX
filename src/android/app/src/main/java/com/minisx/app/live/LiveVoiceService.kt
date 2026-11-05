@@ -79,7 +79,7 @@ class LiveVoiceService : Service() {
         route = LiveAudioRoute(this).also { it.begin() }
         @Suppress("WakelockTimeout") // Released when the call ends or the service is destroyed.
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
-            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Minis:LiveVoice").also { it.acquire() }
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MinisX:LiveVoice").also { it.acquire() }
 
         s.start()
         scope.launch {

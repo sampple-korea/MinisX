@@ -48,8 +48,8 @@ class OAuthReturnToAppTest {
         assertEquals("intent://oauth/return#Intent;scheme=minis;package=com.minisx.app;end", url)
         val page = OAuthCallbackServer.successPage("com.minisx.app")
         assertTrue(page.contains("href=\"$url\""))
-        assertTrue(page.contains(">Return to Minis</a>"))
-        assertTrue(page.contains("Return to Minis to finish signing in."))
+        assertTrue(page.contains(">Return to MinisX</a>"))
+        assertTrue(page.contains("Return to MinisX to finish signing in."))
         assertTrue("Content-Length is String.length", page.all { it.code < 128 })
         assertFalse("no auto-redirect", page.contains("location.href") || page.contains("http-equiv=\"refresh\""))
         // The deep link lands on nothing: minis://oauth is not a route.

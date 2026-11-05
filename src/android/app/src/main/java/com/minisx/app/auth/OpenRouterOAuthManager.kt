@@ -170,7 +170,7 @@ object OpenRouterOAuthManager {
             .post(body.toString().toRequestBody("application/json".toMediaType()))
             .header("Content-Type", "application/json")
             .header("HTTP-Referer", "https://github.com/OpenMinis/OpenMinis")
-            .header("X-Title", "Minis App")
+            .header("X-Title", "MinisX App")
             .build()
 
         val response = com.minisx.app.network.NetworkHttp.client(netTag, client).newCall(request).execute()

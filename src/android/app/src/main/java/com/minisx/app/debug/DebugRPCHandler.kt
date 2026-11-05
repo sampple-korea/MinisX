@@ -1414,7 +1414,7 @@ class DebugRPCHandler(private val context: Context) {
                     put(android.provider.CalendarContract.Calendars.ACCOUNT_NAME, account)
                     put(android.provider.CalendarContract.Calendars.ACCOUNT_TYPE, android.provider.CalendarContract.ACCOUNT_TYPE_LOCAL)
                     put(android.provider.CalendarContract.Calendars.NAME, "minis_debug_local")
-                    put(android.provider.CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, "Minis Debug (local)")
+                    put(android.provider.CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, "MinisX Debug (local)")
                     put(android.provider.CalendarContract.Calendars.CALENDAR_COLOR, 0xFF888888.toInt())
                     put(android.provider.CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, android.provider.CalendarContract.Calendars.CAL_ACCESS_OWNER)
                     put(android.provider.CalendarContract.Calendars.OWNER_ACCOUNT, account)
@@ -1468,7 +1468,7 @@ class DebugRPCHandler(private val context: Context) {
                 val (s0, e0) = com.minisx.app.sandbox.offload.CalendarOffloadHandler.allDayBounds(day, day)
                 val v = android.content.ContentValues().apply {
                     put(android.provider.CalendarContract.Events.CALENDAR_ID, calId)
-                    put(android.provider.CalendarContract.Events.TITLE, "Minis legacy all-day probe")
+                    put(android.provider.CalendarContract.Events.TITLE, "MinisX legacy all-day probe")
                     put(android.provider.CalendarContract.Events.DTSTART, s0)
                     put(android.provider.CalendarContract.Events.DTEND, e0)
                     put(android.provider.CalendarContract.Events.ALL_DAY, 1)

@@ -70,9 +70,9 @@ class OAuthCallbackServer(
          */
         internal fun errorPage(error: String, packageName: String? = null): String {
             val back = packageName?.let {
-                "<p>Return to Minis to continue.</p><p><a href=\"${returnToAppUrl(it)}\" style=\"display:inline-block;" +
+                "<p>Return to MinisX to continue.</p><p><a href=\"${returnToAppUrl(it)}\" style=\"display:inline-block;" +
                     "padding:12px 24px;border-radius:8px;background:#10a37f;color:#fff;text-decoration:none;" +
-                    "font-size:18px\">Return to Minis</a></p>"
+                    "font-size:18px\">Return to MinisX</a></p>"
             }.orEmpty()
             val html = "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head>" +
                 "<body style=\"font-family:sans-serif;text-align:center;padding:24px\">" +
@@ -98,9 +98,9 @@ class OAuthCallbackServer(
         internal fun successPage(packageName: String): String =
             "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head>" +
                 "<body style=\"font-family:sans-serif;text-align:center;padding:24px\">" +
-                "<h1>Authorization received</h1><p>Return to Minis to finish signing in.</p>" +
+                "<h1>Authorization received</h1><p>Return to MinisX to finish signing in.</p>" +
                 "<p><a href=\"${returnToAppUrl(packageName)}\" style=\"display:inline-block;padding:12px 24px;" +
-                "border-radius:8px;background:#10a37f;color:#fff;text-decoration:none;font-size:18px\">Return to Minis</a></p>" +
+                "border-radius:8px;background:#10a37f;color:#fff;text-decoration:none;font-size:18px\">Return to MinisX</a></p>" +
                 "<script>window.close()</script></body></html>"
 
         /** `minis://oauth/return` as an intent URL pinned to our package; the deep link itself is a no-op. */

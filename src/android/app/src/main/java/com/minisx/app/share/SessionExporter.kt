@@ -321,7 +321,7 @@ object SessionExporter {
                 }
                 val body = lines.joinToString("\n")
                 if (body.isNotEmpty()) {
-                    val role = if (row.role == "user") "User" else "Minis"
+                    val role = if (row.role == "user") "User" else "MinisX"
                     out.write("\n[$role] ${timeFmt.format(Date(row.createdAt))}\n$body\n---\n")
                     summary = summary.countMessage(row.createdAt)
                 }

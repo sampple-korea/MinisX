@@ -86,7 +86,7 @@ class NfcOffloadHandler(private val context: Context) : NativeOffloadHandler {
             .put("hint", when {
                 adapter == null -> "This device has no NFC."
                 !adapter.isEnabled -> "NFC is off. Ask the user to turn it on in Settings → Connected devices → NFC."
-                else -> "NFC is ready. Keep Minis on screen, run `android-nfc scan` and hold a tag to the back of the phone."
+                else -> "NFC is ready. Keep MinisX on screen, run `android-nfc scan` and hold a tag to the back of the phone."
             })
         return OffloadEnvelope.ok(TOOL, "status", data, args)
     }
@@ -128,7 +128,7 @@ class NfcOffloadHandler(private val context: Context) : NativeOffloadHandler {
         val activity = ForegroundActivity.get()
             ?: return OffloadEnvelope.error(
                 TOOL, sub, "not_available",
-                "NFC reading needs Minis on screen. Ask the user to open the app (keep it visible), then retry.", args, 3,
+                "NFC reading needs MinisX on screen. Ask the user to open the app (keep it visible), then retry.", args, 3,
             )
         val timeout = (args.getDouble("timeout") ?: 30.0).coerceIn(3.0, 120.0)
 
@@ -473,7 +473,7 @@ class NfcOffloadHandler(private val context: Context) : NativeOffloadHandler {
 USAGE:
   android-nfc <command> [options]
 
-Commands that touch a tag wait for one to be held to the phone. Minis must be on
+Commands that touch a tag wait for one to be held to the phone. MinisX must be on
 screen (NFC reader mode needs a foreground app).
 
 NDEF:

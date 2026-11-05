@@ -84,7 +84,7 @@ class HealthOffloadHandler(private val context: Context) : NativeOffloadHandler 
             OffloadEnvelope.error(
                 TOOL, sub, "permission_denied",
                 "Health Connect refused the read: ${e.message}. If the app is in the background, open Health Connect → " +
-                    "App permissions → Minis and allow \"Access data in the background\".",
+                    "App permissions → MinisX and allow \"Access data in the background\".",
                 args,
             )
         } catch (e: Throwable) {
@@ -214,7 +214,7 @@ class HealthOffloadHandler(private val context: Context) : NativeOffloadHandler 
         return OffloadEnvelope.error(
             TOOL, action, "permission_denied",
             "Health Connect access is not granted for: ${missing.joinToString { it.substringAfterLast('.') }}. " +
-                "Open Health Connect → App permissions → Minis and allow it, then retry.",
+                "Open Health Connect → App permissions → MinisX and allow it, then retry.",
             args, 126, JSONObject().put("missing", JSONArray(missing.map { it.substringAfterLast('.') })),
         )
     }
@@ -750,7 +750,7 @@ EXAMPLES:
 NOTES:
   Health Connect is built into Android 14+. On older Android, install the Health
   Connect app. Reads while the app is in the background need "Access data in the
-  background" under Health Connect → App permissions → Minis.
+  background" under Health Connect → App permissions → MinisX.
 """
     }
 }

@@ -93,7 +93,7 @@ internal fun ChatExportHeaderView(title: String, subtitle: List<String>, widthDp
                 }
                 // Product name: not localized.
                 Text(
-                    text = "Open Minis",
+                    text = "Open MinisX",
                     style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp),
                     color = palette.primaryText,
                     maxLines = 1,
