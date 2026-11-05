@@ -1,13 +1,15 @@
 name: Android
 
-# Builds the signed APK on every push to main, and publishes it as a GitHub release
-# when a tag like v0.1 is pushed. Every build is signed with the same key
+# Builds the signed APK when started by hand or when a tag like v0.2 is pushed, and publishes it as a
+# GitHub release. Every build is signed with the same key
 # (src/android/keystore/minis.jks), and the job fails if that ever stops being true.
 # Build only: there is deliberately no test/verification job (it cost CI minutes).
 
+# No push-to-main trigger on purpose: builds are started by hand (here, or from the public
+# minisx-ci repository, see docs/ci-shuttle/README.md) so private-repo runner minutes are not spent
+# on every commit.
 on:
   push:
-    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
     inputs:

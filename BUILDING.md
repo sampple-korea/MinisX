@@ -177,7 +177,7 @@ Version numbers come from `build.gradle.kts` unless you pass `-Pminis.versionCod
 
 | Trigger | What happens |
 |---|---|
-| push to `main` | builds the signed release APK, uploads it as the `minis-apk` artifact (90 days) |
+| manual run (Actions tab) | builds the signed release APK and uploads it as the `minis-apk` artifact (90 days); there is no push-to-`main` trigger |
 | tag `v*` (e.g. `git tag v0.2 && git push --tags`) | the same, and attaches the APK to a GitHub release; `versionName` is the tag |
 | manual run | the same as a push; with `release_tag` (e.g. `v0.1`) it also creates that tag + release on the built commit, and `version_code` can force the versionCode |
 
