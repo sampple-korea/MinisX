@@ -38,21 +38,28 @@ import com.openminis.app.sandbox.PRootKernel
 import com.openminis.app.sandbox.RootfsManager
 import com.openminis.app.sandbox.offload.AccessibilityOffloadHandler
 import com.openminis.app.sandbox.offload.AlarmOffloadHandler
+import com.openminis.app.sandbox.offload.BluetoothOffloadHandler
 import com.openminis.app.sandbox.offload.BrowserUseOffloadHandler
 import com.openminis.app.sandbox.offload.CalendarOffloadHandler
 import com.openminis.app.sandbox.offload.ClipboardOffloadHandler
 import com.openminis.app.sandbox.offload.ContactsOffloadHandler
 import com.openminis.app.sandbox.offload.DeviceOffloadHandler
+import com.openminis.app.sandbox.offload.HealthOffloadHandler
 import com.openminis.app.sandbox.offload.LocationOffloadHandler
 import com.openminis.app.sandbox.offload.ModelUseOffloadHandler
 import com.openminis.app.sandbox.offload.SessionsOffloadHandler
 import com.openminis.app.sandbox.offload.ShizukuOffloadHandler
+import com.openminis.app.sandbox.offload.NfcOffloadHandler
 import com.openminis.app.sandbox.offload.NotificationOffloadHandler
 import com.openminis.app.sandbox.offload.OpenOffloadHandler
 import com.openminis.app.sandbox.offload.PhotosOffloadHandler
 import com.openminis.app.sandbox.offload.PlayerOffloadHandler
 import com.openminis.app.sandbox.offload.SpeakOffloadHandler
 import com.openminis.app.sandbox.offload.SpeechOffloadHandler
+import com.openminis.app.sandbox.offload.MapsOffloadHandler
+import com.openminis.app.sandbox.offload.MediaOffloadHandler
+import com.openminis.app.sandbox.offload.NlpOffloadHandler
+import com.openminis.app.sandbox.offload.VisionOffloadHandler
 import com.openminis.app.sandbox.offload.WeatherOffloadHandler
 import com.openminis.app.service.SessionActivityTracker
 import com.openminis.app.ui.MinisImageFetcher
@@ -258,6 +265,8 @@ class MinisApp : Application(), ImageLoaderFactory {
     @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
     override fun onCreate() {
         super.onCreate()
+        // [T-android-nfc] Track the resumed activity for APIs that need a foreground one.
+        com.openminis.app.util.ForegroundActivity.install(this)
         // [T-oauth-wait-fgs] Before anything can start an OAuth callback server:
         // gives it a context to keep the process out of the freezer with.
         com.openminis.app.service.OAuthWaitKeepAlive.install(this)
@@ -746,11 +755,14 @@ class MinisApp : Application(), ImageLoaderFactory {
         // materialized lazily. Starting here means the abstract socket is
         // reachable even before any shell session is launched.
         NativeOffloadServer.register("android-alarm", AlarmOffloadHandler(this))
+        NativeOffloadServer.register("android-bluetooth", BluetoothOffloadHandler(this))
         NativeOffloadServer.register("android-calendar", CalendarOffloadHandler(this))
         NativeOffloadServer.register("android-clipboard", ClipboardOffloadHandler(this))
         NativeOffloadServer.register("android-contacts", ContactsOffloadHandler(this))
         NativeOffloadServer.register("android-device", DeviceOffloadHandler(this))
+        NativeOffloadServer.register("android-health", HealthOffloadHandler(this))
         NativeOffloadServer.register("android-location", LocationOffloadHandler(this))
+        NativeOffloadServer.register("android-nfc", NfcOffloadHandler(this))
         NativeOffloadServer.register("android-notification", NotificationOffloadHandler(this))
         NativeOffloadServer.register("android-open", OpenOffloadHandler(this))
         NativeOffloadServer.register("android-photos", PhotosOffloadHandler(this))
@@ -758,6 +770,10 @@ class MinisApp : Application(), ImageLoaderFactory {
         NativeOffloadServer.register("android-speak", SpeakOffloadHandler(this))
         NativeOffloadServer.register("android-speech", SpeechOffloadHandler(this))
         NativeOffloadServer.register("android-weather", WeatherOffloadHandler(this))
+        NativeOffloadServer.register("android-maps", MapsOffloadHandler(this))
+        NativeOffloadServer.register("android-media", MediaOffloadHandler(this))
+        NativeOffloadServer.register("android-vision", VisionOffloadHandler())
+        NativeOffloadServer.register("android-nlp", NlpOffloadHandler())
         // T323: UI-layer automation backed by MinisAccessibilityService.
         NativeOffloadServer.register("android-a11y-cli", AccessibilityOffloadHandler(this))
         NativeOffloadServer.register("minis-model-use", ModelUseOffloadHandler(this, providerRepository))

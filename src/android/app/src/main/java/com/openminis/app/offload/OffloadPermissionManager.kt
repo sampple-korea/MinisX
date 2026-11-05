@@ -73,15 +73,22 @@ object OffloadPermissionManager {
         ToolPermissionInfo("clipboard", "Clipboard", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
         ToolPermissionInfo("contacts", "Contacts", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
         ToolPermissionInfo("photos", "Photos", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
+        ToolPermissionInfo("health", "Health", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
+        ToolPermissionInfo("bluetooth", "Bluetooth", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
+        ToolPermissionInfo("nfc", "NFC", PermissionCategory.PRIVACY, PermissionLevel.BYPASS),
         // Media — no personal data, hidden from Settings.
         ToolPermissionInfo("speak", "Text-to-Speech", PermissionCategory.MEDIA, PermissionLevel.BYPASS, showInSettings = false),
         ToolPermissionInfo("media_player", "Media Player", PermissionCategory.MEDIA, PermissionLevel.BYPASS, showInSettings = false),
+        ToolPermissionInfo("media", "Media", PermissionCategory.MEDIA, PermissionLevel.BYPASS, showInSettings = false),
         ToolPermissionInfo("speech_recognition", "Speech Recognition", PermissionCategory.MEDIA, PermissionLevel.BYPASS, showInSettings = false),
         // System — no personal data, hidden from Settings.
         ToolPermissionInfo("alarm", "Alarms & Timers", PermissionCategory.SYSTEM, PermissionLevel.BYPASS, showInSettings = false),
         ToolPermissionInfo("weather", "Weather", PermissionCategory.SYSTEM, PermissionLevel.BYPASS, showInSettings = false),
         ToolPermissionInfo("notification", "Notifications", PermissionCategory.SYSTEM, PermissionLevel.BYPASS, showInSettings = false),
         ToolPermissionInfo("device_info", "Device Info", PermissionCategory.SYSTEM, PermissionLevel.BYPASS, showInSettings = false),
+        ToolPermissionInfo("vision", "Vision", PermissionCategory.SYSTEM, PermissionLevel.BYPASS, showInSettings = false),
+        ToolPermissionInfo("nlp", "Language", PermissionCategory.SYSTEM, PermissionLevel.BYPASS, showInSettings = false),
+        ToolPermissionInfo("maps", "Maps", PermissionCategory.SYSTEM, PermissionLevel.BYPASS, showInSettings = false),
         // T330: integrations — opt-in by default. These tools can drive
         // other apps and read on-screen content, so the safer posture is
         // NOT_ALLOWED until the user picks otherwise even when the

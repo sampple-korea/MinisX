@@ -486,6 +486,28 @@ dependencies {
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
 
+    // [T-android-health] Health Connect client for android-health (the Android
+    // counterpart of iOS apple-healthkit). 1.1.0-beta01, not the later
+    // 1.1.0-beta02 / 1.1.0: those declare minAndroidGradlePluginVersion 8.9.1
+    // and fail checkAarMetadata on this module's AGP 8.7.3 (beta01 asks for
+    // 8.6.0 / compileSdk 35). Move to 1.1.0 together with an AGP upgrade.
+    implementation("androidx.health.connect:connect-client:1.1.0-beta01")
+
+    // [T-android-vision] android-vision / android-nlp (counterparts of iOS apple-vision
+    // and apple-nlp). Bundled ML Kit models, so the tools work offline and on
+    // devices without Google Play services; only entity extraction downloads a
+    // small language model on first use. One OCR script per artifact.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
+    implementation("com.google.mlkit:text-recognition-korean:16.0.1")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation("com.google.mlkit:image-labeling:17.0.9")
+    implementation("com.google.mlkit:object-detection:17.0.2")
+    implementation("com.google.mlkit:face-detection:16.1.7")
+    implementation("com.google.mlkit:language-id:17.0.6")
+    implementation("com.google.mlkit:entity-extraction:16.0.0-beta6")
+
     // Testing — JVM unit tests
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
