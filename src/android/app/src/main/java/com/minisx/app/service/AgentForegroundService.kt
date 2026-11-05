@@ -1404,7 +1404,8 @@ class AgentForegroundService : Service() {
             )
         }
         // The expanded notification adds the sub agent count under the status line.
-        val expandedText = if (agentsLine != null) collapsedText + "\n" + agentsLine else collapsedText
+        val planLine = SessionActivityTracker.planLine.value
+        val expandedText = listOfNotNull(collapsedText, planLine, agentsLine).joinToString("\n")
         val clock = notificationClockFor(
             phase = phase,
             runStartWallMs = runStartWallMs,

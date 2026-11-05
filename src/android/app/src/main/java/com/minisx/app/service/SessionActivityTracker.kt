@@ -186,6 +186,18 @@ object SessionActivityTracker {
     private val _liveDetail = MutableStateFlow<LiveDetail?>(null)
     internal val liveDetail: StateFlow<LiveDetail?> = _liveDetail.asStateFlow()
 
+    /** "2/5 · the step being worked on", from the model's `update_plan`; kept for the whole run. */
+    private val _planLine = MutableStateFlow<String?>(null)
+    internal val planLine: StateFlow<String?> = _planLine.asStateFlow()
+
+    internal fun publishPlanStep(plan: com.minisx.app.agent.plan.PlanTool.Plan) {
+        val current = plan.current
+        val line = if (current == null) "${plan.steps.size}/${plan.steps.size}" else "${plan.done + 1}/${plan.steps.size} · ${LiveDetails.squash(current.text, 90)}"
+        if (_planLine.value == line) return
+        _planLine.value = line
+        if (_activeSessions.value.isNotEmpty()) updateService()
+    }
+
     @Volatile
     private var lastReasoningPublishedAtMs = 0L
 
@@ -736,6 +748,7 @@ object SessionActivityTracker {
         _lastReplyExcerpt.value = null
         _isThinking.value = false
         _liveDetail.value = null
+        _planLine.value = null
         _lastToolName.value = null
         _lastToolTitle.value = null
         _lastToolStatus.value = null
@@ -785,7 +798,9 @@ object SessionActivityTracker {
             // duration instead of tracking service uptime. Only set when the
             // session was genuinely active — a defensive setInactive for a
             // never-started session must not fake a completion.
-            if (wasActive) {
+            // A run that ends while the user is looking at a chat has been seen: no
+            // "completed" row to come back to after they leave.
+            if (wasActive && _presentSessions.value.isEmpty()) {
                 _lastTaskFinishedAtMs.value = SystemClock.elapsedRealtime()
             }
             // [T-android-overlay-reply-status-34599] Preserve the last
@@ -855,6 +870,12 @@ object SessionActivityTracker {
         if (sessionId in _presentSessions.value) return
         val wasIdle = !shouldRunService()
         _presentSessions.value = _presentSessions.value + sessionId
+        // Opening a chat after a run finished (from the "completed" notification, or any other way)
+        // is seeing the result: the notification stops offering it, and leaving the chat again does
+        // not bring it back.
+        if (_activeSessions.value.isEmpty() && _lastTaskFinishedAtMs.value != null) {
+            _lastTaskFinishedAtMs.value = null
+        }
         Log.d(TAG, "Presence set: $sessionId (present total: ${_presentSessions.value.size})")
         if (wasIdle) {
             startServiceIfNeeded()

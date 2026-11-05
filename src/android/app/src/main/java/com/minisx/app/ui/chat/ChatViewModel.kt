@@ -2524,6 +2524,19 @@ class ChatViewModel(
             advisorEnabled = advisorEntry() != null,
         )
 
+    /** `update_plan`: validate, remember the current step for the notification, echo the checklist. */
+    private fun executePlanTool(argsJson: String): ToolExecutionResult {
+        val args = runCatching { JSONObject(argsJson) }.getOrElse { JSONObject() }
+        val title = args.optString("tool_title", "").ifBlank { "Update plan" }
+        return when (val parsed = com.minisx.app.agent.plan.PlanTool.parse(args)) {
+            is com.minisx.app.agent.plan.PlanTool.Parsed.Invalid -> ToolExecutionResult("Plan not updated: ${parsed.reason}", false, toolTitle = title)
+            is com.minisx.app.agent.plan.PlanTool.Parsed.Ok -> {
+                com.minisx.app.service.SessionActivityTracker.publishPlanStep(parsed.plan)
+                ToolExecutionResult(com.minisx.app.agent.plan.PlanTool.render(parsed.plan), true, toolTitle = title)
+            }
+        }
+    }
+
     /** The model entry the user chose as advisor, or null while the advisor is off or its model is gone. */
     private fun advisorEntry(): com.minisx.app.data.model.ModelEntry? {
         val id = com.minisx.app.agent.advisor.AdvisorSettings.entryId(context) ?: return null
@@ -14269,6 +14282,7 @@ class ChatViewModel(
                 }
             "memory_get" -> executeMemoryGetTool(argsJson)
             com.minisx.app.agent.advisor.Advisor.TOOL_NAME -> executeAdvisorTool(argsJson)
+            com.minisx.app.agent.plan.PlanTool.TOOL_NAME -> executePlanTool(argsJson)
             // [T-port-user-ask] Card in the chat, then wait for the user.
             // [T-user-ask-exposure-guard] A run that does not offer the tool (the
             // setting is off, a helper / sub agent, a scheduled or other headless
@@ -16582,6 +16596,10 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         return buildString {
             append(base)
             // The advisor guidance only while the tool exists (same rule as the other tool lines).
+            if (!isHelper) {
+                append("\n\n")
+                append(com.minisx.app.agent.plan.PlanTool.PROMPT_SECTION)
+            }
             if (!isHelper && advisorEntry() != null) {
                 append("\n\n")
                 append(com.minisx.app.agent.advisor.Advisor.PROMPT_SECTION)
