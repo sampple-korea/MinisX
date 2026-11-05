@@ -160,13 +160,25 @@ proot's build needs **gawk** (`sudo apt install gawk`); Ubuntu's default `mawk` 
 
 ### Signing
 
-Every APK — debug, release, perf, local or CI — is signed with the same key,
-`src/android/keystore/minis.jks` (alias `minis`, password `minis-android`). This repository
-is private, so the key is committed on purpose. A new build therefore always installs over
-the previous one. **Never regenerate or replace the key**: an app signed with a different
-key cannot be updated, only uninstalled and reinstalled (which wipes its data).
+Release builds are signed with one fixed key so that every new build installs over the previous
+one. The key is **not in this repository** (it is public). It lives in GitHub Actions secrets:
 
-Certificate SHA-256: `D0:F1:26:E7:52:4D:BA:FE:B6:36:E7:DC:B9:E1:6A:69:7B:0F:F9:10:81:33:D7:9F:01:58:0E:98:C9:19:A7:47`
+| Secret | Value |
+|---|---|
+| `MINISX_KEYSTORE_B64` | the keystore file, base64 (`base64 -w0 minisx-release.jks`) |
+| `MINISX_KEYSTORE_PASSWORD` | its password (alias `minisx`; the key password is the same) |
+
+CI decodes it, builds, and then fails unless the APK's certificate matches the SHA-256 below.
+**Never regenerate or replace the key**: an app signed with a different key cannot be updated,
+only uninstalled and reinstalled (which wipes its data). Keep a backup of the keystore somewhere
+private; if it is lost, the next release has to be a fresh install.
+
+Certificate SHA-256: `CB:95:20:BC:64:85:1A:2A:E3:E9:2E:61:AC:99:A5:44:9F:12:CB:5E:46:8C:78:62:2E:E2:59:3C:43:C7:D2:DC`
+
+Local builds without the key (the normal case) are signed with your Android debug key
+(`~/.android/debug.keystore`). They install fine but cannot update, or be updated by, a release
+APK. To build with the release key locally:
+`MINISX_KEYSTORE=/path/minisx-release.jks MINISX_KEYSTORE_PASSWORD=... ./scripts/build_android.sh`.
 
 Version numbers come from `build.gradle.kts` unless you pass `-Pminis.versionCode=N
 -Pminis.versionName=X`; CI does that so each build is newer than the one before.
@@ -184,9 +196,7 @@ Version numbers come from `build.gradle.kts` unless you pass `-Pminis.versionCod
 The job checks the APK's certificate against the fingerprint above and fails if it differs.
 `versionCode` is the run number minus 5 (the app restarted at 0.1 / versionCode 1 as `com.minisx.app`), or the `version_code` input.
 
-The in-app updater looks for new releases of `sampple-korea/MinisX`. The repository is
-private, so the unauthenticated GitHub API cannot see them: the app simply finds no update
-(and never offers the upstream project's APK). Install new builds from the artifact or release.
+The in-app updater looks for new releases of `sampple-korea/MinisX` (the repository is public, so the unauthenticated GitHub API sees them).
 
 ### Tests
 

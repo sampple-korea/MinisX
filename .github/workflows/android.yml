@@ -1,8 +1,9 @@
 name: Android
 
 # Builds the signed APK when started by hand or when a tag like v0.2 is pushed, and publishes it as a
-# GitHub release. Every build is signed with the same key
-# (src/android/keystore/minis.jks), and the job fails if that ever stops being true.
+# GitHub release. Every build is signed with the same release key, which lives in the repository's
+# Actions secrets (MINISX_KEYSTORE_B64, MINISX_KEYSTORE_PASSWORD), and the job fails if the APK is
+# ever signed with anything else.
 # Build only: there is deliberately no test/verification job (it cost CI minutes).
 
 # No push-to-main trigger on purpose: builds are started by hand (here, or from the public
@@ -30,10 +31,10 @@ permissions:
   contents: write # attach the APK to a release
 
 env:
-  # SHA-256 of the signing certificate in src/android/keystore/minis.jks.
+  # SHA-256 of the release signing certificate (public information).
   # If an APK is ever signed with anything else, the build stops here instead of
   # producing an APK that cannot be installed over the previous one.
-  EXPECTED_CERT_SHA256: d0f126e7524dbafeb636e7dcb9e16a697b0ff9108133d79f01580e98c919a747
+  EXPECTED_CERT_SHA256: cb9520bc64851a2ae3e92e61ac99a5449f12cb5e468c78622ee2593c43c7d2dc
   BUILD_TOOLS: 36.0.0
   NDK_VERSION: 28.0.12433566
   CMAKE_VERSION: 3.22.1
@@ -111,8 +112,21 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "versionCode=$code versionName=$name"
 
+      - name: Release signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.MINISX_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Secret MINISX_KEYSTORE_B64 is not set (see BUILDING.md, Signing)"
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/minisx-release.jks"
+          echo "MINISX_KEYSTORE=$RUNNER_TEMP/minisx-release.jks" >> "$GITHUB_ENV"
+
       - name: Build the release APK
         working-directory: src/android
+        env:
+          MINISX_KEYSTORE_PASSWORD: ${{ secrets.MINISX_KEYSTORE_PASSWORD }}
         run: |
           ./gradlew --no-daemon :app:assembleGithubRelease \
             -Pminis.versionCode=${{ steps.version.outputs.code }} \

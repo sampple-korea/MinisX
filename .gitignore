@@ -26,8 +26,7 @@ render.experimental.xml
 # Keystore files
 *.jks
 *.keystore
-# The fixed signing key of this private repository (see build.gradle.kts, signingConfigs).
-!src/android/keystore/minis.jks
+# The release key lives in GitHub Actions secrets, never in the tree (see BUILDING.md, Signing).
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json

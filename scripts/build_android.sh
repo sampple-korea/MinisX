@@ -3,16 +3,16 @@
 # One-shot local build of the Android app: native dependencies (only the ones that are
 # missing), then Gradle. Same steps as .github/workflows/android.yml.
 #
-#   ./scripts/build_android.sh              signed release APK  (default)
-#   ./scripts/build_android.sh debug        signed debug APK
+#   ./scripts/build_android.sh              release APK  (default)
+#   ./scripts/build_android.sh debug        debug APK
 #   ./scripts/build_android.sh release --clean-native    rebuild proot / rclone too
 #   any other argument goes to Gradle, e.g. -Pminis.versionCode=2 -Pminis.versionName=0.2
 #
 # Needs: JDK 17+, Android SDK (ANDROID_HOME), NDK r28+ (ANDROID_NDK_HOME), Go 1.25+,
 # gomobile, gawk, curl. See BUILDING.md.
 #
-# Every APK is signed with src/android/keystore/minis.jks, so a new build installs over
-# the previous one. The script prints the certificate fingerprint so you can check that.
+# Signing: with MINISX_KEYSTORE / MINISX_KEYSTORE_PASSWORD set (see BUILDING.md) the APK gets the
+# release key, otherwise your Android debug key. The script prints the certificate fingerprint.
 
 set -euo pipefail
 

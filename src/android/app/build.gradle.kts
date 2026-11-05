@@ -87,24 +87,29 @@ android {
         }
     }
 
-    // One fixed signing key for every build of every type, on every machine and in CI,
-    // so a new build always installs over the previous one. This is a private repository,
-    // so the key is committed (src/android/keystore/minis.jks) with fixed passwords; the
-    // MINIS_* environment variables replace them if the key is ever moved out of the repo.
-    // Never regenerate the key: a different key cannot update an installed app.
-    signingConfigs {
-        create("minis") {
-            storeFile = file(System.getenv("MINIS_KEYSTORE") ?: "${rootProject.projectDir}/keystore/minis.jks")
-            storePassword = System.getenv("MINIS_KEYSTORE_PASSWORD") ?: "minis-android"
-            keyAlias = System.getenv("MINIS_KEY_ALIAS") ?: "minis"
-            keyPassword = System.getenv("MINIS_KEY_PASSWORD") ?: "minis-android"
+    // The release key is NOT in the repository (it is public). CI decodes it from GitHub Actions
+    // secrets and passes it in MINISX_KEYSTORE (path) + MINISX_KEYSTORE_PASSWORD (+ optional
+    // MINISX_KEY_ALIAS, default "minisx", and MINISX_KEY_PASSWORD, default = store password).
+    // Without them, builds on your machine are signed with the Android debug key
+    // (~/.android/debug.keystore) so they still install - but they cannot update an APK signed
+    // with the release key, and the other way round. Never regenerate the release key.
+    val releaseStore = System.getenv("MINISX_KEYSTORE")?.takeIf { it.isNotBlank() }?.let { file(it) }
+    if (releaseStore != null) {
+        signingConfigs {
+            create("minisx") {
+                storeFile = releaseStore
+                storePassword = System.getenv("MINISX_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("MINISX_KEY_ALIAS") ?: "minisx"
+                keyPassword = System.getenv("MINISX_KEY_PASSWORD") ?: System.getenv("MINISX_KEYSTORE_PASSWORD")
+            }
         }
     }
+    val appSigning = signingConfigs.findByName("minisx") ?: signingConfigs.getByName("debug")
 
     buildTypes {
         getByName("debug") {
             buildConfigField("boolean", "DEV_TOOLS", "true")
-            signingConfig = signingConfigs.getByName("minis")
+            signingConfig = appSigning
         }
         // `perf`: the debug variant minus android:debuggable. ART refuses to
         // AOT-compile a debuggable app (`cmd package compile -m speed`
@@ -121,7 +126,7 @@ android {
             isProfileable = true
             matchingFallbacks += listOf("debug")
             buildConfigField("boolean", "DEV_TOOLS", "true")
-            signingConfig = signingConfigs.getByName("minis")
+            signingConfig = appSigning
         }
         release {
             // [OpenMinis#363] Produce native-debug-symbols.zip alongside the
@@ -143,7 +148,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("minis")
+            signingConfig = appSigning
         }
     }
 

@@ -122,13 +122,13 @@ cd src/android
 
 - 위 과정을 한 번에: `./scripts/build_android.sh` (릴리스 APK) 또는 `./scripts/build_android.sh debug`. 없는 네이티브
   산출물만 빌드하고, 끝에 서명 인증서 지문을 출력합니다. proot 빌드에는 `gawk`가 필요합니다.
-- **서명**: 모든 빌드(debug / release, 로컬 / CI)가 같은 키 `src/android/keystore/minis.jks` 로 서명됩니다. 개인용
-  프라이빗 저장소라 키를 커밋했고, 그래서 새 빌드가 항상 이전 버전 위에 덮어 설치됩니다. **이 키를 바꾸거나 다시
-  만들지 마세요.** 다른 키로 서명하면 업데이트가 안 되고 지웠다 다시 깔아야 합니다(데이터 삭제).
-- **CI**: `main`에 푸시하면 GitHub Actions가 서명된 릴리스 APK를 만들어 아티팩트(`minis-apk`)로 올리고,
-  `v0.2` 같은 태그를 푸시하면(또는 Actions에서 `release_tag` 입력으로 수동 실행하면) 릴리스에 APK를 붙입니다. 인증서가 위 키와 다르면 빌드가 실패합니다.
-- 앱 내 업데이트 확인은 이 저장소(`sampple-korea/MinisX`)의 릴리스를 봅니다. 프라이빗이라 앱이 새 버전을 찾지는
-  못하므로 새 APK는 아티팩트/릴리스에서 직접 설치하세요.
+- **서명**: 릴리스 키는 저장소에 없고 GitHub Actions 시크릿(`MINISX_KEYSTORE_B64`, `MINISX_KEYSTORE_PASSWORD`)에만
+  있습니다. CI가 그 키로 서명하고, 인증서 지문이 `BUILDING.md`의 값과 다르면 빌드를 실패시킵니다. 로컬 빌드는 본인의
+  디버그 키로 서명되므로 릴리스 APK와는 서로 덮어 설치되지 않습니다. 릴리스 키를 바꾸거나 잃어버리면 업데이트가 안 되고
+  지웠다 다시 깔아야 합니다(데이터 삭제). 자세한 내용은 `BUILDING.md`의 Signing.
+- **CI**: Actions에서 "Android"를 수동 실행하거나 `v0.2` 같은 태그를 푸시하면 서명된 릴리스 APK를 만들어 아티팩트
+  (`minis-apk`)로 올리고, 태그/`release_tag`가 있으면 릴리스에 APK를 붙입니다.
+- 앱 내 업데이트 확인은 이 저장소(`sampple-korea/MinisX`)의 릴리스를 봅니다.
 - 빌드 변형(flavor)은 `github`(기본)과 `store` 두 가지입니다.
 - 빠른 컴파일 확인은 `./gradlew :app:compileGithubDebugKotlin` 입니다.
 - 단위 테스트는 `./gradlew :app:testGithubDebugUnitTest --tests "com.minisx.app.config.*"` 처럼 패키지 단위로
