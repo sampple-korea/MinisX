@@ -13,6 +13,8 @@ data class UsageLimit(
     val remainingPercent: Double,
     /** Epoch ms, or null when the vendor did not report one. */
     val resetsAt: Long?,
+    /** Just the window ("5h", "7d"): what the widget shows in its rows, where [label] would not fit. */
+    val window: String = label,
 )
 
 /** What a usage widget shows. Only quota figures: no credentials, prompts or account names. */
@@ -57,7 +59,7 @@ data class UsageWidgetModel(
                     val remaining = BigDecimal(100).subtract(used).toDouble().coerceIn(0.0, 100.0)
                     val name = w.calendarPeriod?.name ?: w.id
                     val label = pool.vendorLabel?.takeIf { it.isNotBlank() }?.let { "$it · $name" } ?: name
-                    rows += UsageLimit(label.take(100), remaining, w.resetsAt)
+                    rows += UsageLimit(label.take(100), remaining, w.resetsAt, name.take(24))
                 }
             }
             return rows.sortedBy { it.remainingPercent }.take(MAX_LIMITS)
