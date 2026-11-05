@@ -655,6 +655,8 @@ fun ChatScreen(
     val selectedGroupName by viewModel.selectedGroupName.collectAsState()
     val providerName by viewModel.providerName.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    // [T-mc-live] The call panel (a dialog) for the live call this chat started.
+    com.openminis.app.ui.chat.voice.LiveVoiceHost(sessionId)
 
     // [T-android-voice-panel] Shared 3-stage RECORD_AUDIO permission flow
     // (system dialog → post-DENY poll → in-app settings gate). Extracted from
@@ -7852,6 +7854,14 @@ fun ChatScreen(
                                 onClick = { triggerVoiceInput() },
                                 onLongClick = { showLangSheet = true },
                                 isVoiceActive = com.openminis.app.ui.chat.voice.VoiceModePrefs.isVoiceActive,
+                            )
+                            // [T-mc-live] Spoken conversation with the model (OpenAI Realtime).
+                            Spacer(modifier = Modifier.width(6.dp))
+                            com.openminis.app.ui.chat.voice.LiveVoiceButton(
+                                sessionId = sessionId,
+                                viewModel = viewModel,
+                                providerRepository = providerRepository,
+                                ensureMicPermission = ensureMicPermissionFlow,
                             )
                         }
 

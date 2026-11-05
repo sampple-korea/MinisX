@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- [T-mc-live] Realtime voice conversation (idea from Mobile Codex's Codex Live). -->
+    <string name="live_button_desc">Live voice conversation</string>
+    <string name="live_voice_menu_title">Voice for the next call</string>
+    <string name="live_connecting">Connecting…</string>
+    <string name="live_listening">Listening</string>
+    <string name="live_working">Working on it…</string>
+    <string name="live_muted">Muted</string>
+    <string name="live_mute">Mute microphone</string>
+    <string name="live_unmute">Unmute microphone</string>
+    <string name="live_end">End</string>
+    <string name="live_minimize">Minimize</string>
+    <string name="live_channel_name">Live voice</string>
+    <string name="live_notification_title">Minis Live</string>
+    <string name="live_notification_text">Voice conversation in progress</string>
+    <string name="live_error_no_provider">Live voice needs an OpenAI provider with an API key (Settings → Providers). A ChatGPT sign-in does not work for it.</string>
+</resources>

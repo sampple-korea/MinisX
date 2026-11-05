@@ -25,6 +25,8 @@
          the agent service (moved to mediaPlayback over the 6h/24h cap), a
          backup is finite, and the service handles onTimeout by stopping. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- [T-mc-live] The Live voice call keeps the microphone open while Minis is in the background. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <!-- T50: PARTIAL_WAKE_LOCK held by AgentForegroundService while sessions
          are streaming so Doze + OEM CPU throttling don't stall long shell
          tools after screen-off. -->
@@ -606,6 +608,12 @@
         <!-- T-android-fgs-timeout-crash: type=mediaPlayback to escape the
              dataSync 6h cap. See FOREGROUND_SERVICE_MEDIA_PLAYBACK
              permission comment above. -->
+        <!-- [T-mc-live] Ongoing Live voice call: microphone + audio playback while off-screen. -->
+        <service
+            android:name=".live.LiveVoiceService"
+            android:exported="false"
+            android:foregroundServiceType="microphone|mediaPlayback" />
+
         <service
             android:name=".service.AgentForegroundService"
             android:exported="false"
