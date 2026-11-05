@@ -176,7 +176,7 @@ private fun TaskCardHeadRow(
  * The height a line of this style really takes with CJK in it, on this device
  * and font. Measured on a Pixel 4a: with the same fontSize and lineHeight, a
  * line holding CJK (a fallback font) came out taller than a Latin one, so the
- * sub-agent card ("完成 …") was 6 px taller than a scheduled card titled
+ * sub-agent card ("Done …") was 6 px taller than a scheduled card titled
  * "t2-sub". Using this as each row's MINIMUM height makes the card height the
  * same whatever the text, without clipping anything (a fixed height clipped
  * the top of CJK glyphs).

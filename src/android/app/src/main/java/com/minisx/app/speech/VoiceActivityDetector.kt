@@ -326,7 +326,7 @@ class VoiceActivityDetector(
      * Silero only reports speech once it is CONFIRMED, so the first syllables
      * — the run-up it needed to make that decision — are already spoken by the
      * time `onVoiceStart` fires. Recording [openSegment] from that moment
-     * therefore loses the head of the utterance: "看看附近的天气情况" reached
+     * therefore loses the head of the utterance: "근처 날씨 좀 알려줘" reached
      * the recogniser without its first two characters, which is the reported
      * symptom. The existing [backfill] ring solves the same problem for the
      * VAD itself but holds AGC-processed FloatArrays; this keeps the raw PCM16

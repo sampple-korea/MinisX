@@ -141,7 +141,7 @@ fun ModelGroupsScreen(
                 providerRepository.reorderAgentLoopGroups(newOrder)
             }
             // [T-android-modelgroup-reorder] Third zone: the user's Model
-            // Groups themselves ("日常/编程/翻译"…). NOTE the prefix check
+            // Groups themselves ("Daily/Coding/Translation"…). NOTE the prefix check
             // order is safe: "agent_group:" does not start with "group:", so
             // the zones cannot cross-match.
             fromKey.startsWith("group:") && toKey.startsWith("group:") -> {

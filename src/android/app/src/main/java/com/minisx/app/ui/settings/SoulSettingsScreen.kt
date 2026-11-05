@@ -732,13 +732,13 @@ private fun LangButtonLabel(label: String) {
 private fun LangPicker(lang: String, onLangChange: (String) -> Unit) {
     val options = listOf(
         "auto" to stringResource(R.string.soul_lang_auto),
-        "zh" to stringResource(R.string.soul_lang_zh),
+        "ko" to stringResource(R.string.soul_lang_ko),
         "en" to stringResource(R.string.soul_lang_en),
     )
     val current = options.firstOrNull { it.first == lang } ?: options.first()
     var expanded by remember { mutableStateOf(false) }
     // Render the picker as a simple labeled row of buttons. Three options
-    // (auto / Chinese / English) fit comfortably without a dropdown — avoids
+    // (auto / Korean / English) fit comfortably without a dropdown — avoids
     // depending on material3 ExposedDropdownMenu, which has a fragile
     // alignment story across compose versions.
     Column(modifier = Modifier.fillMaxWidth()) {

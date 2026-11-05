@@ -117,7 +117,7 @@ fun WebPreviewFullscreenScreen(
                 // effect's enter. In light theme this could snapshot the
                 // sheet's `true`, then write it back on dismiss, leaving DARK
                 // status-bar icons over the app's dark chrome — the reported
-                // "顶部状态条变成白色，系统状态条看不清楚".
+                // "the top status bar turns white and the system status bar is hard to read".
                 controller.isAppearanceLightStatusBars = !darkTheme
                 controller.isAppearanceLightNavigationBars = !darkTheme
             }

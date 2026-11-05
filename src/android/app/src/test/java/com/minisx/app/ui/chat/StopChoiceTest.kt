@@ -221,7 +221,7 @@ class StopChoiceTest {
 
     @Test fun `strings exist in en, zh-CN and zh-TW`() {
         val base = listOf("src/main/res", "app/src/main/res").map { java.io.File(it) }.first { it.exists() }
-        for (dir in listOf("values", "values-zh", "values-zh-rTW")) {
+        for (dir in listOf("values")) {
             val xml = java.io.File(base, "$dir/strings.xml").readText()
             for (key in listOf(
                 "string name=\"chat_stop_choice_title\"", "string name=\"chat_stop_choice_current_tools\"",

@@ -237,7 +237,7 @@ class RootfsManager private constructor(private val context: Context) {
      * and its whole subtree counted again (once per link pointing at it), and a
      * link to a file was counted as a second copy of the target. That is the
      * same defect 754e65eac fixed in `SessionStorage.directorySize` and
-     * `DebugRPCHandler.dirSize`, and missing it here is why the "Rootfs 管理"
+     * `DebugRPCHandler.dirSize`, and missing it here is why the "Rootfs management"
      * screen still read 40.25 GB after the Storage screen had been corrected —
      * two screens sizing the same directory and disagreeing by an order of
      * magnitude.

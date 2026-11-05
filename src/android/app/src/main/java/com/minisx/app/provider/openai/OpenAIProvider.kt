@@ -1873,7 +1873,7 @@ class OpenAIProvider private constructor(
             // Downstream, ChatViewModel.runAgentLoop only ever assigns
             // turnFinishReason from a Finished chunk, so it stayed null and the
             // turn was reported as "stream closed without a finish reason" —
-            // the red "连接中断，此回复可能不完整" banner on a reply that was in
+            // the red "connection interrupted, this reply may be incomplete" banner on a reply that was in
             // fact complete. It looked intermittent because it depends on the
             // relay: those that do append [DONE] worked, the rest did not, which
             // is why the same model on the same account failed only sometimes,

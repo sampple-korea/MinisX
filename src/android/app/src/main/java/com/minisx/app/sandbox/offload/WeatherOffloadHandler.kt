@@ -224,7 +224,7 @@ class WeatherOffloadHandler(private val context: Context) : NativeOffloadHandler
         if (inChina) {
             obj.put(
                 "hint",
-                "api.open-meteo.com is hosted in Europe and may time out from Chinese mobile networks. Ask the user to retry on Wi-Fi, or use a CN-resident weather service (e.g. QWeather / 和风天气) when available.",
+                "api.open-meteo.com is hosted in Europe and may time out from Chinese mobile networks. Ask the user to retry on Wi-Fi, or use a CN-resident weather service (e.g. QWeather) when available.",
             )
         }
         return OffloadOutput.formatBody(obj.toString(), args) + "\n"

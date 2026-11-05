@@ -310,7 +310,7 @@ object CodexModelsApi {
         val id = obj.optString("slug").ifBlank { obj.optString("id") }.trim()
         if (id.isEmpty()) return null
 
-        // GH#319: "隐藏/不可见的模型条目保持隐藏". The backend marks internal /
+        // GH#319: "hidden / invisible model entries stay hidden". The backend marks internal /
         // withdrawn SKUs here; surfacing one puts a model in the picker that
         // errors on first send.
         //
@@ -425,8 +425,8 @@ object CodexModelsApi {
      * Fill gaps from models.dev WITHOUT letting it overwrite what the
      * authoritative route just told us.
      *
-     * This is GH#319 requirement 3 ("不要用过期的 enrichment 数据覆盖来自权威端点
-     * 的新鲜元数据") and it cannot be met by calling [ModelsDevApi.enrichModels]
+     * This is GH#319 requirement 3 ("do not overwrite fresh metadata from the authoritative
+     * endpoint with stale enrichment data") and it cannot be met by calling [ModelsDevApi.enrichModels]
      * directly: `applyDevData` resolves every field as `devModel.x ?: model.x`,
      * i.e. models.dev WINS wherever it has an opinion. That is the right rule
      * for a `/v1/models` response, which carries almost no metadata — but here

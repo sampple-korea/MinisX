@@ -1457,11 +1457,11 @@ internal object ConfigBuiltins {
                 // The description IS the API doc — `minis-config topic-help
                 // soul` prints it verbatim. It leads with every word a user
                 // might use for this (icon / avatar / persona image /
-                // 角色形象 / 头像) because they are all this ONE field, and a
+                // 캐릭터 이미지 / 프로필 사진) because they are all this ONE field, and a
                 // model that doesn't match the wording will otherwise report
                 // the capability as missing.
                 description = "The Soul's identity icon — also called its avatar, its persona image, or its " +
-                    "character image (中文：角色形象 / 图标 / 头像). All of those refer to THIS one setting; " +
+                    "character image (한국어: 캐릭터 이미지 / 아이콘 / 프로필 사진). All of those refer to THIS one setting; " +
                     "there is no separate avatar field. Shown beside the assistant name in the chat header " +
                     "and on the Soul settings card.\n" +
                     "\n" +
@@ -1550,13 +1550,13 @@ internal object ConfigBuiltins {
             ClosureField(
                 path = "soul.lang",
                 displayName = "Soul language",
-                description = "Preferred response language: auto / zh / en. Older SOUL.md files missing the field are upgraded on first write.",
-                valueSchema = ConfigSchema.StrEnum(listOf("auto", "zh", "en")),
+                description = "Preferred response language: auto / ko / en. Older SOUL.md files missing the field are upgraded on first write.",
+                valueSchema = ConfigSchema.StrEnum(listOf("auto", "ko", "en")),
                 risk = ConfigRisk.SENSITIVE,
                 revertable = true,
                 // Label = the iOS key for the same field, so both read alike.
                 readable = ConfigReadable(
-                    ConfigValueFormatter.EnumLabels(mapOf("auto" to "Automatic", "zh" to "Chinese", "en" to "English")),
+                    ConfigValueFormatter.EnumLabels(mapOf("auto" to "Automatic", "ko" to "Korean", "en" to "English")),
                     label = "Soul language preference",
                 ),
                 reader = {

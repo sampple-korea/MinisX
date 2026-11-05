@@ -13,7 +13,7 @@
     <!-- T207: FullscreenImageViewer share / copy temp files. T197 wrote them
          to cacheDir root, which isn't covered by any declared root, so
          FileProvider.getUriForFile threw IllegalArgumentException and the
-         user saw "分享失败" toasts instead of the share sheet. -->
+         user saw "share failed" toasts instead of the share sheet. -->
     <cache-path name="share" path="share/" />
     <!-- PRoot rootfs — expose so inline video/audio cards can hand the host
          file to the system player via ACTION_VIEW. -->

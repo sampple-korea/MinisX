@@ -862,7 +862,7 @@ fun SessionListScreen(
             var idx = 0
             leadingDateGroups.forEach { (_, rows) -> idx += 1 + rows.size }
             if (folderBlocks.isNotEmpty()) {
-                idx += 1 // the "分组" section header item
+                idx += 1 // the "Group" section header item
                 folderBlocks.forEach { b ->
                     put(b.folder.id, idx)
                     // [T-folder-pages] + the "Show N more" row while members are hidden.
@@ -2181,7 +2181,7 @@ private fun SessionItemContent(
      * A dangling folder_id renders as ungrouped (see partitionByFolder), so
      * deciding the wording from the raw id alone made the row and its menu
      * disagree: the session sat in the date buckets while its menu offered
-     * "更换分组". The caller resolves membership the same way the list does.
+     * "Change group". The caller resolves membership the same way the list does.
      */
     isFiled: Boolean,
     isRegenerating: Boolean = false,

@@ -76,7 +76,7 @@ class BackgroundTaskNotifier(
                 // [T-android-subagent-no-system-notification] A sub agent run
                 // is not a task the user is waiting on — it is one step inside
                 // the parent's turn, and its result is already delivered into
-                // the parent chat as an "代理任务·摘要" card. Posting a system
+                // the parent chat as an "agent task · summary" card. Posting a system
                 // notification for it interrupts the user to tell them about
                 // work they did not start, and a parent that delegates several
                 // children fires one per child.

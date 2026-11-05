@@ -311,7 +311,7 @@
     <string name="soul_field_style">Style</string>
     <string name="soul_field_lang">Language</string>
     <string name="soul_lang_auto">Auto</string>
-    <string name="soul_lang_zh">中文</string>
+    <string name="soul_lang_ko">한국어</string>
     <string name="soul_lang_en">English</string>
     <string name="soul_body_placeholder">Describe how the Agent should sound, think, and behave…</string>
     <string name="soul_length_indicator">%1$d characters</string>

@@ -108,7 +108,7 @@ internal fun ChatExportHeaderView(title: String, subtitle: List<String>, widthDp
 /**
  * "model · date" on one line when it fits; otherwise one part per line, so a narrow
  * page never splits the date itself. Chosen by measuring, not by gluing characters:
- * joiners inside a CJK date make a PDF's text layer map 月 / 日 to look-alike
+ * joiners inside a CJK date make a PDF's text layer map month / day to look-alike
  * radicals, breaking copy and search (iOS 9c23a4003).
  */
 @Composable

@@ -109,10 +109,7 @@ class ModelRefusalTest {
         val res = listOf("src/main/res", "app/src/main/res", "src/android/app/src/main/res")
             .map { java.io.File(it) }.first { it.exists() }
         val dirs = listOf(
-            "values", "values-de", "values-es", "values-fil", "values-fr", "values-hr", "values-in", "values-ja",
-            "values-ko", "values-ms", "values-pl", "values-pt-rBR", "values-ro", "values-ru", "values-th",
-            "values-tr", "values-zh", "values-zh-rTW",
-        )
+            "values", "values-ko", )
         for (d in dirs) {
             assertTrue(d, java.io.File(res, "$d/strings.xml").readText().contains("name=\"chat_error_model_refused\""))
         }

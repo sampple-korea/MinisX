@@ -71,7 +71,7 @@ class RestoreSourceEntriesTest {
     @Test
     fun `its strings are gone from every locale`() {
         val dead = listOf("backup_choose_shared", "backup_shared_title", "backup_shared_empty")
-        for (locale in listOf("values", "values-zh", "values-es")) {
+        for (locale in listOf("values")) {
             val f = File("src/main/res/$locale/strings.xml")
             assertTrue("missing $locale/strings.xml", f.isFile)
             val xml = f.readText()

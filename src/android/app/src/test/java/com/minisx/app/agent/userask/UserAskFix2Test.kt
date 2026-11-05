@@ -115,7 +115,7 @@ class UserAskFix2Test {
             assertTrue(f, ProductionSources.read(f).contains("displayToolTitle(block)"))
         }
         val res = ProductionSources.mainRoot()!!.parentFile.parentFile.parentFile.parentFile.resolve("res")
-        for (l in listOf("values-zh", "values-ja", "values-zh-rTW")) {
+        for (l in listOf("values-ko")) {
             val xml = res.resolve("$l/strings.xml").readText()
             val v = Regex("""<string name="user_ask_question_for_you">([^<]*)</string>""").find(xml)!!.groupValues[1]
             assertFalse("$l is translated", v == "Question for you")

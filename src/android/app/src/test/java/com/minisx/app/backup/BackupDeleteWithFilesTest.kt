@@ -389,7 +389,7 @@ class BackupDeleteWithFilesTest {
             "backup_delete_files_failed_body",
             "backup_delete_files_dest_missing",
         )
-        for (locale in listOf("values", "values-zh", "values-zh-rTW")) {
+        for (locale in listOf("values")) {
             val xml = src("src/main/res/$locale/strings.xml")
             for (k in keys) {
                 assertTrue("$k missing from $locale", xml.contains("\"$k\""))

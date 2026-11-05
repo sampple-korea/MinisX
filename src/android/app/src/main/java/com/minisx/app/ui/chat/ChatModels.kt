@@ -320,7 +320,7 @@ data class QueuedPrompt(
  * [T-p2-gentle-injection] Origin of a queued prompt.
  *
  * A USER follow-up typed while the agent is busy is an interruption by
- * intent ("怎么样了" — stop the plan, answer me), so the agent loop injects
+ * intent ("how is it going" — stop the plan, answer me), so the agent loop injects
  * it the moment the current tool call closes (T-android-queued-message-
  * interrupt-on-toolclose). A PROGRAMMATIC prompt — a scheduled job firing,
  * a background helper reporting back, an RPC/CLI send — carries no such

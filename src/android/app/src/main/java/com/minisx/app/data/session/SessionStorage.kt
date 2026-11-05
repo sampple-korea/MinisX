@@ -232,7 +232,7 @@ class SessionStorage(private val filesDir: File) {
          *     apk layouts all create them, and the inflation multiplies rather
          *     than adds.
          *
-         * A user reported "Shell 容器 43.89 GB" while Android's own app-storage
+         * A user reported "Shell container 43.89 GB" while Android's own app-storage
          * page said 9.60 GB of data for the same install. Android counts real
          * blocks; we counted symlink targets repeatedly. That is the whole gap
          * — nothing was double-counted from bind mounts, which a host-side walk

@@ -123,6 +123,6 @@ class BackgroundTurnOutcomeTest {
         val res = File(ProductionSources.mainRoot(), "../../../../res").canonicalFile
         val en = File(res, "values/strings_bg_outcome.xml").readText()
         assertTrue(en.contains("<string name=\"notif_task_paused_body\">Task paused. Open the session to continue.</string>"))
-        for (d in listOf("values-zh", "values-zh-rTW")) assertTrue(d, File(res, "$d/strings_bg_outcome.xml").exists())
+        for (d in listOf("values-ko")) assertTrue(d, File(res, "$d/strings_bg_outcome.xml").exists())
     }
 }

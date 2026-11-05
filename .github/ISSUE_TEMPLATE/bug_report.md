@@ -1,45 +1,45 @@
 ---
-name: 🐛 Bug Report
-about: Report a bug or unexpected behavior in Minis
+name: 🐛 버그 제보
+about: MinisX의 버그나 예상과 다른 동작을 제보합니다 (개인 취미 프로젝트라 답변이나 수정은 보장하지 않습니다)
 title: "[Bug] "
 labels: ["bug", "triage"]
 ---
 
-## 📝 Problem Summary / 问题描述
+## 📝 문제 설명
 
-<!-- A clear and concise description of the bug. 简要描述遇到的问题。-->
+<!-- 겪은 문제를 간단명료하게 적어 주세요. -->
 
 
-## 📱 Basic Information / 基本信息
+## 📱 기본 정보
 
-| Field | Value |
-|-------|-------|
-| Platform / 平台 | Android |
-| OS Version / 系统版本 | <!-- e.g. Android 15 --> |
-| Minis Version / 应用版本 | <!-- e.g. 1.2.3 (build 456) --> |
-| Device Model / 设备型号 | <!-- e.g. iPhone 16 Pro / Pixel 9 --> |
+| 항목 | 값 |
+|------|----|
+| 플랫폼 | Android |
+| OS 버전 | <!-- 예: Android 15 --> |
+| MinisX 버전 | <!-- 예: 0.6 (build 6) --> |
+| 기기 모델 | <!-- 예: Pixel 9 --> |
 
-## 🔁 Steps to Reproduce / 重现步骤
+## 🔁 재현 방법
 
-<!-- Optional. 可选。-->
+<!-- 선택 사항 -->
 
 1. 
 2. 
 3. 
 
-## ❌ Error Details / 错误信息
+## ❌ 오류 내용
 
-<!-- Optional. Paste error messages or attach screenshots. 可选，粘贴错误信息或附上截图。-->
+<!-- 선택 사항. 오류 메시지를 붙여 넣거나 스크린샷을 첨부해 주세요. -->
 
 ```
-paste error here
+여기에 오류를 붙여 넣으세요
 ```
 
-## ✅ Expected Behavior / 预期结果
+## ✅ 기대한 동작
 
-<!-- Optional. What did you expect to happen? 可选，你期望发生什么？-->
+<!-- 선택 사항. 어떻게 동작하길 기대했나요? -->
 
 
-## 🗂️ Additional Information / 其他辅助信息
+## 🗂️ 추가 정보
 
-<!-- Optional. Crash logs, diagnostic reports, screen recordings, etc. 可选，闪退日志、诊断报告、录屏等。-->
+<!-- 선택 사항. 크래시 로그, 진단 보고서, 화면 녹화 등. -->

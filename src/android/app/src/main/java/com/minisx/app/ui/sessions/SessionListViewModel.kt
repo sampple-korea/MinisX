@@ -523,7 +523,7 @@ class SessionListViewModel(
     /**
      * True only for a session filed into a group that EXISTS locally. A dangling
      * folder_id is displayed as ungrouped, so treating it as filed would offer
-     * "暂不分组" for a group the user cannot see — and label the action "Change" when
+     * "Not grouped for now" for a group the user cannot see — and label the action "Change" when
      * there is nothing to change from. Mirrors partitionByFolder's presence test.
      */
     private fun isFiled(session: ChatSessionEntity?): Boolean {
@@ -960,7 +960,7 @@ class SessionListViewModel(
      * made under one language is still recognized after the user switches.
      */
     private fun allCopySuffixWords(): List<String> =
-        listOf(java.util.Locale.ENGLISH, java.util.Locale.SIMPLIFIED_CHINESE, java.util.Locale.TRADITIONAL_CHINESE).map { loc ->
+        listOf(java.util.Locale.ENGLISH, java.util.Locale.KOREAN).map { loc ->
             val cfg = android.content.res.Configuration(context.resources.configuration).apply { setLocale(loc) }
             context.createConfigurationContext(cfg).getString(R.string.session_duplicate_suffix)
         }

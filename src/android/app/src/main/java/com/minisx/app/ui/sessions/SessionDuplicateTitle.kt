@@ -6,7 +6,7 @@ package com.minisx.app.ui.sessions
  *
  * - Format: "<base> (<word>)" for the first copy, "<base> (<word> N)" for
  *   N >= 2, with ASCII parentheses and a space before them. The word is
- *   localized ("Copy", "副本").
+ *   localized ("Copy", "사본").
  * - Base: the source title minus ONE trailing copy suffix, so copying
  *   "Foo (Copy 2)" never gives "Foo (Copy 2) (Copy)". A trailing suffix is
  *   "(" or a full-width "(", a known word in any shipped language

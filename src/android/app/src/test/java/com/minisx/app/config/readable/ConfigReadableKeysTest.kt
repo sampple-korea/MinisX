@@ -83,16 +83,12 @@ class ConfigReadableKeysTest {
     }
 
     @Test
-    fun `every mapped key has its English text and zh + zh-TW translations`() {
+    fun `every mapped key has its English text`() {
         val base = strings("values")
-        val zh = strings("values-zh")
-        val tw = strings("values-zh-rTW")
         val problems = ArrayList<String>()
         for ((key, id) in ConfigReadableStrings.ids) {
             val name = resourceName(id)
             if (name !in base) problems.add("$name ($key) not in values")
-            if (name !in zh) problems.add("$name ($key) not in values-zh")
-            if (name !in tw) problems.add("$name ($key) not in values-zh-rTW")
             // The English resource is the key with Android placeholders.
             val expected = ReadableCore.placeholderCount(key)
             base[name]?.let { v -> if (ReadableCore.placeholderCount(unescape(v)) != expected) problems.add("$name English placeholders") }

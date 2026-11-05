@@ -34,24 +34,14 @@ internal fun titleLanguageDirective(locale: Locale = Locale.getDefault()): Strin
             .append("\" (").append(human).append("). Generate the title primarily in this language. ")
         append("If the conversation content is in a different language, you may keep proper nouns ")
         append("from it, but the overall title language should match the interface language.\n")
-        append("用户的 App 界面语言是 \"").append(code).append("\"（").append(human).append("）。")
-        append("请优先使用该语言生成标题。如果对话内容是其他语言，可保留专有名词，但标题整体语言应与界面语言一致。")
+        append("사용자의 앱 인터페이스 언어는 \"").append(code).append("\"(").append(human).append(")입니다. ")
+        append("이 언어로 제목을 만드는 것을 우선하세요. 대화 내용이 다른 언어라면 고유명사는 그대로 두어도 되지만, 제목 전체의 언어는 인터페이스 언어와 같아야 합니다.")
     }
 }
 
 private fun resolveTitleLanguageCode(locale: Locale): Pair<String, String> {
     return try {
         val lang = locale.language.takeIf { it.isNotEmpty() } ?: return "en" to "English"
-        // Distinguish Simplified vs Traditional Chinese — both render as "zh"
-        // bare, but title style differs meaningfully between them.
-        if (lang == "zh") {
-            val script = locale.script
-            val region = locale.country
-            val isTraditional = script.equals("Hant", ignoreCase = true)
-                || region in setOf("TW", "HK", "MO")
-            return if (isTraditional) "zh-Hant" to "繁體中文 / Traditional Chinese"
-            else "zh-Hans" to "简体中文 / Simplified Chinese"
-        }
         val human = humanReadable[lang] ?: locale.getDisplayLanguage(Locale.ENGLISH)
             .ifEmpty { lang }
         lang to human

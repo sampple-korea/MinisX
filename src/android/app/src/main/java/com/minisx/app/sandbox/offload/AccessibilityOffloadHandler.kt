@@ -1073,9 +1073,9 @@ First-run: enable "MinisX" under Settings → Accessibility, then `service ping`
         val explicit = args.get("button")
         val candidates = when {
             explicit != null -> listOf(explicit)
-            confirm -> listOf("确认", "确定", "允许", "好", "是", "OK", "Allow", "Confirm", "Yes")
-            deny    -> listOf("拒绝", "取消", "否", "不允许", "Cancel", "Deny", "No")
-            else    -> listOf("取消", "关闭", "否", "Cancel", "Close")
+            confirm -> listOf("확인", "허용", "예", "OK", "Allow", "Confirm", "Yes")
+            deny    -> listOf("거부", "취소", "아니요", "허용 안 함", "Cancel", "Deny", "No")
+            else    -> listOf("취소", "닫기", "아니요", "Cancel", "Close")
         }
         for (label in candidates) {
             val matches = ArrayList<AccessibilityNodeInfo>()

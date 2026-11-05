@@ -1141,7 +1141,7 @@ class ChatRepository(internal val dao: ChatDao) {
                             }
                             // [T-preview-scheduled-tag-leak] A scheduled fire's
                             // row is its <scheduled_task …> envelope: preview it
-                            // as "定时任务 · <label>", never the raw tag.
+                            // as "예약 작업 · <label>", never the raw tag.
                             InternalTags.scheduledPreviewLine(
                                 text,
                                 com.minisx.app.agent.jobs.AgentCallbackLabels.scheduled,

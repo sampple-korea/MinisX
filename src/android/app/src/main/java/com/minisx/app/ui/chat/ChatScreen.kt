@@ -759,7 +759,7 @@ fun ChatScreen(
         // [XSessionDiag] Hypothesis 2: the composer state AFTER injection. If the
         // reported corrupted input was assembled here, this line holds it verbatim
         // (head-truncated) together with the session that received it — which is
-        // the direct check against a user's "I only typed 你好" report.
+        // the direct check against a user's "I only typed 안녕" report.
         com.minisx.app.logging.AppLogger.info(
             "XSessionDiag",
             "[XSessionDiag] share/injected: session=${sessionId.take(8)} " +
@@ -7705,7 +7705,7 @@ fun ChatScreen(
                             // every panel entry and speak() was never called
                             // once — minis-2026-08-16.log has 5 "suppressed"
                             // lines, 0 "feeding" lines, which is exactly the
-                            // reported "朗读回复开了但没有任何声音". The
+                            // reported "read-aloud is on but there is no sound". The
                             // self-poisoning also explains the paradoxical
                             // `alreadySeen=true streaming=true` entries.
                             //

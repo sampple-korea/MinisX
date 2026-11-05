@@ -203,7 +203,7 @@ object MarkdownParser {
             }
 
             // Numbered list. Marker digits are capped at 2 so a paragraph
-            // starting with a year or big number ("2020. 年的…") isn't
+            // starting with a year or big number ("2020. Annual …") isn't
             // misparsed as ordered-list item #2020 (user report). Real lists
             // rarely exceed 99 items; CommonMark itself caps markers at 9
             // digits, we deliberately go tighter.

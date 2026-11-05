@@ -580,12 +580,11 @@ class ProviderQuotaTest {
         val res = java.io.File(ProductionSources.mainRoot()!!, "../../../../res")
         // Keys iOS translates beyond en / zh-Hans / zh-Hant (checked against Localizable.xcstrings).
         val wide = listOf("quota_source", "quota_done", "quota_status_unknown", "quota_status_low", "quota_updated")
-        for (folder in listOf("values-de", "values-es", "values-fil", "values-fr", "values-hr", "values-in", "values-ja",
-            "values-ko", "values-ms", "values-pl", "values-pt-rBR", "values-ro", "values-ru", "values-th", "values-tr")) {
+        for (folder in listOf("values-ko")) {
             val text = java.io.File(res, "$folder/strings.xml").readText()
             for (name in wide) assertTrue("$folder lacks $name", text.contains("name=\"$name\""))
         }
-        for (folder in listOf("values-hr", "values-ja")) {
+        for (folder in listOf("values-ko")) {
             assertTrue(java.io.File(res, "$folder/strings.xml").readText().contains("name=\"quota_status_rate_limited\""))
         }
     }

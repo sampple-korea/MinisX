@@ -1369,7 +1369,7 @@ private fun MarkdownBlockBody(
                 // revisited this gate — so a fragment under 2000 chars was
                 // guaranteed to miss at freeze and flash its raw markdown.
                 // A 462-char weather table did exactly that: rendered, went
-                // to `| 城市 | ... |---|` pipes for one parse, came back.
+                // to `| City | ... |---|` pipes for one parse, came back.
                 //
                 // Every tick deposits now, but each tick REMOVES the previous
                 // tick's entry first: one live entry per fragment, so the
@@ -2947,7 +2947,7 @@ private fun rememberKatexInlineContent(
                     // The slot is over-estimated AND the KaTeX bitmap carries
                     // its own top/bottom whitespace, so an above-baseline slot
                     // put the formula's optical center well ABOVE the line's
-                    // ("N(100) 渲染偏上"). Centering the slot on the line and
+                    // ("N(100) renders too high"). Centering the slot on the line and
                     // the bitmap in the slot (CenterStart below) aligns the
                     // two optical centers instead — robust against both the
                     // generous estimate and the bitmap padding.
@@ -3023,7 +3023,7 @@ private fun RenderInlineMath(latex: String, fontSize: TextUnit) {
         // uses AboveBaseline (slot bottom sits ON the text baseline), but its
         // height is deliberately over-estimated — with the default TopStart
         // alignment the formula rode at the TOP of the too-tall slot,
-        // floating visibly above its own line ("N(100) 渲染偏上"). Anchoring
+        // floating visibly above its own line ("N(100) renders too high"). Anchoring
         // to the slot's bottom puts the formula on the baseline regardless of
         // how generous the height estimate is.
         androidx.compose.foundation.layout.BoxWithConstraints(
@@ -4947,7 +4947,7 @@ private fun looksLikeMath(latex: String): Boolean {
  * [T-latex-inline] True when a candidate inline-math span is really a markdown
  * table-cell artifact (a `$` that paired across `|` column separators) rather
  * than a formula. Mirrors iOS MinisMarkdownParser.isTablePipeArtifact so a row
- * like `| 月付 | $20|$ **3** |` doesn't capture `20|` as fake math (which would
+ * like `| Monthly | $20|$ **3** |` doesn't capture `20|` as fake math (which would
  * eat the bold `**3**`). Two signals a real formula avoids: an unescaped pipe
  * with whitespace on a side (the ` | ` column separator), or an ODD number of
  * unescaped pipes (abs-value / norm bars always come in balanced pairs).

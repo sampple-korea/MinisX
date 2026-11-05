@@ -14,7 +14,7 @@ package com.minisx.app.speech
  * emphasis → line-leading block markers → leftover markers.
  *
  * DIVERGENCE FROM iOS (deliberate): iOS hardcodes the Chinese link phrases
- * "<host> 的链接" / "链接". Here the phrase is supplied by the caller via
+ * "link to <host>" / "link". Here the phrase is supplied by the caller via
  * [LinkPhrases] so it can come from `R.string` and follow the device locale —
  * the project requires localized user-facing strings, and TTS output is
  * user-facing. Defaults are English so the class stays usable (and unit

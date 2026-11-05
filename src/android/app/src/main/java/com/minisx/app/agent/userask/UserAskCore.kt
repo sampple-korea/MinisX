@@ -83,7 +83,7 @@ object UserAskParser {
     /** Cap on free text coming back from the user (Other / note). */
     const val MAX_INPUT_LENGTH = 1000
 
-    private val RECOMMENDED_MARKERS = listOf("(Recommended)", "(recommended)", "（推荐）", "(推荐)", "Recommended:", "推荐：")
+    private val RECOMMENDED_MARKERS = listOf("(Recommended)", "(recommended)", "(권장)", "(추천)", "Recommended:", "권장:", "추천:")
 
     /** "(Recommended)" style markers the model was told not to write; the UI adds its own. */
     fun stripRecommended(s: String): String {

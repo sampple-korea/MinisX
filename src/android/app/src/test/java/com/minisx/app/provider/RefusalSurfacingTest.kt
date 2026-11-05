@@ -122,8 +122,8 @@ class RefusalSurfacingTest {
     }
 
     @Test
-    fun `category string exists in en, zh and zh-rTW with one placeholder`() {
-        for (dir in listOf("values", "values-zh", "values-zh-rTW")) {
+    fun `category string exists in en with one placeholder`() {
+        for (dir in listOf("values")) {
             val xml = File("src/main/res/$dir/strings.xml").readText()
             val line = xml.lines().firstOrNull { it.contains("name=\"chat_error_model_refused_category\"") }
             assertTrue("$dir has the string", line != null)

@@ -416,7 +416,7 @@ internal fun SubAgentStatChips(digest: SubAgentRunDigest, remainingMs: Long?, bu
  * ~30dp, against ~21pt on iOS (user report, 2026-10-06). The line box is pinned
  * to 13sp and trimmed, the same correction the "Read replies" pill uses.
  * The chips themselves get a fixed height on top: the CJK fallback still
- * stretched its line a few px past the Latin one, so "9 轮" stood taller than
+ * stretched its line a few px past the Latin one, so "9 turns" stood taller than
  * "8" in the same row; a fixed, centred height keeps every chip identical,
  * as on iOS.
  */

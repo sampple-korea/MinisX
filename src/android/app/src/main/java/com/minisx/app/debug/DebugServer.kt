@@ -239,7 +239,7 @@ class DebugServer(
                 // Content-Length counts BYTES, so the loop must too. Reading it
                 // as CharArray off the decoding reader counted CHARACTERS, and
                 // any multi-byte UTF-8 in the body made the two disagree: a
-                // 6-byte "你好" decodes to 2 chars, so the loop kept waiting for
+                // 6-byte "안녕" decodes to 2 chars, so the loop kept waiting for
                 // 4 more that were never coming and the request stalled until
                 // one side timed out. Callers saw non-ASCII requests hang while
                 // the identical \u-escaped (all-ASCII) body answered in ~25ms.

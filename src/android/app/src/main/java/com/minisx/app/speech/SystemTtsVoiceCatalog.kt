@@ -18,7 +18,7 @@ import java.util.Locale
  *
  * Android's [Voice] API exposes no human display name (names are technical,
  * e.g. "cmn-cn-x-ssa-local"), so rows are labelled from the voice's locale
- * plus a variant marker derived from the technical name — "中文 (中国) · ssa"
+ * plus a variant marker derived from the technical name — "한국어 (대한민국) · ssa"
  * — with a network tag where the voice is cloud-only. Not as pretty as iOS's
  * curated names, but honest about what the engine actually reports.
  *

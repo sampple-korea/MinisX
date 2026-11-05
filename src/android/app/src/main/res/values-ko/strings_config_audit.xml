@@ -5,4 +5,22 @@
 <resources>
     <string name="config_audit_detail_status">상태</string>
     <string name="config_audit_detail_reverted">되돌림</string>
+    <string name="config_audit_summary_header">승인된 변경 요약</string>
+    <string name="config_audit_detail_title">변경 상세</string>
+    <string name="config_audit_detail_changed_by">변경한 주체</string>
+    <string name="config_audit_detail_requested">요청 시각</string>
+    <string name="config_audit_detail_resolved">처리 시각</string>
+    <string name="config_audit_detail_note">어시스턴트의 메모</string>
+    <string name="config_audit_detail_what_changed">변경된 내용</string>
+    <string name="config_audit_detail_predates">이 기록은 읽기 쉬운 설명이 생기기 전의 것이라 원본 변경 내용만 표시됩니다.</string>
+    <string name="config_audit_detail_raw">원본 변경</string>
+    <string name="config_audit_detail_setting">설정</string>
+    <string name="config_audit_detail_before">변경 전</string>
+    <string name="config_audit_detail_after">변경 후</string>
+    <string name="config_audit_detail_revert">이 변경 되돌리기</string>
+    <string name="config_audit_revert_undoes">다음을 되돌립니다:</string>
+    <string name="config_audit_actor_assistant">어시스턴트</string>
+    <string name="config_audit_actor_you">나</string>
+    <string name="config_audit_actor_assistant_revert">어시스턴트 (되돌리기)</string>
+    <string name="config_audit_actor_you_revert">나 (되돌리기)</string>
 </resources>

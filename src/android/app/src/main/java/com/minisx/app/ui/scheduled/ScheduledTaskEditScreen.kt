@@ -598,7 +598,7 @@ private fun EditFormBody(
         )
 
         // ── Thinking (optional) ──
-        // [T-android-scheduled-task-thinking] Reported: "定时任务不能添加思考强度".
+        // [T-android-scheduled-task-thinking] Reported: "scheduled tasks cannot set a thinking effort".
         // The runner already accepted a level (HeadlessChatRunner.prompt) — it
         // was hardcoded null because the task had nowhere to carry one.
         PickerRow(

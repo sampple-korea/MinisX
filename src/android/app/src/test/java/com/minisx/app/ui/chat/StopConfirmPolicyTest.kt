@@ -114,7 +114,7 @@ class StopConfirmPolicyTest {
         val appearance = ProductionSources.read("ui/settings/AppearanceScreen.kt")
         assertTrue(appearance.contains("prefs.edit().putBoolean(com.minisx.app.ui.chat.StopConfirmPolicy.SETTINGS_KEY, it).apply()"))
         val base = listOf("src/main/res", "app/src/main/res").map { java.io.File(it) }.first { it.exists() }
-        for (dir in listOf("values", "values-zh", "values-zh-rTW")) {
+        for (dir in listOf("values")) {
             val xml = java.io.File(base, "$dir/strings.xml").readText()
             for (key in listOf("chat_stop_confirm_title", "chat_stop_confirm_message", "chat_stop_confirm_stop",
                 "chat_stop_confirm_keep_running", "appearance_confirm_before_stopping_title", "appearance_confirm_before_stopping_footer",

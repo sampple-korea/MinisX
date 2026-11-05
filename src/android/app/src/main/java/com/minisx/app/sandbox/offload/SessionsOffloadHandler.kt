@@ -724,7 +724,7 @@ EXAMPLES:
   minis-sessions-cli status --id <session_id>
   minis-sessions-cli list --group "Project A"
   minis-sessions-cli groups
-  minis-sessions-cli update --id <session_id> --title "新标题" --group "项目A" --icon "code"
+  minis-sessions-cli update --id <session_id> --title "새 제목" --group "프로젝트A" --icon "code"
   minis-sessions-cli update --id <session_id> --group ""
   minis-sessions-cli update --id <session_id> --icon ""
 """

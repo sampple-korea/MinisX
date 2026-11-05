@@ -8,7 +8,7 @@ package com.minisx.app.speech
  * as its silence window is satisfied, so the audio it hands over is trimmed at
  * both ends: the onset spoken while it was still deciding, and the decay of
  * the final syllable. Feeding that to a recogniser drops leading and trailing
- * words — reported as "识别到的内容一直没有前面两个字".
+ * words — reported as "the recognized text always misses the first two syllables".
  *
  * Both ends are therefore padded from the raw capture: a pre-roll ring held
  * before confirmation, and a tail hold kept after the endpoint. This object

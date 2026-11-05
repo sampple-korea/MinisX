@@ -376,7 +376,7 @@ object VisionGroupResolver {
      * the model that actually produced the text and disclosing any fallback.
      *
      * The MODEL name leads the header rather than the group name alone —
-     * "via 图像输入" said nothing about which member answered. The fallback line
+     * "via image input" said nothing about which member answered. The fallback line
      * is emitted only when one happened, so the common first-try success stays
      * as terse as before.
      */

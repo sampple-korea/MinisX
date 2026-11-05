@@ -782,8 +782,8 @@ internal fun buildFlatChatItems(
             // where it happened, in order, among the other turns. With the
             // block present (the normal case for a delegate_task run) neither
             // the progress reports nor the final result had any entry in the
-            // conversation, which is the report: "子任务汇报消息没有像 iOS
-            // 一样落一个 UI 入口在消息中". iOS dropped the same dedup in
+            // conversation, which is the report: "sub-task report messages do not leave a UI
+            // entry in the conversation the way iOS does". iOS dropped the same dedup in
             // 8417eb68f (progress) and 7985d161e (final); this is the port.
             // The child-id scan that fed the dedup walked every message and
             // block on each flatten and nothing reads it now, so it goes too.
@@ -1006,7 +1006,7 @@ internal fun buildFlatChatItems(
         // [T-android-typing-hidden-thinking] "Visible" must mean WILL RENDER,
         // not merely "exists". Two blocks used to count as content while
         // drawing nothing, killing the indicator into a blank gap ("thinking
-        // 还没等到内容出现就消失了"):
+        // disappears before any content has appeared"):
         //  - a "thinking" block when the message's thinking level is OFF —
         //    forced-reasoning models (MiniMax M2, Grok…) still stream
         //    reasoning_content, but ChatScreen suppresses the row when the

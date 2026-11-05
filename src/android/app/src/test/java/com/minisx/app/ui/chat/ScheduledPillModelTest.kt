@@ -175,8 +175,7 @@ class ScheduledPillModelTest {
     @Test
     fun `every locale has the pill strings`() {
         val res = File(ProductionSources.mainRoot()!!, "../../../../res")
-        val locales = listOf("values", "values-de", "values-es", "values-fil", "values-fr", "values-hr", "values-in", "values-ja",
-            "values-ko", "values-ms", "values-pl", "values-pt-rBR", "values-ro", "values-ru", "values-th", "values-tr", "values-zh", "values-zh-rTW")
+        val locales = listOf("values", "values-ko")
         val base = Regex("name=\"(sched_pill_[a-z0-9_]+)\"").findAll(File(res, "values/strings_sched_pill.xml").readText()).map { it.groupValues[1] }.toList()
         assertEquals(19, base.size)  // + sched_pill_run_now [T-sched-run-now]
         for (l in locales) {

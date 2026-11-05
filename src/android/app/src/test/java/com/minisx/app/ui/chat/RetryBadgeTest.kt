@@ -86,7 +86,7 @@ class RetryBadgeTest {
         val res = File(ProductionSources.mainRoot()!!, "../../../../res")
         val keys = listOf("retry_badge_a11y", "retry_sheet_title", "retry_sheet_subtitle", "retry_sheet_empty", "retry_record_title",
             "retry_record_error", "retry_record_model", "retry_record_endpoint", "retry_record_delay", "retry_record_switched")
-        for (dir in listOf("values", "values-zh", "values-zh-rTW")) {
+        for (dir in listOf("values")) {
             val text = File(res, "$dir/strings_retry_badge.xml").readText()
             for (k in keys) assertTrue("$dir lacks $k", text.contains("name=\"$k\""))
         }

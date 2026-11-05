@@ -1903,7 +1903,7 @@ private fun categoryTint(cat: BackupCategory): Color = when (cat) {
 /**
  * Name the UNIT, not just the number.
  *
- * Every category used to render through `backup_count_items` ("N 项"), so one
+ * Every category used to render through `backup_count_items` ("N items"), so one
  * label covered messages, skills, servers and providers alike and the reader
  * had no way to tell what was being counted — which is how "569 items" for a
  * dozen skills read as corruption.

@@ -967,7 +967,7 @@ class AgentForegroundService : Service() {
      * them, so every other route down (this branch, the foreground
      * transition, the dynamic-island swap) left them behind, and the NEXT run
      * counted them: one task on screen reporting "3 of 3" after two earlier
-     * runs. Reported as "实际执行的只有一个任务，怎么展示 2 of 2".
+     * runs. Reported as "only one task actually ran, so why show 2 of 2".
      */
     private fun hideOverlay() {
         overlayController?.let { if (it.isShown) it.hide() }
@@ -1580,7 +1580,7 @@ class AgentForegroundService : Service() {
         // [T-android-live-update-completed] "Stop" is meaningless once the task
         // has finished — there is nothing left to stop, and offering it invites
         // a tap that does nothing visible. Reported from a device screenshot
-        // showing "任务已完成 ✓" above a live Stop button.
+        // showing "Task completed ✓" above a live Stop button.
         if (!isCompleted) {
             builder.addAction(
                 Notification.Action.Builder(

@@ -33,18 +33,18 @@ class ToolSpeechTest {
     /**
      * Language follows the model's title, not the device locale: the tool
      * schema asks the model to write the title in the user's language, so it is
-     * the better signal — and mixing "Executing script:" with a Chinese detail
+     * the better signal — and mixing "Executing script:" with a Korean detail
      * is exactly what this avoids.
      */
     @Test
-    fun `a chinese title switches the whole phrase to chinese`() {
+    fun `a korean title switches the whole phrase to korean`() {
         assertEquals(
-            "正在执行脚本:安装依赖包",
-            ToolSpeech.announcement("shell_execute", """{"command":"apk add py3-pip"}""", "安装依赖包"),
+            "스크립트 실행 중: 의존성 설치",
+            ToolSpeech.announcement("shell_execute", """{"command":"apk add py3-pip"}""", "의존성 설치"),
         )
         assertEquals(
-            "正在读取文件:配置文件",
-            ToolSpeech.announcement("file_read", """{"path":"/etc/conf"}""", "配置文件"),
+            "파일 읽는 중: 설정 파일",
+            ToolSpeech.announcement("file_read", """{"path":"/etc/conf"}""", "설정 파일"),
         )
     }
 
@@ -73,26 +73,26 @@ class ToolSpeechTest {
     fun `a missing path degrades to a generic noun`() {
         assertEquals("Reading file: a file", ToolSpeech.announcement("file_read", "{}", null))
         // With a title present the title wins; the generic noun never appears.
-        assertEquals("正在读取文件:读取", ToolSpeech.announcement("file_read", "{}", "读取"))
+        assertEquals("파일 읽는 중: 읽기", ToolSpeech.announcement("file_read", "{}", "읽기"))
     }
 
     /**
      * Any non-blank title becomes the detail, including punctuation-only ones —
-     * and Chinese phrasing is selected by that same title. The two conditions
-     * are therefore coupled: a title cannot be Han-bearing (selecting Chinese)
+     * and Korean phrasing is selected by that same title. The two conditions
+     * are therefore coupled: a title cannot be Hangul-bearing (selecting Korean)
      * and blank (falling through to the generic noun) at once.
      *
-     * Consequence worth stating: the Chinese generic noun is unreachable, here
+     * Consequence worth stating: the Korean generic noun is unreachable, here
      * and in the iOS original this was ported from. It is kept only so the two
      * implementations stay literally comparable.
      */
     @Test
     fun `any non-blank title becomes the detail and drives the language`() {
-        // CJK punctuation is not a Han character, so phrasing stays English —
+        // CJK punctuation is not a Hangul character, so phrasing stays English —
         // but the title is still non-blank, so it is still the detail.
         assertEquals("Reading file: 。", ToolSpeech.announcement("file_read", "{}", "。"))
-        // A single Han character selects Chinese and doubles as the detail.
-        assertEquals("正在读取文件:读", ToolSpeech.announcement("file_read", "{}", "读"))
+        // A single Hangul character selects Korean and doubles as the detail.
+        assertEquals("파일 읽는 중: 읽", ToolSpeech.announcement("file_read", "{}", "읽"))
     }
 
     @Test

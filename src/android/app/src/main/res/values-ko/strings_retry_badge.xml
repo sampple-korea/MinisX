@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="retry_badge_a11y">재시도 중, %2$d회 중 %1$d번째 시도. 눌러서 재시도 내역을 확인하세요.</string>
+    <string name="retry_sheet_title">자동 재시도</string>
+    <string name="retry_sheet_subtitle">이 작업 중 재시도한 요청입니다. 답변이 끝나면 목록이 지워집니다.</string>
+    <string name="retry_sheet_empty">이 작업에서는 재시도가 없었습니다.</string>
+    <string name="retry_record_title">%2$d회 중 %1$d번째 재시도</string>
+    <string name="retry_record_error">오류: %1$s</string>
+    <string name="retry_record_model">모델: %1$s</string>
+    <string name="retry_record_endpoint">엔드포인트: %1$s</string>
+    <string name="retry_record_delay">%1$d초 기다린 뒤 재시도</string>
+    <string name="retry_record_switched">이전 재시도와 다른 모델</string>
+</resources>

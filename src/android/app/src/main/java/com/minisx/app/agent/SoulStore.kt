@@ -59,7 +59,7 @@ data class SoulMetadata(
      */
     val icon: String,
     val style: String,
-    /** `"auto"`, `"zh"`, `"en"`, or any free-form tag. */
+    /** `"auto"`, `"ko"`, `"en"`, or any free-form tag. */
     val lang: String,
 ) {
     /**

@@ -62,7 +62,7 @@ class MinisAccessibilityService : AccessibilityService() {
         _instance = this
         // [T-android-a11y-miui-service-failure] Breadcrumb on (re)bind. On OEM
         // ROMs (MIUI etc.) the system kills + rebinds this service repeatedly,
-        // surfacing "此服务出现故障"; a connect log lets us correlate a degraded
+        // surfacing "이 서비스에 문제가 발생했습니다"; a connect log lets us correlate a degraded
         // window in stall/diag logs with a kill/rebind. No self-restart logic —
         // remediation is the user whitelisting autostart + battery (see
         // SystemPermissionsScreen OEM guidance).

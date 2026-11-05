@@ -2513,7 +2513,7 @@ class ProviderRepository(private val context: Context) {
     /**
      * @param forceRefresh set by a user-initiated Refresh tap. Today only the
      *   Codex discovery path reads it ([T-codex-dynamic-discovery GH#319]:
-     *   "手动点击刷新必须真正绕过缓存重新拉取"); every other path is already
+     *   "a manual refresh tap must really bypass the cache and refetch"); every other path is already
      *   uncached at this level. Defaulted false so background/auto refresh and
      *   the existing call sites keep their behaviour.
      * @param onVendorError [T-onboarding-model-fetch-fallback] receives the
@@ -2917,8 +2917,8 @@ class ProviderRepository(private val context: Context) {
      *
      * @throws CodexDiscoveryAuthException when the backend rejected the
      *   CREDENTIAL. That one case is NOT folded into null on a user-initiated
-     *   refresh, because GH#319 asks for it explicitly: "认证失败(token过期等)要
-     *   如实报告为认证错误，不要伪装成'刷新成功但列表为空'". Silently falling
+     *   refresh, because GH#319 asks for it explicitly: "authentication failures (expired token etc.) must
+     *   be reported honestly as auth errors, not disguised as 'refresh succeeded but the list is empty'". Silently falling
      *   back would redisplay the old list and read as success while the account
      *   is in fact signed out.
      */

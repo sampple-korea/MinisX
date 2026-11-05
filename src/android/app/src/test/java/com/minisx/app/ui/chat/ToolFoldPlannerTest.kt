@@ -317,8 +317,7 @@ class ToolFoldPlannerTest {
     @Test
     fun `every locale has the fold strings`() {
         val res = File(ProductionSources.mainRoot()!!, "../../../../res")
-        val locales = listOf("values", "values-de", "values-es", "values-fil", "values-fr", "values-hr", "values-in", "values-ja",
-            "values-ko", "values-ms", "values-pl", "values-pt-rBR", "values-ro", "values-ru", "values-th", "values-tr", "values-zh", "values-zh-rTW")
+        val locales = listOf("values", "values-ko")
         val keys = listOf("tool_fold_setting_title", "tool_fold_section", "tool_fold_setting_footer", "tool_fold_ran_n_tools",
             "tool_fold_n_failed", "tool_fold_n_cancelled", "tool_fold_expand_hint", "tool_fold_collapse_hint")
         for (l in locales) {

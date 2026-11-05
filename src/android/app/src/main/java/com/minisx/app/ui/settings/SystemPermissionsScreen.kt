@@ -255,7 +255,7 @@ fun SystemPermissionsScreen(onBack: () -> Unit) {
             }
 
             // [T-android-a11y-miui-service-failure] OEM keep-alive guidance. Only
-            // shown when the service is degraded ("此服务出现故障" — enabled in
+            // shown when the service is degraded ("이 서비스에 문제가 발생했습니다" — enabled in
             // Settings but the process was killed by the ROM) AND the vendor is
             // one known to enforce autostart on top of stock Android. Routes the
             // two canonical remediations through the existing

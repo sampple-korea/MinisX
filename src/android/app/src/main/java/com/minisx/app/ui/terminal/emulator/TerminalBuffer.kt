@@ -247,7 +247,7 @@ class TerminalBuffer(
          * Append the text of [row] in `[from, to)` to [sb] with its trailing
          * spaces trimmed. Wide-character trailers and empty (0) cells are
          * skipped — shared by [plainText] and the selection copy, which used
-         * to put a space after every CJK character ("中 文").
+         * to put a space after every CJK character ("한 글").
          */
         fun appendRowText(sb: StringBuilder, row: Array<TerminalCell>, from: Int = 0, to: Int = row.size) {
             val start = sb.length

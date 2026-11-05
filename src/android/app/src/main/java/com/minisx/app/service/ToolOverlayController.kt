@@ -200,7 +200,7 @@ class ToolOverlayController(private val context: Context) {
         // the screen.
         //
         // [T-android-overlay-wide-screen-width] The ceiling was 400dp, which
-        // still read as "巨长" on landscape phones and tablets. 400dp is about
+        // still read as "huge" on landscape phones and tablets. 400dp is about
         // DOUBLE the portrait-phone capsule (a 393dp Pixel gives 196dp, a
         // 411dp Xiaomi gives 206dp), so the pill grew markedly whenever the
         // screen got wider — which is exactly the complaint, even though the
@@ -935,8 +935,8 @@ class ToolOverlayController(private val context: Context) {
             // On completion the outcome word stands alone rather than as
             // "Minis — <outcome>": row 1 shares its width with the status tick
             // and the elapsed clock, and the localized words are long enough
-            // (zh "执行完成" is four full-width characters) that the combined
-            // string ellipsized to an unreadable "Minis — 执...". The app
+            // (ko "실행 완료" is four wide characters) that the combined
+            // string ellipsized to an unreadable "Minis — 실...". The app
             // identity is already carried by the logo to the left, so dropping
             // it here loses nothing.
             // [T-android-overlay-multitask] Row 1 names the TASK, not the
@@ -953,7 +953,7 @@ class ToolOverlayController(private val context: Context) {
             // The completion case is unchanged in spirit but no longer
             // replaces the title: the outcome is shown by the leading glyph
             // (see applyLogoFor / StatusGlyphView), so a finished task keeps
-            // its name instead of collapsing to a bare "执行完成" that says
+            // its name instead of collapsing to a bare "실행 완료" that says
             // nothing about WHICH task finished — unreadable once more than
             // one is on screen.
             val identityName = SoulStore.cachedMetadata.value.name

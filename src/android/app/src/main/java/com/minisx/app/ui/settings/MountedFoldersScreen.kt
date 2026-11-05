@@ -333,7 +333,7 @@ fun MountedFoldersScreen(
 
     // [T-android-mount-picker-landing] GH#93: the system picker used to open at
     // whatever location it liked — on the reporter's Xiaomi that was the shared
-    // storage ROOT, where Android shows "无法使用此文件夹 / can't use this folder",
+    // storage ROOT, where Android shows "can't use this folder",
     // greys out "Use this folder", and (being already the top level) offers no
     // way back. The user reads that as being trapped.
     //
@@ -460,7 +460,7 @@ private fun AllFilesAccessBanner(onClick: () -> Unit) {
  *   storage is what feeds proot the /mnt/runtime/write FUSE view, and that
  *   requires READ_EXTERNAL_STORAGE to actually be granted. Returning true
  *   unconditionally here (the old behaviour) hid the banner even when the
- *   user hadn't granted "允许访问文件", leaving them stuck on an empty mount.
+ *   user hadn't granted "Allow access to files", leaving them stuck on an empty mount.
  * - Below Q: legacy storage is always on, no opt-in needed.
  */
 private fun checkAllFilesAccess(context: android.content.Context): Boolean {

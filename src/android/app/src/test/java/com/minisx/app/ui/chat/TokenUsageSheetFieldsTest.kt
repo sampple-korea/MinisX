@@ -170,7 +170,7 @@ class TokenUsageSheetFieldsTest {
             "token_usage_section_speed",
             "token_usage_output_speed",
         )
-        for (locale in listOf("values", "values-zh", "values-zh-rTW")) {
+        for (locale in listOf("values")) {
             val xml = src("src/main/res/$locale/strings.xml")
             for (key in keys) {
                 assertTrue("$locale is missing $key", xml.contains("""<string name="$key">"""))

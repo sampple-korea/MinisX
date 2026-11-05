@@ -91,14 +91,8 @@ class SpeedTierIconsTest {
             assertEquals("${d.name}: Ultrafast stays untranslated", "Ultrafast", s["chat_speed_ultrafast"])
             assertFalse("${d.name}: the Speed key is gone", s.containsKey("chat_menu_speed"))
         }
-        val zh = strings("values-zh")
-        assertEquals(listOf("快速模式", "标准", "快速", "启用快速模式"),
-            listOf(zh["chat_menu_fast_mode_tier"], zh["chat_speed_standard"], zh["chat_speed_fast"], zh["chat_menu_fast_mode"]))
-        val tw = strings("values-zh-rTW")
-        assertEquals(listOf("快速模式", "標準", "快速", "啟用快速模式"),
-            listOf(tw["chat_menu_fast_mode_tier"], tw["chat_speed_standard"], tw["chat_speed_fast"], tw["chat_menu_fast_mode"]))
         assertEquals("Fast Mode", strings("values")["chat_menu_fast_mode_tier"])
-        assertEquals("高速モード", strings("values-ja")["chat_menu_fast_mode_tier"])
+        assertEquals("고속 모드", strings("values-ko")["chat_menu_fast_mode_tier"])
     }
 
     @Test

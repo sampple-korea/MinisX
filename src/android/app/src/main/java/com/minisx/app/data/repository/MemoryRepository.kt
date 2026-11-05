@@ -37,10 +37,10 @@ class MemoryRepository(private val memoryDir: File) {
          * [XSessionDiag] Vocabulary that suggests an injected daily log describes
          * a TASK a model might try to resume, rather than a plain fact. Purely a
          * log tag — nothing branches on it, and both languages are listed because
-         * the reported incidents were Chinese-language sessions.
+         * the reported incidents were non-English sessions.
          */
         private val DIAG_TASK_KEYWORDS = listOf(
-            "任务", "调研", "继续", "接着", "未完成", "下一步",
+            "작업", "조사", "계속", "이어서", "미완료", "다음 단계",
             "task", "continue", "resume", "TODO",
         )
         // [T-memory-get-truncate-android] Hard byte ceiling on memory_get
@@ -316,7 +316,7 @@ class MemoryRepository(private val memoryDir: File) {
         // daily log is visible to a brand-new chat. The prompt already asks the
         // model not to resume them ("they describe past tasks, not the current
         // one"), but that is a prompt-level defence only — a weak model can and
-        // did ignore it (the noVNC incident: "为了你最早那句需求").
+        // did ignore it (the noVNC incident: "for your earliest requirement").
         //
         // Logged: which files were injected, how large, and whether the text
         // carries task-resumption vocabulary. The keyword scan is READ-ONLY and

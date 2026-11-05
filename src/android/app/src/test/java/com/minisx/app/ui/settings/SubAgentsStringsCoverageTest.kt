@@ -30,7 +30,7 @@ class SubAgentsStringsCoverageTest {
     @Test
     fun `every Sub Agents string is translated in the covered locales`() {
         assertTrue("the page has its strings", base.size >= 27)
-        for (dir in listOf("values-zh", "values-zh-rTW", "values-ja", "values-ko", "values-de", "values-es", "values-fr", "values-hr")) {
+        for (dir in listOf("values-ko")) {
             val missing = base.keys - strings(dir).keys
             assertEquals("$dir is missing $missing", emptySet<String>(), missing)
         }
@@ -38,7 +38,7 @@ class SubAgentsStringsCoverageTest {
 
     @Test
     fun `format arguments survive translation`() {
-        for (dir in listOf("values-zh", "values-zh-rTW", "values-ja", "values-ko", "values-de", "values-es", "values-fr", "values-hr")) {
+        for (dir in listOf("values-ko")) {
             val s = strings(dir)
             for ((key, en) in base) {
                 val args = Regex("""%\d\$[sd]""").findAll(en).map { it.value }.toSet()
@@ -51,7 +51,7 @@ class SubAgentsStringsCoverageTest {
 
     @Test
     fun `apostrophes are escaped so aapt accepts them`() {
-        for (dir in listOf("values-zh-rTW", "values-ja", "values-ko", "values-de", "values-es", "values-fr")) {
+        for (dir in listOf("values-ko")) {
             for ((key, v) in strings(dir)) {
                 assertTrue("$dir/$key has an unescaped apostrophe", !Regex("""(?<!\\)'""").containsMatchIn(v))
             }

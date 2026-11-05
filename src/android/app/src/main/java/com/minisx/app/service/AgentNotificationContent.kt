@@ -267,8 +267,8 @@ internal fun wallClockToElapsedRealtime(wallMs: Long, nowWallMs: Long, nowElapse
  * [T-port-sched-completed-copy] The COMPLETED line. After the last run of a
  * schedule (or any run whose capsule keeps the service for its completion
  * linger) no session is active, present or scheduled any more, so the count
- * is 0 and the line read "0 个会话 | 用时 0:01". With no session to count,
- * the line is the duration alone ("用时 0:01" / "Completed in 0:01").
+ * is 0 and the line read "0 sessions | Took 0:01". With no session to count,
+ * the line is the duration alone ("Took 0:01" / "Completed in 0:01").
  */
 @androidx.annotation.StringRes
 internal fun completedTextResFor(sessionCount: Int): Int =

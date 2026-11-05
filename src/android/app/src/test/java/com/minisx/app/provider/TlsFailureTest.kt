@@ -72,7 +72,7 @@ class TlsFailureTest {
         for (kind in Kind.values()) assertTrue(com.minisx.app.data.model.CertificateErrorText.english(kind, "h.example").contains("h.example"))
         // mainRoot() = src/main/java/com/minisx/app -> src/main/res
         val res = ProductionSources.mainRoot()!!.parentFile.parentFile.parentFile.parentFile.resolve("res")
-        for (locale in listOf("values", "values-zh", "values-zh-rTW")) {
+        for (locale in listOf("values")) {
             val xml = res.resolve("$locale/strings.xml").readText()
             for (key in listOf("error_tls_untrusted", "error_tls_expired_or_clock", "error_tls_hostname_mismatch")) {
                 assertTrue("$locale/$key", Regex("""<string name="$key">[^<]*%1\${'$'}s[^<]*</string>""").containsMatchIn(xml))

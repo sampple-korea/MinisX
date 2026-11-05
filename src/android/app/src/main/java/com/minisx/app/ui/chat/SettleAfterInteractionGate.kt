@@ -13,7 +13,7 @@ package com.minisx.app.ui.chat
  * flipped that edge and the settle snapped `scrollToItem(0, 0)` on top of it.
  * Measured on a Pixel 4a during a 300-paragraph stream: 103 settle fires in
  * one turn, and on screen a repeating pattern of an eased glide followed by an
- * instant jump — the "来回抖" the user reported. Programmatic scrolls emit no
+ * instant jump — the "jitter back and forth" the user reported. Programmatic scrolls emit no
  * DragInteraction; only a real finger lift records [msSinceDrag]'s timestamp.
  *
  * Pure so it can be unit-tested; the composable passes its own state in.

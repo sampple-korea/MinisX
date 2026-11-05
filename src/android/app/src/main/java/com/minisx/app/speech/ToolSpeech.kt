@@ -3,7 +3,7 @@ package com.minisx.app.speech
 import org.json.JSONObject
 
 /**
- * Spoken announcement for a tool call — "正在执行脚本:安装依赖" /
+ * Spoken announcement for a tool call — "스크립트 실행 중: 의존성 설치" /
  * "Executing script: install deps".
  *
  * Port of iOS `AIChatViewModel.makeToolSpeech`
@@ -25,7 +25,7 @@ object ToolSpeech {
     /** Longest detail we will speak; beyond this the tail becomes "…". */
     private const val DETAIL_MAX = 40
 
-    private val HAN = Regex("\\p{IsHan}")
+    private val HANGUL = Regex("\\p{IsHangul}")
 
     /**
      * Build the announcement for a tool call.
@@ -39,39 +39,39 @@ object ToolSpeech {
         val args = parseArgs(argsJson)
         // Language follows the model's own summary, matching iOS: the title is
         // written in the user's language (the tool schema asks for it), so it
-        // is a better signal than the device locale — a Chinese user talking to
+        // is a better signal than the device locale — a Korean user talking to
         // an English-answering model should hear one language, not a mix.
-        val zh = title?.let { HAN.containsMatchIn(it) } ?: false
+        val ko = title?.let { HANGUL.containsMatchIn(it) } ?: false
         val detail = clip(title)
 
         return when (name) {
             "shell_execute" -> {
                 val d = detail ?: clip(args?.optString("command")) ?: ""
-                if (zh) "正在执行脚本:$d" else "Executing script: $d"
+                if (ko) "스크립트 실행 중: $d" else "Executing script: $d"
             }
             "file_read" -> {
-                val d = detail ?: fileName(args?.optString("path"), zh)
-                if (zh) "正在读取文件:$d" else "Reading file: $d"
+                val d = detail ?: fileName(args?.optString("path"), ko)
+                if (ko) "파일 읽는 중: $d" else "Reading file: $d"
             }
             "file_write" -> {
-                val d = detail ?: fileName(args?.optString("path"), zh)
-                if (zh) "正在写入文件:$d" else "Writing file: $d"
+                val d = detail ?: fileName(args?.optString("path"), ko)
+                if (ko) "파일 쓰는 중: $d" else "Writing file: $d"
             }
             "file_edit" -> {
-                val d = detail ?: fileName(args?.optString("path"), zh)
-                if (zh) "正在编辑文件:$d" else "Editing file: $d"
+                val d = detail ?: fileName(args?.optString("path"), ko)
+                if (ko) "파일 편집 중: $d" else "Editing file: $d"
             }
             "browser_use" -> {
                 val d = detail ?: clip(args?.optString("action")) ?: ""
-                if (zh) "正在操作浏览器:$d" else "Using browser: $d"
+                if (ko) "브라우저 사용 중: $d" else "Using browser: $d"
             }
             "read_image" -> {
-                val d = detail ?: fileName(args?.optString("path"), zh)
-                if (zh) "正在读取图片:$d" else "Reading image: $d"
+                val d = detail ?: fileName(args?.optString("path"), ko)
+                if (ko) "이미지 읽는 중: $d" else "Reading image: $d"
             }
             else -> {
                 val d = detail ?: name
-                if (zh) "正在执行:$d" else "Running: $d"
+                if (ko) "실행 중: $d" else "Running: $d"
             }
         }
     }
@@ -93,9 +93,9 @@ object ToolSpeech {
     }
 
     /** Last path component — the full path is noise when spoken. */
-    private fun fileName(path: String?, zh: Boolean): String {
+    private fun fileName(path: String?, ko: Boolean): String {
         val p = path?.trim()?.takeIf { it.isNotEmpty() && it != "null" }
-            ?: return if (zh) "文件" else "a file"
+            ?: return if (ko) "파일" else "a file"
         return p.trimEnd('/').substringAfterLast('/').ifEmpty { p }
     }
 }

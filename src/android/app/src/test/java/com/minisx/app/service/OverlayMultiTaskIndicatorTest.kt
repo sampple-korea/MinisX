@@ -233,7 +233,7 @@ class OverlayMultiTaskIndicatorTest {
             "the source locale keeps the word",
             base.contains("""<string name="overlay_task_index">%1${'$'}d of %2${'$'}d</string>"""),
         )
-        for (loc in listOf("zh", "zh-rTW", "ja", "ko", "th")) {
+        for (loc in listOf("ko")) {
             val f = java.io.File(res, "values-$loc/strings.xml")
             assertTrue("missing locale file: $loc", f.isFile)
             assertTrue(

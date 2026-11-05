@@ -1037,7 +1037,7 @@ internal fun HelperDetailContent(block: AssistantBlock) {
                 f.model?.let { add(Triple(stringResource(R.string.agent_detail_model_actual), it, false)) }
                 // [T-android-agent-model-identity] Which GROUP the strategy
                 // chose, and which resolver tier ran. iOS shows both; Android
-                // showed neither, so "Default 分组" and "primary/sub" — the two
+                // showed neither, so "Default group" and "primary/sub" — the two
                 // things that explain WHY this model and not another — were
                 // invisible. Only rendered when the payload carries them: an
                 // inherited binding names no group, and an old block has

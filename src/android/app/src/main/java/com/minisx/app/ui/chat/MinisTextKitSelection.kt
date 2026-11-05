@@ -81,7 +81,7 @@ class TextShard(
      *
      * Prose wants the sentence-level expansion [SelectionController] normally
      * applies; a table cell does not. A cell's text is usually punctuation-free
-     * ("Alice Smith", "张三 项目经理"), so that scan runs to both ends and picks
+     * ("Alice Smith", "Kim Minsu, project manager"), so that scan runs to both ends and picks
      * up the whole cell anyway — but a cell that DOES contain punctuation
      * ("1,200", "v1.2, beta") would select only a fragment, which is never what
      * someone long-pressing a table wants. Marking the cell atomic makes the

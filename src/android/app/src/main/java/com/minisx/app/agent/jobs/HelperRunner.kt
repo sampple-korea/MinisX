@@ -261,7 +261,7 @@ object HelperRunner {
     /** Strip the (current-locale or legacy) prefix back off a stored title. */
     fun stripChildSessionTitlePrefix(context: Context, title: String): String {
         var t = title
-        for (prefix in listOf("${context.getString(R.string.helper_label)} · ", "Agent · ", "Helper · ", "代理任务 · ", "帮手 · ")) {
+        for (prefix in listOf("${context.getString(R.string.helper_label)} · ", "Agent · ", "Helper · ")) {
             if (t.startsWith(prefix)) t = t.removePrefix(prefix)
         }
         return t

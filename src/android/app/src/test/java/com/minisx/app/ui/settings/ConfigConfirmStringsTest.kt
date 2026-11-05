@@ -30,10 +30,7 @@ class ConfigConfirmStringsTest {
     )
 
     private val locales = mapOf(
-        "zh-Hans" to "values-zh", "zh-Hant" to "values-zh-rTW", "hr" to "values-hr", "ja" to "values-ja",
-        "ko" to "values-ko", "de" to "values-de", "es" to "values-es", "fr" to "values-fr",
-        "pt-BR" to "values-pt-rBR", "ru" to "values-ru", "fil" to "values-fil", "id" to "values-in",
-        "ms" to "values-ms", "pl" to "values-pl", "ro" to "values-ro", "th" to "values-th", "tr" to "values-tr",
+        "ko" to "values-ko",
     )
 
     private fun strings(dir: String): Map<String, String> {

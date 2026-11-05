@@ -11,7 +11,7 @@ import com.minisx.app.data.model.effectiveInputModalities
  * Background: attaching an image while a text-only model is selected (the
  * official DeepSeek chat/reasoner endpoints, many relay-hosted text models)
  * used to go straight to the network and come back as
- * `Provider error: [400] 请求参数或所选模型能力不受支持`. The OpenAI-compatible
+ * `Provider error: [400] The request parameters or the selected model capability are not supported`. The OpenAI-compatible
  * provider already swaps pixels for a text placeholder when
  * [LLMModel.hasImageInput] is false, so that path never 400s — but it also
  * silently drops the user's image, and a model whose vision support is only
@@ -56,7 +56,7 @@ internal object ImageInputPreflight {
         // tool run, T-android-responses-toolresult-image-split) came back with
         // "this model may not support image input" appended, and the user went
         // looking at the image. Generic 400s keep the hint: a text-only model's
-        // rejection often names nothing at all ("请求参数或所选模型能力不受支持").
+        // rejection often names nothing at all ("the request parameters or the selected model capability are not supported").
         val detail = providerError.detail.lowercase()
         return NOT_IMAGE_RELATED.none { it in detail }
     }
