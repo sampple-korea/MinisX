@@ -21,4 +21,8 @@
     <string name="provider_detail_sign_out_all">모든 계정 로그아웃</string>
     <string name="settings_browser">브라우저</string>
     <string name="settings_browser_subtitle">사용자 에이전트, 브라우징 데이터</string>
+    <string name="provider_detail_accounts_refresh">사용량 새로고침</string>
+    <string name="provider_detail_accounts_release">보류 해제</string>
+    <string name="provider_detail_accounts_usage_none">사용량을 아직 읽지 못했어요</string>
+    <string name="provider_detail_accounts_left">%1$s %2$d%% 남음</string>
 </resources>

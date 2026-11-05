@@ -89,6 +89,11 @@ class CodexAccountPool(
         cooldowns.set(instanceId, now() + hold)
     }
 
+    /** Takes an account off hold now (the user knows its limit was reset, or wants to try it again). */
+    fun release(instanceId: String) {
+        cooldowns.set(instanceId, 0L)
+    }
+
     /** The account was refused (401/403): keep it out of rotation for a while. */
     fun reportRejected(instanceId: String) {
         cooldowns.set(instanceId, now() + REJECTED_COOLDOWN_MS)

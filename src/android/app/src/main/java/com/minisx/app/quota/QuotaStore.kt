@@ -384,10 +384,30 @@ object QuotaStore {
      * query and parser as the provider's own account, merged under that account's own subject.
      * An account asked within the last few minutes is left alone unless [forced].
      */
-    private suspend fun refreshExtraAccounts(parent: ProviderInstance, forced: Boolean) {
+    /**
+     * The raw (not pooled) quota pools of ONE ChatGPT account: the provider's own for its primary id,
+     * an extra account'"'"'s for the others. What the per-account lines in the provider page show.
+     */
+    fun accountPools(accountId: String): List<QuotaPool> {
+        val st = _state.value
+        val sid = st.instanceSubjects[accountId] ?: subscriptionSubject(QuotaVendor.codexSubscription, accountId)
+        return st.poolsOf(sid)
+    }
+
+    /** Re-reads one account'"'"'s usage now (ignoring the usual spacing). */
+    suspend fun refreshAccount(parent: ProviderInstance, accountId: String) {
+        if (accountId == parent.id) {
+            refresh(parent.id, forced = true, reason = "accounts")
+        } else {
+            withContext(Dispatchers.Default) { refreshExtraAccounts(parent, forced = true, only = accountId) }
+        }
+    }
+
+    private suspend fun refreshExtraAccounts(parent: ProviderInstance, forced: Boolean, only: String? = null) {
         val ctx = appContext ?: return
         val now = System.currentTimeMillis()
         for (extraId in parent.poolAccountIds) {
+            if (only != null && extraId != only) continue
             if (!com.minisx.app.auth.OAuthManager.hasStoredCredential(ctx, extraId)) continue
             if (!forced && now - (extraAccountFetchedAt[extraId] ?: 0L) < EXTRA_ACCOUNT_REFRESH_MS) continue
             extraAccountFetchedAt[extraId] = now

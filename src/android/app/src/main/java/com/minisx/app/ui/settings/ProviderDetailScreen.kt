@@ -54,6 +54,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
+import com.minisx.app.quota.QuotaStore
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -1624,7 +1626,11 @@ private fun ChatGptAccountsSection(
         com.minisx.app.provider.ProviderFactory.codexAccountPool(instance, context)
     }
     val activeId = pool?.active()?.instanceId
-    val cooling = pool?.status()?.associate { it.member.instanceId to it.coolingUntilMs } ?: emptyMap()
+    // Re-read the holds after a release, and the per-account usage when the quota store changes.
+    var held by remember { mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
+    @Suppress("UNUSED_VARIABLE") val quotaTick by QuotaStore.state.collectAsState()
+    val cooling = remember(held, quotaTick) { pool?.status()?.associate { it.member.instanceId to it.coolingUntilMs } ?: emptyMap() }
     val timeFormat = remember { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT) }
 
     SettingsSection(
@@ -1653,6 +1659,41 @@ private fun ChatGptAccountsSection(
                         if (status.isNotEmpty()) {
                             Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
+                        // This account's own usage (not the pooled figure) and when each window resets.
+                        if (signedIn) {
+                            val limits = com.minisx.app.widget.UsageWidgetModel.limitsOf(
+                                QuotaStore.accountPools(id), System.currentTimeMillis(), QuotaStore.freshnessPolicy,
+                            ).sortedBy { com.minisx.app.widget.UsageWidgetModel.windowMinutes(it.window) }
+                            if (limits.isEmpty()) {
+                                Text(
+                                    stringResource(R.string.provider_detail_accounts_usage_none),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            for (limit in limits) {
+                                val resets = limit.resetsAt?.let { stringResource(R.string.usage_widget_resets, com.minisx.app.ui.quota.QuotaText.relative(context, it)) }
+                                Text(
+                                    listOfNotNull(
+                                        stringResource(R.string.provider_detail_accounts_left, limit.window, limit.remainingPercent.toInt()),
+                                        resets,
+                                    ).joinToString(" · "),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (com.minisx.app.widget.UsageWidgetModel.isLow(limit.remainingPercent)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                    if (signedIn) {
+                        MinisSmallTextButton(onClick = {
+                            scope.launch { QuotaStore.refreshAccount(instance, id) }
+                        }) { Text(stringResource(R.string.provider_detail_accounts_refresh)) }
+                    }
+                    if (until != null && pool != null) {
+                        MinisSmallTextButton(onClick = {
+                            pool.release(id)
+                            held = held + 1
+                        }) { Text(stringResource(R.string.provider_detail_accounts_release)) }
                     }
                     if (index > 0) {
                         MinisSmallTextButton(onClick = {

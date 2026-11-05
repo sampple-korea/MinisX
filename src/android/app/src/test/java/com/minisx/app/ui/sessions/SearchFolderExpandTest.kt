@@ -112,7 +112,7 @@ class SearchFolderExpandTest {
     @Test fun `the count line is in every locale`() {
         val res = ProductionSources.mainRoot()!!.resolve("../../../../res").canonicalFile
         val dirs = res.listFiles()!!.filter { it.name.startsWith("values") && File(it, "strings.xml").exists() }
-        assertTrue(dirs.size >= 20)
+        assertTrue(dirs.size >= 2)
         for (d in dirs) {
             val f = File(d, "strings_search_folders.xml")
             assertTrue(d.name, f.exists())

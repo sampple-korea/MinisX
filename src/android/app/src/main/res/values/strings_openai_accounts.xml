@@ -23,4 +23,8 @@
     <string name="provider_detail_sign_out_all">Sign out of all accounts</string>
     <string name="settings_browser">Browser</string>
     <string name="settings_browser_subtitle">User agent and browsing data</string>
+    <string name="provider_detail_accounts_refresh">Refresh usage</string>
+    <string name="provider_detail_accounts_release">Release hold</string>
+    <string name="provider_detail_accounts_usage_none">Usage not read yet</string>
+    <string name="provider_detail_accounts_left">%1$s %2$d%% left</string>
 </resources>

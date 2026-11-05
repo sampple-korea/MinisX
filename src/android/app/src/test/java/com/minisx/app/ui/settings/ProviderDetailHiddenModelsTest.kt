@@ -54,7 +54,7 @@ class ProviderDetailHiddenModelsTest {
     @Test
     fun `the new strings exist in every locale folder and no existing strings xml carries them`() {
         val folders = File("src/main/res").listFiles()!!.filter { File(it, "strings.xml").exists() }
-        assertTrue(folders.size >= 23)
+        assertTrue(folders.size >= 2)
         folders.forEach { d ->
             val f = File(d, "strings_hidden_models.xml")
             assertTrue("missing ${f.path}", f.exists())

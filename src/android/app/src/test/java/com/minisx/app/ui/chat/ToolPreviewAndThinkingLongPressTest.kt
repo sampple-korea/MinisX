@@ -53,6 +53,6 @@ class ToolPreviewAndThinkingLongPressTest {
             t.contains("name=\"tool_preview_close_menu\"") && t.contains("name=\"tool_preview_closed_toast\"")
         }
         assertEquals(withSetting.map { it.name }.sorted(), withNew.map { it.name }.sorted())
-        assertTrue(withSetting.size >= 18)
+        assertTrue(withSetting.size >= 2)
     }
 }

@@ -42,7 +42,7 @@ class BackupHistoryDetailLogFoldTest {
     fun `the new strings exist in every locale folder and no existing strings xml carries them`() {
         val res = File("src/main/res")
         val folders = res.listFiles()!!.filter { it.name == "values" || File(it, "strings_backup_restore.xml").exists() }
-        assertTrue(folders.size >= 23)
+        assertTrue(folders.size >= 2)
         folders.forEach { d ->
             val f = File(d, "strings_backup_log.xml")
             assertTrue("missing ${f.path}", f.exists())

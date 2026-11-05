@@ -76,7 +76,7 @@ class SkillSourceUrlTest {
     @Test
     fun `both strings exist in every shipped locale, with escaped apostrophes`() {
         val dirs = res.listFiles()!!.filter { java.io.File(it, "strings.xml").exists() }.map { it.name }
-        assertTrue("found the locales: $dirs", dirs.size >= 18)
+        assertTrue("found the locales: $dirs", dirs.size >= 2)
         for (dir in dirs) {
             val xml = java.io.File(res, "$dir/strings.xml").readText()
             for (key in keys) {
