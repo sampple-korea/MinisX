@@ -5,6 +5,8 @@ package com.minisx.app.ui.chat
 // copied from ChatScreen.kt (unused imports are warnings, not errors);
 // ModelPickerSheet flipped private->internal so ChatScreen can call it.
 
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Favorite
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
@@ -324,6 +326,17 @@ internal fun ModelPickerSheet(
     var collapsedInstanceIds by remember(allInstanceIds) {
         mutableStateOf(allInstanceIds)
     }
+    // Starred models, newest first (see ModelFavorites).
+    val pickerContext = androidx.compose.ui.platform.LocalContext.current
+    var favoriteIds by remember { mutableStateOf(com.minisx.app.data.ModelFavorites.load(pickerContext)) }
+    val toggleFavorite: (String) -> Unit = { id ->
+        favoriteIds = com.minisx.app.data.ModelFavorites.toggled(favoriteIds, id)
+        com.minisx.app.data.ModelFavorites.save(pickerContext, favoriteIds)
+    }
+    val favoriteEntries = remember(favoriteIds, config) {
+        favoriteIds.mapNotNull { id -> config.modelEntries.find { it.id == id } }
+            .filter { e -> !e.isHidden && config.instances.any { it.id == e.providerInstanceId && it.isEnabled } }
+    }
 
     /**
      * [T-android-model-picker-polish] Model whose Quick Test sheet is open.
@@ -578,6 +591,63 @@ internal fun ModelPickerSheet(
                     .fillMaxWidth()
                     .nestedScroll(pickerScrollGuard),
             ) {
+                // ── Favourites: the models the user starred, at the top ──
+                if (searchText.isEmpty() && favoriteEntries.isNotEmpty()) {
+                    item(key = "__favorites__") {
+                        Column(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(14.dp)),
+                        ) {
+                            Text(
+                                stringResource(R.string.model_picker_favorites),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+                            )
+                            favoriteEntries.forEachIndexed { i, entry ->
+                                val isFavActive = activeEntryId == entry.id && selectedGroupId == null
+                                val instance = config.instances.find { it.id == entry.providerInstanceId }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 48.dp)
+                                        .clickable { onSelectEntry(entry.id) }
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Icon(
+                                        if (isFavActive) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                        contentDescription = null,
+                                        tint = if (isFavActive) Color(0xFF007AFF) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                    Spacer(Modifier.width(10.dp))
+                                    Box(Modifier.size(6.dp).background(providerDotColor(instance?.providerType), CircleShape))
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(entry.model.displayName, style = MaterialTheme.typography.bodyMedium)
+                                        Text(
+                                            instance?.label?.ifEmpty { instance.providerType.displayName } ?: entry.model.provider,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        )
+                                    }
+                                    FavoriteButton(true) { toggleFavorite(entry.id) }
+                                }
+                                if (i < favoriteEntries.size - 1) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(start = 52.dp, end = 16.dp),
+                                        thickness = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(6.dp))
+                        }
+                    }
+                }
+
                 // ── Model Groups (grouped section card with embedded header) ──
                 if (filteredGroups.isNotEmpty()) {
                     // Section card: header + rows live in the same surface so
@@ -1273,6 +1343,7 @@ internal fun ModelPickerSheet(
                                                 showActiveBadge = selectedGroupId != null && activeEntryId == entry.id,
                                                 modifier = Modifier.weight(1f),
                                             )
+                                            FavoriteButton(entry.id in favoriteIds) { toggleFavorite(entry.id) }
                                             QuickTestButton(onClick = { quickTestEntry = entry })
                                         }
                                         // Inset hairline between entries.
@@ -1438,7 +1509,7 @@ private fun ProviderEntryRowText(
     showActiveBadge: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val badges = com.minisx.app.ui.components.modalityBadges(entry.model)
+    val badges = com.minisx.app.ui.components.capabilityBadges(entry.model) + com.minisx.app.ui.components.modalityBadges(entry.model)
     Column(modifier = modifier) {
         ModelNameWithActiveBadge(entry.model.displayName, showActiveBadge = showActiveBadge)
         FitOrWrapLine(
@@ -1463,6 +1534,25 @@ private fun ProviderEntryRowText(
             tags = {
                 badges.forEach { badge -> com.minisx.app.ui.components.ModalityBadge(badge) }
             },
+        )
+    }
+}
+
+/** The heart that stars a model; starred models are listed at the top of the picker. */
+@Composable
+private fun FavoriteButton(isFavorite: Boolean, onToggle: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onToggle),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+            contentDescription = stringResource(if (isFavorite) R.string.model_picker_unfavorite else R.string.model_picker_favorite),
+            tint = if (isFavorite) Color(0xFFFF3B30) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier.size(17.dp),
         )
     }
 }

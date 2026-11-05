@@ -8481,6 +8481,14 @@ class ChatViewModel(
             logBubbleAnchor("retry", messageId, located)
             val cutoffSortOrder = BubbleRowLocator.cutoffFor(located, keepBubble = true)
             if (cutoffSortOrder >= 0) {
+                // The answer being thrown away is kept, so the user can flip back to it
+                // (only for the LAST user message: older turns have later turns after them).
+                if (messages.subList(keepThrough + 1, messages.size).none { it.role == "user" }) {
+                    runCatching {
+                        val old = chatRepository.loadMessages(sid).filter { it.sortOrder >= cutoffSortOrder }
+                        alternatives.pushLive(sid, messageId, old)
+                    }
+                }
                 chatRepository.deleteMessagesAfter(sid, cutoffSortOrder)
             }
 
@@ -8501,6 +8509,54 @@ class ChatViewModel(
                     _isStreaming.value = false
                 }
             }
+        }
+    }
+
+    // ── Earlier answers to the last user message (‹ 1/3 ›) ─────────────────
+
+    /** Where the chat stands among the answers to its last user message. [lastAssistantId] carries the switcher. */
+    data class AltInfo(val anchorId: String, val position: Int, val count: Int, val lastAssistantId: String?)
+
+    private val alternatives by lazy {
+        com.minisx.app.data.AlternativesStore(java.io.File(context.filesDir, "minis-global/alternatives"))
+    }
+    private val _altInfo = MutableStateFlow<AltInfo?>(null)
+    val altInfo: StateFlow<AltInfo?> = _altInfo.asStateFlow()
+
+    /** Re-reads the switcher state; cheap, called when a turn ends or the message count changes. */
+    fun refreshAltInfo() {
+        val sid = realSessionId.takeIf { it.isNotEmpty() } ?: sessionId
+        if (isDraft) { _altInfo.value = null; return }
+        viewModelScope.launch(Dispatchers.IO) {
+            val info = runCatching {
+                val rows = chatRepository.loadMessages(sid)
+                val lastUser = rows.lastOrNull { it.role == "user" } ?: return@runCatching null
+                val (pos, count) = alternatives.info(sid, lastUser.id) ?: return@runCatching null
+                val lastAssistant = rows.lastOrNull { it.role == "assistant" && it.sortOrder > lastUser.sortOrder }
+                AltInfo(lastUser.id, pos, count, lastAssistant?.id)
+            }.getOrNull()
+            _altInfo.value = info
+        }
+    }
+
+    /** Flip to the 1-based answer [position] of the last user message. Refused while a turn runs. */
+    fun switchAlternative(position: Int) {
+        if (_isStreaming.value) return
+        val info = _altInfo.value ?: return
+        if (position == info.position || position !in 1..info.count) return
+        val sid = realSessionId.takeIf { it.isNotEmpty() } ?: sessionId
+        viewModelScope.launch(Dispatchers.IO) {
+            val rows = chatRepository.loadMessages(sid)
+            val anchor = rows.firstOrNull { it.id == info.anchorId } ?: return@launch
+            val live = rows.filter { it.sortOrder > anchor.sortOrder }
+            val incoming = alternatives.swap(sid, info.anchorId, position - 1, live) ?: return@launch
+            chatRepository.deleteMessagesAfter(sid, anchor.sortOrder + 1)
+            chatRepository.restoreMessages(incoming)
+            withContext(Dispatchers.Main) {
+                _canResume.value = false
+                loadSession()
+            }
+            refreshAltInfo()
         }
     }
 

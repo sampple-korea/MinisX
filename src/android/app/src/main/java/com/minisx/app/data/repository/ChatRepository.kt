@@ -450,6 +450,11 @@ class ChatRepository(internal val dao: ChatDao) {
     suspend fun deleteMessagesAfter(sessionId: String, keepCount: Int) =
         dao.deleteMessagesAfter(sessionId, keepCount)
 
+    /** Puts stored message rows (an earlier answer) back, as they were. */
+    suspend fun restoreMessages(rows: List<com.minisx.app.data.db.MessageEntity>) {
+        for (row in rows) dao.insertMessage(row)
+    }
+
     /**
      * Rewrite a single message row's parts_json in place. Used by
      * [com.minisx.app.ui.chat.ChatViewModel.rerunFromToolBlock]'s block-

@@ -2021,6 +2021,15 @@
     <string name="code_block_download">다운로드</string>
     <string name="code_block_expand">%1$d줄 더 보기</string>
     <string name="code_block_collapse">접기</string>
+    <string name="alt_previous">이전 답변</string>
+    <string name="alt_next">다음 답변</string>
+    <string name="alt_position">%1$d/%2$d</string>
+    <string name="model_picker_favorites">즐겨찾기</string>
+    <string name="model_picker_favorite">즐겨찾기에 추가</string>
+    <string name="model_picker_unfavorite">즐겨찾기에서 제거</string>
+    <string name="token_usage_context_fill">컨텍스트 창의 %1$d%% 사용 중</string>
+    <string name="settings_no_provider_title">아직 프로바이더가 없어요</string>
+    <string name="settings_no_provider_body">대화하려면 AI 프로바이더(API 키 또는 ChatGPT 로그인)를 먼저 추가하세요. 눌러서 설정할 수 있어요.</string>
     <string name="overlay_thinking">생각 중…</string>
     <string name="bg_live_thinking">추론 중 · %1$s</string>
     <plurals name="bg_live_agents_running">

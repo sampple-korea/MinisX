@@ -5274,12 +5274,16 @@ fun ChatScreen(
                             is FlatChatItem.AssistantUsage -> {
                                 val msgId = originalMessageId(item.messageId)
                                 val shown = msgId in revealedUsageIds
+                                // Earlier answers to the last user message (‹ 1/3 ›).
+                                val altInfo by viewModel.altInfo.collectAsState()
+                                androidx.compose.runtime.LaunchedEffect(msgId, isStreaming) { viewModel.refreshAltInfo() }
                                 // [T-android-usage-capsule-blank-tap-margin]
                                 // Dismiss-only, exact bounds (UsageCapsuleRow):
                                 // hidden, the zero-height row used to catch taps
                                 // ~24dp above it through the 48dp touch-target
                                 // expansion and reveal the capsule beside the
                                 // reply's last line, bypassing every rule.
+                                androidx.compose.foundation.layout.Column {
                                 UsageCapsuleRow(
                                     shown = shown,
                                     onToggle = { viewModel.toggleUsageCapsule(msgId) },
@@ -5292,6 +5296,15 @@ fun ChatScreen(
                                     ) {
                                         UsageCapsule(usage = item.usage, completedAt = item.completedAt)
                                     }
+                                }
+                                altInfo?.takeIf { it.lastAssistantId == msgId && !isStreaming }?.let { alt ->
+                                    AlternativeSwitcher(
+                                        position = alt.position,
+                                        count = alt.count,
+                                        onPrevious = { safeMutate { viewModel.switchAlternative(alt.position - 1) } },
+                                        onNext = { safeMutate { viewModel.switchAlternative(alt.position + 1) } },
+                                    )
+                                }
                                 }
                             }
                             is FlatChatItem.AssistantError -> InlineErrorBanner(

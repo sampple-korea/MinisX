@@ -158,6 +158,15 @@
     <string name="code_block_download">Download</string>
     <string name="code_block_expand">Show %1$d more lines</string>
     <string name="code_block_collapse">Fold</string>
+    <string name="alt_previous">Previous answer</string>
+    <string name="alt_next">Next answer</string>
+    <string name="alt_position">%1$d/%2$d</string>
+    <string name="model_picker_favorites">Favorites</string>
+    <string name="model_picker_favorite">Add to favorites</string>
+    <string name="model_picker_unfavorite">Remove from favorites</string>
+    <string name="token_usage_context_fill">%1$d%% of the window is used</string>
+    <string name="settings_no_provider_title">No provider yet</string>
+    <string name="settings_no_provider_body">Add an AI provider (an API key or a ChatGPT sign-in) before chatting. Tap to set one up.</string>
     <string name="overlay_thinking">Thinking…</string>
     <string name="bg_live_thinking">Thinking · %1$s</string>
     <plurals name="bg_live_agents_running">

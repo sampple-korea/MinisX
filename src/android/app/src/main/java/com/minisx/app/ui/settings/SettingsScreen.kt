@@ -184,6 +184,39 @@ fun SettingsScreen(
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             )
+            // Nothing to talk to yet: say so first, with the way out (like rikkahub's provider warning card).
+            val providerRepo = (context.applicationContext as com.minisx.app.MinisApp).providerRepositoryOrNull
+            val providerConfig = providerRepo?.config?.collectAsState()?.value
+            if (providerConfig != null && providerConfig.instances.none { it.isEnabled }) {
+                androidx.compose.material3.Surface(
+                    onClick = onProvidersClick,
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Outlined.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.settings_no_provider_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                            Text(
+                                stringResource(R.string.settings_no_provider_body),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                            )
+                        }
+                    }
+                }
+            }
             // -- LLM Providers --
             SettingsSection(
                 title = stringResource(R.string.settings_section_llm_providers),

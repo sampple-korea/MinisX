@@ -450,6 +450,23 @@ fun modalityBadges(model: LLMModel): List<String> {
 }
 
 /**
+ * What a model can do besides its modalities, as short chips: "1M" / "200K" context and "think" for models
+ * that reason. Shown next to the modality chips in the model picker.
+ */
+fun capabilityBadges(model: LLMModel): List<String> {
+    val badges = mutableListOf<String>()
+    model.contextWindow?.takeIf { it > 0 }?.let { badges.add(contextLabel(it)) }
+    if (model.supportsReasoning == true) badges.add("think")
+    return badges
+}
+
+internal fun contextLabel(tokens: Int): String = when {
+    tokens >= 1_000_000 -> "${(tokens / 100_000) / 10.0}M".replace(".0M", "M")
+    tokens >= 1_000 -> "${tokens / 1_000}K"
+    else -> tokens.toString()
+}
+
+/**
  * [T-android-modality-chip] One modality chip, iOS entryRow badge recipe
  * (UnifiedModelPicker.swift:1109): 9pt medium, tertiarySystemFill rounded-3
  * background. Two Android-specific constraints baked in:

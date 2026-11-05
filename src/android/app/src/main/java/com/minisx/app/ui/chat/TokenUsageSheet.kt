@@ -1,5 +1,9 @@
 package com.minisx.app.ui.chat
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -85,6 +89,10 @@ fun TokenUsageSheet(
                 StatRow(stringResource(R.string.token_usage_context_used), formatTokens(s?.context ?: 0))
                 contextWindow?.let { StatRow(stringResource(R.string.token_usage_context_window), formatTokens(it)) }
                 maxOutput?.let { StatRow(stringResource(R.string.token_usage_max_output), formatTokens(it)) }
+                // How full the window is: one bar, amber from 75% and red from 90% (where auto-compact starts).
+                contextWindow?.takeIf { it > 0 }?.let { window ->
+                    ContextFillBar(used = (s?.context ?: 0).toLong(), window = window.toLong())
+                }
             }
 
             thinking?.let { t ->
@@ -184,3 +192,40 @@ private fun formatTokens(n: Long): String = when {
 }
 
 private fun formatTokens(n: Int): String = formatTokens(n.toLong())
+
+/** "42% of the window": an 8dp rounded bar that turns amber at 75% and red at 90%. */
+@Composable
+private fun ContextFillBar(used: Long, window: Long) {
+    val fraction = (used.toDouble() / window).coerceIn(0.0, 1.0).toFloat()
+    val percent = (fraction * 100).toInt()
+    val fill = when {
+        fraction >= 0.9f -> Color(0xFFFF453A)
+        fraction >= 0.75f -> Color(0xFFFFB020)
+        else -> MaterialTheme.colorScheme.primary
+    }
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .androidClip()
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+        ) {
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction.coerceAtLeast(if (used > 0) 0.02f else 0f))
+                    .height(8.dp)
+                    .androidClip()
+                    .background(fill),
+            )
+        }
+        Text(
+            text = stringResource(R.string.token_usage_context_fill, percent),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+}
+
+private fun Modifier.androidClip(): Modifier = this.clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
