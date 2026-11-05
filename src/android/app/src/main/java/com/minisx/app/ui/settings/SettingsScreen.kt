@@ -1,5 +1,11 @@
 package com.minisx.app.ui.settings
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.layout.Layout
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -153,12 +159,31 @@ fun SettingsScreen(
             )
         },
     ) { padding ->
+        var query by remember { mutableStateOf("") }
+        androidx.compose.runtime.CompositionLocalProvider(LocalSettingsQuery provides query) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
+            // Search: the list is long, so find a setting by what it is called or what it does.
+            androidx.compose.material3.OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                singleLine = true,
+                placeholder = { Text(stringResource(R.string.settings_search_hint)) },
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.settings_search_clear))
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            )
             // -- LLM Providers --
             SettingsSection(
                 title = stringResource(R.string.settings_section_llm_providers),
@@ -410,6 +435,7 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
         }
+        }
     }
 
     if (showFeedbackSheet) {
@@ -541,41 +567,62 @@ private fun SettingsSection(
     footer: String? = null,
     content: @Composable () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp),
-    ) {
-        // Section header
-        Text(
-            text = title.uppercaseForDisplay(),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = 0.5.sp,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-        )
-
-        // Section card
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(color = MaterialTheme.colorScheme.surfaceContainerLow),
-        ) {
-            content()
-        }
-
-        // Section footer
-        if (footer != null) {
+    val searching = LocalSettingsQuery.current.isNotBlank()
+    // Custom layout instead of a Column: while the search filters the rows, a section none of whose rows
+    // match takes no space at all (header and footer included).
+    Layout(
+        content = {
+            // Section header
             Text(
-                text = footer,
-                style = MaterialTheme.typography.bodySmall,
+                text = title.uppercaseForDisplay(),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                lineHeight = 16.sp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.5.sp,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .semantics { heading() },
             )
+
+            // Section card
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(color = MaterialTheme.colorScheme.surfaceContainerLow),
+            ) {
+                content()
+            }
+
+            // Section footer
+            if (footer != null) {
+                Text(
+                    text = footer,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                    lineHeight = 16.sp,
+                )
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+    ) { measurables, constraints ->
+        val loose = constraints.copy(minHeight = 0)
+        val placeables = measurables.map { it.measure(loose) }
+        val card = placeables.getOrNull(1)
+        if (searching && (card == null || card.height == 0)) {
+            layout(constraints.maxWidth, 0) {}
+        } else {
+            val top = 20.dp.roundToPx()
+            val height = top + placeables.sumOf { it.height }
+            layout(constraints.maxWidth, height) {
+                var y = top
+                for (p in placeables) {
+                    p.placeRelative(0, y)
+                    y += p.height
+                }
+            }
         }
     }
 }
@@ -595,11 +642,16 @@ private fun SettingsItem(
     // [T-update-channels] A small dot before the chevron.
     badge: Boolean = false,
 ) {
+    // While the search box has text, only the rows that match it are drawn.
+    val query = LocalSettingsQuery.current
+    if (query.isNotBlank() && !settingsRowMatches(query, title, subtitle)) return
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
+                // One focus stop for TalkBack: "title, subtitle, button" instead of three.
+                .semantics(mergeDescendants = true) {}
+                .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -669,3 +721,12 @@ private fun SettingsItem(
     }
 }
 
+
+/** The text typed in the Settings search box; empty when the full list is shown. */
+private val LocalSettingsQuery = androidx.compose.runtime.compositionLocalOf { "" }
+
+/** A row matches when every word of [query] appears in its title or subtitle (case-insensitive). */
+internal fun settingsRowMatches(query: String, title: String, subtitle: String?): Boolean {
+    val hay = (title + " " + subtitle.orEmpty()).lowercase()
+    return query.lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }.all { it in hay }
+}

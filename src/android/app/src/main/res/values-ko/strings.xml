@@ -2001,6 +2001,9 @@
     <string name="advisor_setting_title">어드바이저</string>
     <string name="advisor_setting_off">끔</string>
     <string name="advisor_setting_footer">에이전트가 자문할 수 있는 더 강력한 모델을 고릅니다. 어드바이저는 대화 전체를 보고 조언만 돌려주며, 에이전트는 본격적인 작업 전과 작업을 끝냈다고 말하기 전에 물어보도록 안내받습니다. 자문할 때마다 모델 호출이 한 번 더 일어납니다.</string>
+    <string name="settings_search_hint">설정 검색</string>
+    <string name="settings_search_clear">검색어 지우기</string>
+    <string name="backup_dest_details">서버 세부정보</string>
     <string name="overlay_thinking">생각 중…</string>
     <string name="bg_live_thinking">추론 중 · %1$s</string>
     <plurals name="bg_live_agents_running">
