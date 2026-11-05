@@ -2,6 +2,11 @@
 >
 > 이 프로젝트는 **개인용으로, 취미 삼아** 만들고 있습니다. 정상 동작을 **보장하지 않고**, 버그·데이터 손실·계정 문제가 생겨도 책임지지 않으며, 예고 없이 바뀌거나 망가질 수 있습니다.
 > 기능 요청이나 수정에 대한 **기대는 하지 마세요.** 솔직히 **쓰지 않는 것을 추천합니다.** 그래도 쓰신다면 모두 본인 책임입니다.
+>
+> ⚠️ **Please read first**
+>
+> This is a **personal hobby project**, built for my own use. It is **not guaranteed to work**, I take **no responsibility** for bugs, data loss or account problems, and it may change or break without notice.
+> **Do not expect** feature requests or fixes to be handled. Honestly, **I recommend that you do not use it.** If you use it anyway, everything is at your own risk.
 
 # MinisX
 
