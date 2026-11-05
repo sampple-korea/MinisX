@@ -17,4 +17,8 @@
     <string name="provider_detail_accounts_waiting">브라우저에서 로그인하는 중…</string>
     <string name="provider_detail_accounts_added">추가됨: %1$s</string>
     <string name="quota_pooled_accounts">ChatGPT 계정 %1$d개 합산</string>
+    <string name="provider_detail_accounts_count">계정 %1$d개</string>
+    <string name="provider_detail_sign_out_all">모든 계정 로그아웃</string>
+    <string name="settings_browser">브라우저</string>
+    <string name="settings_browser_subtitle">사용자 에이전트, 브라우징 데이터</string>
 </resources>

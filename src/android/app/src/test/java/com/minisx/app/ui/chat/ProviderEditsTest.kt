@@ -17,6 +17,7 @@ class ProviderEditsTest {
         providerType = ProviderType.openAI,
         credentialType = ProviderCredential.apiKey,
         useResponsesAPI = responses,
+        createdAt = 1L, // fixed: two instances built a millisecond apart must still compare equal
     )
 
     @Test

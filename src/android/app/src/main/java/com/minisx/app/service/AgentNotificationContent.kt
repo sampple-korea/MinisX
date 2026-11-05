@@ -70,7 +70,7 @@ internal fun notificationSmallIconFor(phase: AgentPhase, toolName: String?, wait
     AgentPhase.TOOL -> toolIconResFor(toolName)
     AgentPhase.THINKING -> R.drawable.ic_tool_psychology
     AgentPhase.ASKING -> R.drawable.ic_notification_question
-    AgentPhase.GENERATING, AgentPhase.IDLE -> R.drawable.ic_launcher_monochrome
+    AgentPhase.GENERATING, AgentPhase.IDLE -> R.drawable.ic_notification_minis
 }
 
 /**

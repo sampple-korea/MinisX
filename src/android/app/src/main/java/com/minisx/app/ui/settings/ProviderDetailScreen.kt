@@ -227,7 +227,7 @@ fun ProviderDetailScreen(
         SettingsSection(
             header = if (isOAuthProvider) stringResource(R.string.add_provider_credential) else stringResource(R.string.provider_list_api_key),
             footer = if (isOAuthProvider) {
-                "OAuth tokens are stored securely in encrypted storage."
+                stringResource(R.string.provider_detail_oauth_tokens_stored)
             } else {
                 null
             },
@@ -283,7 +283,7 @@ fun ProviderDetailScreen(
             SettingsSection(
                 header = stringResource(R.string.provider_detail_manual_bearer_token),
                 footer = stringResource(R.string.provider_detail_use_a_static_bearer_token_instead_of_the) +
-                    "Useful with custom proxy endpoints.",
+                    stringResource(R.string.provider_detail_manual_bearer_footer_extra),
             ) {
                 SettingsCardBlock {
                     ManualBearerTokenSection(
@@ -1109,20 +1109,38 @@ private fun OAuthCredentialBlock(
             )
         }
     }
-    // [T-multi-openai-accounts] Which ChatGPT account this provider is signed in as.
+    // [T-multi-openai-accounts] Which ChatGPT account(s) this provider is signed in as: one line for a
+    // single account, a numbered list when more accounts are added under it.
     if (instance.providerType == ProviderType.openAI && displayedKey.isNotEmpty()) {
-        val accountLine = remember(instance.id, displayedKey) {
-            com.minisx.app.auth.OpenAIOAuthManager(context, instance.id).let { m ->
-                listOfNotNull(m.email, m.planType).joinToString(" · ").ifEmpty { null }
+        val accountLines = remember(instance.id, instance.poolAccountIds, displayedKey) {
+            (listOf(instance.id) + instance.poolAccountIds).mapNotNull { id ->
+                if (!com.minisx.app.auth.OAuthManager.hasStoredCredential(context, id)) return@mapNotNull null
+                com.minisx.app.auth.OpenAIOAuthManager(context, id).let { m ->
+                    listOfNotNull(m.email, m.planType).joinToString(" · ").ifEmpty { null }
+                }
             }
         }
-        if (accountLine != null) {
+        if (accountLines.size == 1) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                stringResource(R.string.provider_detail_openai_account, accountLine),
+                stringResource(R.string.provider_detail_openai_account, accountLines.first()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        } else if (accountLines.size > 1) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.provider_detail_accounts_count, accountLines.size),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            accountLines.forEachIndexed { index, line ->
+                Text(
+                    "${index + 1}. $line",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
     Spacer(modifier = Modifier.height(8.dp))
@@ -1141,6 +1159,14 @@ private fun OAuthCredentialBlock(
                 // the UI swaps to the Sign In button immediately.
                 com.minisx.app.auth.OAuthManager.forInstance(context, instance)?.logout()
                 providerRepository.deleteApiKey(instance.id)
+                // [T-codex-account-pool] Signing out of the provider signs out every account under it.
+                if (instance.poolAccountIds.isNotEmpty()) {
+                    instance.poolAccountIds.forEach { extraId ->
+                        runCatching { com.minisx.app.auth.OpenAIOAuthManager(context, extraId).logout() }
+                        providerRepository.deleteApiKey(extraId)
+                    }
+                    providerRepository.updateInstance(instance.copy(poolAccountIds = emptyList()))
+                }
                 displayedKey = ""
                 needsReauth = false
                 AppLogger.info(TAG, "OAuth signed out for ${instance.id} (tokens + apiKey cleared)")
@@ -1150,7 +1176,11 @@ private fun OAuthCredentialBlock(
                 contentColor = MaterialTheme.colorScheme.error,
             ),
         ) {
-            Text(stringResource(R.string.provider_detail_sign_out))
+            Text(
+                stringResource(
+                    if (instance.poolAccountIds.isNotEmpty()) R.string.provider_detail_sign_out_all else R.string.provider_detail_sign_out,
+                ),
+            )
         }
     }
     if (displayedKey.isNotEmpty() && needsReauth) {

@@ -754,7 +754,6 @@ fun SessionListScreen(
     var showOverflowMenu by remember { mutableStateOf(false) }
     var editSession by remember { mutableStateOf<ChatSessionEntity?>(null) }
     var showBrowserSheet by remember { mutableStateOf(false) }
-    var showBrowserSettings by remember { mutableStateOf(false) }
     val browserTabPool = remember { com.minisx.app.browser.BrowserTabPool(context) }
 
     // [T-android-session-grouping] Groups are pulled out FIRST; only the
@@ -1050,7 +1049,7 @@ fun SessionListScreen(
                                 contentDescription = stringResource(R.string.sessionlist_scheduled_tasks),
                             )
                         }
-                        // Shell menu (matching iOS trailing shell button: Terminal, Rootfs, Browser)
+                        // Shell menu: selection, terminal and the browser. Settings live in Settings.
                         Box {
                             IconButton(onClick = { showOverflowMenu = true }) {
                                 Icon(Icons.Outlined.Terminal, contentDescription = stringResource(R.string.sessionlist_shell))
@@ -1083,16 +1082,6 @@ fun SessionListScreen(
                                         Icon(Icons.Outlined.Terminal, contentDescription = null)
                                     },
                                 )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.sessionlist_rootfs_management)) },
-                                    onClick = {
-                                        showOverflowMenu = false
-                                        onRootfsClick()
-                                    },
-                                    leadingIcon = {
-                                        Icon(Icons.Outlined.Settings, contentDescription = null)
-                                    },
-                                )
                                 MinisMenuDivider()
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.sessionlist_open_browser)) },
@@ -1103,16 +1092,6 @@ fun SessionListScreen(
                                     },
                                     leadingIcon = {
                                         Icon(Icons.Outlined.Language, contentDescription = null)
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.sessionlist_browser_settings)) },
-                                    onClick = {
-                                        showOverflowMenu = false
-                                        showBrowserSettings = true
-                                    },
-                                    leadingIcon = {
-                                        Icon(Icons.Outlined.Settings, contentDescription = null)
                                     },
                                 )
                             }
@@ -1794,12 +1773,6 @@ fun SessionListScreen(
     }
 
     // Browser Settings sheet
-    if (showBrowserSettings) {
-        com.minisx.app.ui.browser.BrowserSettingsSheet(
-            tabPool = browserTabPool,
-            onDismiss = { showBrowserSettings = false },
-        )
-    }
 }
 
 // ─── Dual FAB Row (matching iOS fabRow) ─────────────────────────────────────

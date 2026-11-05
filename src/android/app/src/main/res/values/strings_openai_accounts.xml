@@ -17,4 +17,10 @@
     <string name="provider_detail_accounts_waiting">Waiting for the sign-in in the browser…</string>
     <string name="provider_detail_accounts_added">Added: %1$s</string>
     <string name="quota_pooled_accounts">Pooled across %1$d ChatGPT accounts</string>
+    <string name="provider_detail_oauth_tokens_stored">OAuth tokens are stored securely in encrypted storage.</string>
+    <string name="provider_detail_manual_bearer_footer_extra">Useful with custom proxy endpoints.</string>
+    <string name="provider_detail_accounts_count">Accounts (%1$d)</string>
+    <string name="provider_detail_sign_out_all">Sign out of all accounts</string>
+    <string name="settings_browser">Browser</string>
+    <string name="settings_browser_subtitle">User agent and browsing data</string>
 </resources>

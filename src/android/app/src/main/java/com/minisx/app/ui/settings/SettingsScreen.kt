@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Lan
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material.icons.outlined.VpnLock
@@ -129,6 +130,14 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     var showFeedbackSheet by remember { mutableStateOf(false) }
+    var showBrowserSettings by remember { mutableStateOf(false) }
+    if (showBrowserSettings) {
+        val browserTabPool = remember { com.minisx.app.browser.BrowserTabPool(context) }
+        com.minisx.app.ui.browser.BrowserSettingsSheet(
+            tabPool = browserTabPool,
+            onDismiss = { showBrowserSettings = false },
+        )
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -250,6 +259,14 @@ fun SettingsScreen(
                     title = stringResource(R.string.settings_mcp),
                     subtitle = stringResource(R.string.settings_mcp_subtitle),
                     onClick = onMcpClick,
+                )
+                // The browser's settings used to sit in the session list's shell menu; settings live here.
+                SettingsItem(
+                    icon = Icons.Outlined.Language,
+                    iconColor = Color(0xFF007AFF),
+                    title = stringResource(R.string.settings_browser),
+                    subtitle = stringResource(R.string.settings_browser_subtitle),
+                    onClick = { showBrowserSettings = true },
                 )
                 SettingsItem(
                     icon = Icons.Outlined.Terminal,
