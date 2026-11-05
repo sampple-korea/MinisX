@@ -16,7 +16,11 @@ sealed class LLMError(message: String, cause: Throwable? = null) : Exception(mes
     class ProviderError(val detail: String, val httpStatus: Int? = null) :
         LLMError("Provider error: $detail")
     class DecodingError(cause: Throwable) : LLMError("Decoding error: ${cause.message}", cause)
-    class RateLimited : LLMError("Rate limited — please try again later")
+    /**
+     * [T-codex-account-pool] [retryAfterMs] is when the limit lifts, if the provider said (the
+     * ChatGPT/Codex usage-limit reply carries `resets_in_seconds`); null when it did not.
+     */
+    class RateLimited(val retryAfterMs: Long? = null) : LLMError("Rate limited — please try again later")
     /**
      * [T-android-503-fallback] Retry-worthy failure. [httpStatus] carries the
      * response code ONLY when the failure was a real HTTP response from the

@@ -176,7 +176,7 @@ class QuotaSubscriptionTest {
         assertEquals("both Claude paths feed the sink", 2,
             anthropic.split("if (isOAuth) com.minisx.app.quota.QuotaObservationSink.recordAnthropicResponse(quotaInstanceId, response.headers)").size - 1)
         val openai = ProductionSources.read("provider/openai/OpenAIProvider.kt")
-        val sink = openai.indexOf("QuotaObservationSink.recordCodexResponse(quotaInstanceId, response.headers)")
+        val sink = openai.indexOf("QuotaObservationSink.recordCodexResponse(leased?.member?.instanceId ?: quotaInstanceId, response.headers)")
         assertTrue("Codex replies feed the sink before the error branch", sink > 0 &&
             sink < openai.indexOf("[T321] ← HTTP \${response.code} error body"))
         val factory = ProductionSources.read("provider/ProviderFactory.kt")

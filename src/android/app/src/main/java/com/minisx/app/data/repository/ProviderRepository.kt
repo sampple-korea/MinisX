@@ -911,6 +911,11 @@ class ProviderRepository(private val context: Context) {
             .filter { it.providerInstanceId == instanceId }
             .map { it.id }
             .toSet()
+        // [T-codex-account-pool] The extra accounts of this provider go with it.
+        config.instances.firstOrNull { it.id == instanceId }?.poolAccountIds?.forEach { extraId ->
+            runCatching { com.minisx.app.auth.OpenAIOAuthManager(context, extraId).logout() }
+            deleteApiKey(extraId)
+        }
         config.instances.removeAll { it.id == instanceId }
         config.modelEntries.removeAll { it.providerInstanceId == instanceId }
 

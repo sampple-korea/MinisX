@@ -46,7 +46,7 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
             val auth = payload.optJSONObject("https://api.openai.com/auth")
             fun claim(name: String): String? =
                 auth?.optString(name)?.takeIf { it.isNotEmpty() } ?: payload.optString(name).takeIf { it.isNotEmpty() }
-            return IdTokenClaims(claim("chatgpt_account_id"), claim("chatgpt_plan_type"))
+            return IdTokenClaims(claim("chatgpt_account_id"), claim("chatgpt_plan_type"), email = payload.optString("email").takeIf { it.isNotEmpty() })
         }
 
         /**
@@ -64,21 +64,43 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
             val access = of("access_token")
             val accountId = id?.accountId ?: access?.accountId
             val planType = id?.planType ?: access?.planType
-            if (accountId == null && planType == null) return null
+            val email = id?.email ?: access?.email
+            if (accountId == null && planType == null && email == null) return null
             val source = when {
                 id?.accountId != null -> "id_token"
                 access?.accountId != null -> "access_token"
                 else -> null
             }
-            return IdTokenClaims(accountId, planType, source)
+            return IdTokenClaims(accountId, planType, source, email)
         }
+
+        /**
+         * [T-multi-openai-accounts] The id of the instance in [others] (instance id to its stored
+         * ChatGPT account id) that already holds [accountId], or null. A second sign-in that lands
+         * on an account that is already added must not create a duplicate provider.
+         */
+        fun duplicateOf(accountId: String?, others: Map<String, String?>): String? =
+            if (accountId.isNullOrEmpty()) null else others.entries.firstOrNull { it.value == accountId }?.key
+
+        /**
+         * The authorize URL's extra parameters when other accounts exist: `prompt=login` makes the
+         * sign-in page ask for credentials instead of silently reusing the browser's ChatGPT session
+         * (which would just add the same account again).
+         */
+        internal fun accountPromptParams(force: Boolean): List<String> = if (force) listOf("prompt=login") else emptyList()
 
         /**
          * Static helper: perform full login flow and save the access token.
          * Returns the access token. Mirrors ClaudeOAuthManager.login().
          */
-        suspend fun login(context: Context, instanceId: String, providerRepository: com.minisx.app.data.repository.ProviderRepository): String {
+        suspend fun login(
+            context: Context,
+            instanceId: String,
+            providerRepository: com.minisx.app.data.repository.ProviderRepository,
+            forceAccountPrompt: Boolean = false,
+        ): String {
             val manager = OpenAIOAuthManager(context, instanceId)
+            manager.forceAccountPrompt = forceAccountPrompt
             val token = manager.performLogin(context)
             providerRepository.saveApiKey(instanceId, token)
             return token
@@ -87,6 +109,9 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
 
     private var loginCallbackServer: OAuthCallbackServer? = null
     private var expectedState: String? = null
+
+    /** Ask the sign-in page to re-authenticate (see [accountPromptParams]). */
+    var forceAccountPrompt: Boolean = false
 
     /**
      * Perform the full OAuth login flow.
@@ -185,7 +210,7 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
             "codex_cli_simplified_flow=true",
             "originator=codex_cli_rs",
             "id_token_add_organizations=true",
-        ).joinToString("&")
+        ).plus(accountPromptParams(forceAccountPrompt)).joinToString("&")
     }
 
     // [T-android-codex-account-id-claim] Logins made before the claim was read
@@ -201,11 +226,17 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
         get() = loadOAuthString("plan_type") ?: backfill()?.planType
         private set(value) { value?.let { saveOAuthString("plan_type", it) } }
 
+    /** The ChatGPT account's e-mail, shown so several accounts can be told apart. */
+    var email: String?
+        get() = loadOAuthString("email") ?: backfill()?.email
+        private set(value) { value?.let { saveOAuthString("email", it) } }
+
     private fun backfill(): IdTokenClaims? {
         val claims = claimsFromTokens(loadStoredTokens() ?: return null) ?: return null
         var wrote = false
         if (claims.accountId != null && loadOAuthString("account_id") == null) { accountId = claims.accountId; wrote = true }
         if (claims.planType != null && loadOAuthString("plan_type") == null) { planType = claims.planType; wrote = true }
+        if (claims.email != null && loadOAuthString("email") == null) { email = claims.email; wrote = true }
         if (wrote) AppLogger.info(TAG, "account claims backfilled (instance=$instanceId hasAccountId=${claims.accountId != null} source=${claims.source})")
         return claims
     }
@@ -222,6 +253,7 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
         val claims = claimsFromTokens(json)
         claims?.accountId?.let { accountId = it }
         claims?.planType?.let { planType = it }
+        claims?.email?.let { email = it }
         AppLogger.info(TAG, "account claims (instance=$instanceId hasAccountId=${claims?.accountId != null} source=${claims?.source})")
     }
 
@@ -382,5 +414,5 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
             .build()
     }
 
-    internal data class IdTokenClaims(val accountId: String?, val planType: String?, val source: String? = null)
+    internal data class IdTokenClaims(val accountId: String?, val planType: String?, val source: String? = null, val email: String? = null)
 }

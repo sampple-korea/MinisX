@@ -37,6 +37,30 @@ object ProviderFactory {
      */
     fun oneOffSessionId(): String = java.util.UUID.randomUUID().toString()
 
+    /**
+     * [T-codex-account-pool] The accounts signed in under [instance]: its own first, then the extra
+     * ones in the order they were added. Null when there is only one usable account (nothing to
+     * switch to).
+     */
+    internal fun codexAccountPool(instance: ProviderInstance, context: Context): com.minisx.app.provider.openai.CodexAccountPool? {
+        if (instance.poolAccountIds.isEmpty()) return null
+        val ids = (listOf(instance.id) + instance.poolAccountIds)
+            .filter { com.minisx.app.auth.OAuthManager.hasStoredCredential(context, it) }
+        if (ids.size < 2) return null
+        val members = ids.mapIndexed { index, id ->
+            val manager = OpenAIOAuthManager(context, id)
+            com.minisx.app.provider.openai.CodexAccountPool.Member(
+                instanceId = id,
+                label = manager.email ?: "#${index + 1}",
+                accountId = { manager.accountId },
+                token = { manager.validAccessToken() ?: throw com.minisx.app.data.model.LLMError.InvalidApiKey() },
+            )
+        }
+        return com.minisx.app.provider.openai.CodexAccountPool(
+            members, com.minisx.app.provider.openai.CodexAccountPool.PrefsCooldowns.get(context),
+        )
+    }
+
     fun create(
         instance: ProviderInstance,
         apiKey: String,
@@ -121,6 +145,7 @@ object ProviderFactory {
                         // [T-quota-codex-subscription] Replies' x-codex-*
                         // headers feed this instance's quota.
                         it.quotaInstanceId = instance.id
+                        it.accountPool = codexAccountPool(instance, context)
                     }
                 } else {
                     // API key, or manual OAuth bearer (with or without custom

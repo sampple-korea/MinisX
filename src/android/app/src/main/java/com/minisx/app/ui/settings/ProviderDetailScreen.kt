@@ -443,6 +443,16 @@ fun ProviderDetailScreen(
             }
         }
 
+        // ─── Accounts (ChatGPT / Codex sign-ins) ────────────────────
+        // [T-codex-account-pool] Several ChatGPT accounts under this one provider, used in turn:
+        // the first until it hits its usage limit, then the next, and back again after the reset.
+        if (instance.providerType == ProviderType.openAI &&
+            instance.credentialType == com.minisx.app.data.model.ProviderCredential.oauth &&
+            instance.customBaseURL.isNullOrBlank()
+        ) {
+            ChatGptAccountsSection(instance = instance, providerRepository = providerRepository)
+        }
+
         // ─── Response idle timeout ──────────────────────────────────
         // [T-sse-idle-timeout] OpenAI-compatible API-key instances only (the
         // Codex sign-in path keeps its own budgets). Per device, not synced:
@@ -1005,6 +1015,12 @@ private fun OAuthCredentialBlock(
                     ProviderType.openAI ->
                         com.minisx.app.auth.OpenAIOAuthManager.login(
                             context, instance.id, providerRepository,
+                            // [T-multi-openai-accounts] With several ChatGPT accounts added, ask which
+                            // one is signing in instead of reusing the browser's session.
+                            forceAccountPrompt = providerRepository.config.value.instances.any {
+                                it.id != instance.id && it.providerType == ProviderType.openAI &&
+                                    it.credentialType == com.minisx.app.data.model.ProviderCredential.oauth
+                            },
                         )
                     ProviderType.openRouter ->
                         com.minisx.app.auth.OpenRouterOAuthManager.login(
@@ -1083,6 +1099,22 @@ private fun OAuthCredentialBlock(
                 color = if (isAuthenticating) MaterialTheme.colorScheme.onSurfaceVariant
                 else MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+    // [T-multi-openai-accounts] Which ChatGPT account this provider is signed in as.
+    if (instance.providerType == ProviderType.openAI && displayedKey.isNotEmpty()) {
+        val accountLine = remember(instance.id, displayedKey) {
+            com.minisx.app.auth.OpenAIOAuthManager(context, instance.id).let { m ->
+                listOfNotNull(m.email, m.planType).joinToString(" · ").ifEmpty { null }
+            }
+        }
+        if (accountLine != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.provider_detail_openai_account, accountLine),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -1535,5 +1567,114 @@ private fun ResponseIdleTimeoutSection(instanceId: String) {
                 }
             },
         )
+    }
+}
+
+
+/**
+ * [T-codex-account-pool] The ChatGPT accounts signed in under one OpenAI (OAuth) provider. The
+ * provider's own sign-in is the first account; "Add account" signs in another one under the same
+ * provider, and requests move through them as each hits its usage limit.
+ */
+@Composable
+private fun ChatGptAccountsSection(
+    instance: com.minisx.app.data.model.ProviderInstance,
+    providerRepository: ProviderRepository,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+    var adding by remember(instance.id) { mutableStateOf(false) }
+    var addError by remember(instance.id) { mutableStateOf<String?>(null) }
+    val accountIds = listOf(instance.id) + instance.poolAccountIds
+    val pool = remember(instance.poolAccountIds, adding) {
+        com.minisx.app.provider.ProviderFactory.codexAccountPool(instance, context)
+    }
+    val activeId = pool?.active()?.instanceId
+    val cooling = pool?.status()?.associate { it.member.instanceId to it.coolingUntilMs } ?: emptyMap()
+    val timeFormat = remember { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT) }
+
+    SettingsSection(
+        header = stringResource(R.string.provider_detail_accounts),
+        footer = stringResource(R.string.provider_detail_accounts_footer),
+    ) {
+        SettingsCardBlock {
+            accountIds.forEachIndexed { index, id ->
+                val manager = com.minisx.app.auth.OpenAIOAuthManager(context, id)
+                val signedIn = com.minisx.app.auth.OAuthManager.hasStoredCredential(context, id)
+                val title = manager.email ?: stringResource(R.string.provider_detail_accounts_unnamed, index + 1)
+                val until = cooling[id]
+                val status = when {
+                    !signedIn -> stringResource(R.string.provider_detail_accounts_signed_out)
+                    until != null -> stringResource(R.string.provider_detail_accounts_cooling, timeFormat.format(java.util.Date(until)))
+                    pool != null && id == activeId -> stringResource(R.string.provider_detail_accounts_in_use)
+                    pool != null -> stringResource(R.string.provider_detail_accounts_standby)
+                    else -> manager.planType.orEmpty()
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("${index + 1}. $title", style = MaterialTheme.typography.bodyMedium)
+                        if (status.isNotEmpty()) {
+                            Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    if (index > 0) {
+                        MinisSmallTextButton(onClick = {
+                            runCatching { manager.logout() }
+                            providerRepository.deleteApiKey(id)
+                            providerRepository.instance(instance.id)?.let { cur ->
+                                providerRepository.updateInstance(cur.copy(poolAccountIds = cur.poolAccountIds - id))
+                            }
+                        }) { Text(stringResource(R.string.provider_detail_accounts_remove)) }
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            MinisSmallButton(
+                enabled = !adding && com.minisx.app.auth.OAuthManager.hasStoredCredential(context, instance.id),
+                onClick = {
+                    adding = true
+                    addError = null
+                    scope.launch {
+                        val newId = java.util.UUID.randomUUID().toString()
+                        com.minisx.app.auth.OAuthForegroundGate.begin()
+                        try {
+                            com.minisx.app.auth.OpenAIOAuthManager.login(context, newId, providerRepository, forceAccountPrompt = true)
+                            val signedIn = com.minisx.app.auth.OpenAIOAuthManager(context, newId)
+                            val existing = accountIds.associateWith { com.minisx.app.auth.OpenAIOAuthManager(context, it).accountId }
+                            if (com.minisx.app.auth.OpenAIOAuthManager.duplicateOf(signedIn.accountId, existing) != null) {
+                                signedIn.logout()
+                                providerRepository.deleteApiKey(newId)
+                                addError = context.getString(R.string.provider_detail_accounts_duplicate)
+                            } else {
+                                providerRepository.instance(instance.id)?.let { cur ->
+                                    providerRepository.updateInstance(cur.copy(poolAccountIds = cur.poolAccountIds + newId))
+                                }
+                            }
+                        } catch (e: Exception) {
+                            runCatching { com.minisx.app.auth.OpenAIOAuthManager(context, newId).logout() }
+                            providerRepository.deleteApiKey(newId)
+                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            addError = if (e is com.minisx.app.auth.OAuthNetworkUnreachableException) {
+                                context.getString(R.string.add_provider_oauth_network_unreachable)
+                            } else {
+                                context.getString(R.string.oauth_sign_in_failed, e.message ?: e.javaClass.simpleName)
+                            }
+                        } finally {
+                            adding = false
+                            com.minisx.app.auth.OAuthForegroundGate.end()
+                        }
+                    }
+                },
+            ) {
+                Text(stringResource(if (adding) R.string.oauth_status_signing_in else R.string.provider_detail_accounts_add))
+            }
+            addError?.let {
+                Spacer(Modifier.height(4.dp))
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
+        }
     }
 }

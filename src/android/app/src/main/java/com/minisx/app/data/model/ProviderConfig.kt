@@ -318,6 +318,11 @@ data class ProviderInstance(
     // so existing OpenAI instances are completely unaffected. Field name
     // matches iOS for cross-platform export/import interop.
     var azureMode: Boolean = false,
+    // [T-codex-account-pool] More ChatGPT/Codex accounts signed in under THIS provider (OpenAI +
+    // OAuth). Each id is the storage key of one extra account's tokens (the first account keeps using
+    // the instance id). With any, the provider uses the accounts in turn: the first until its usage
+    // limit, then the next, back again once the limit resets. Default empty keeps older JSON valid.
+    var poolAccountIds: List<String> = emptyList(),
 
 ) {
     /** Returns the effective API base URL, applying v1 suffix if configured. */

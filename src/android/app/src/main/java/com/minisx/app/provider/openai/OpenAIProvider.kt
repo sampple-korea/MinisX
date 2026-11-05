@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import okhttp3.Call
@@ -103,6 +104,13 @@ class OpenAIProvider private constructor(
      * ProviderFactory for Codex (ChatGPT OAuth) instances only. Every reply's
      * `x-codex-*` headers feed its quota.
      */
+    /**
+     * [T-codex-account-pool] Set by the factory when this is a Codex sign-in that belongs to an
+     * account pool: each request then uses the pool's first available account, and a usage-limit
+     * (429) answer moves on to the next one. Null = the single account of [oauthTokenProvider].
+     */
+    var accountPool: CodexAccountPool? = null
+
     var quotaInstanceId: String? = null
 
     /**
@@ -632,6 +640,7 @@ class OpenAIProvider private constructor(
     private val isCodexImageModel: Boolean get() = isOAuth && model.id in CODEX_IMAGE_MODEL_IDS
 
     private suspend fun getToken(): String {
+        accountPool?.let { return it.lease().token }
         oauthTokenProvider?.let { return it() }
         return apiKey ?: throw LLMError.InvalidApiKey()
     }
@@ -903,9 +912,33 @@ class OpenAIProvider private constructor(
         imageParts: List<LLMMessage.ImagePart>,
         tools: List<AgentToolDefinition>,
         thinkingLevel: ThinkingLevel,
-    ): Flow<LLMStreamChunk> = rawStreamMessage(
-        messages, systemPrompt, maxTokens, temperature, imageParts, tools, thinkingLevel,
-    ).failOnSilentEmptyCompletion(name)
+    ): Flow<LLMStreamChunk> = withAccountPool {
+        rawStreamMessage(messages, systemPrompt, maxTokens, temperature, imageParts, tools, thinkingLevel)
+    }.failOnSilentEmptyCompletion(name)
+
+    /**
+     * [T-codex-account-pool] Run [make]; when it fails with a usage limit (or a refused account)
+     * BEFORE any output was produced and another pooled account is available, run it again - the
+     * failed account is already on hold (see the throw site in [rawStreamMessage]), so the retry
+     * picks the next one. Output already sent to the caller is never replayed.
+     */
+    private fun withAccountPool(make: () -> Flow<LLMStreamChunk>): Flow<LLMStreamChunk> {
+        val pool = accountPool ?: return make()
+        return flow {
+            var attempts = 0
+            while (true) {
+                var emitted = false
+                try {
+                    make().collect { emitted = true; emit(it) }
+                    return@flow
+                } catch (e: LLMError) {
+                    val retryable = e is LLMError.RateLimited || e is LLMError.InvalidApiKey
+                    if (emitted || !retryable || !pool.hasAvailable() || ++attempts >= pool.members.size) throw e
+                    com.minisx.app.logging.AppLogger.info("OpenAIProvider", "[account-pool] ${e.javaClass.simpleName}: switching to the next account")
+                }
+            }
+        }
+    }
 
     private fun rawStreamMessage(
         messages: List<LLMMessage>,
@@ -1106,7 +1139,8 @@ class OpenAIProvider private constructor(
         }
         // [T-quota-codex-subscription] Codex replies, errors included.
         if (isOAuth && !forceChatCompletions) {
-            com.minisx.app.quota.QuotaObservationSink.recordCodexResponse(quotaInstanceId, response.headers)
+            val leased = response.request.tag(CodexAccountPool.Lease::class.java)
+            com.minisx.app.quota.QuotaObservationSink.recordCodexResponse(leased?.member?.instanceId ?: quotaInstanceId, response.headers)
         }
         // T321: response-side diagnostic log (status + select header values).
         run {
@@ -1145,7 +1179,17 @@ class OpenAIProvider private constructor(
                     )
                 )
             }
-            throw mapHttpError(response.code, errorBody)
+            val mapped = mapHttpError(response.code, errorBody)
+            // [T-codex-account-pool] Put the account that was just refused on hold, so the retry
+            // (and later requests) use the next one.
+            request.tag(CodexAccountPool.Lease::class.java)?.let { lease ->
+                when (mapped) {
+                    is LLMError.RateLimited -> accountPool?.reportRateLimited(lease.member.instanceId, mapped.retryAfterMs)
+                    is LLMError.InvalidApiKey -> accountPool?.reportRejected(lease.member.instanceId)
+                    else -> Unit
+                }
+            }
+            throw mapped
         }
         if (com.minisx.app.BuildConfig.DEBUG) {
             com.minisx.app.debug.LLMRequestLog.add(
@@ -2963,7 +3007,10 @@ class OpenAIProvider private constructor(
      */
     // internal (not private) so tests can inspect the real request headers.
     internal suspend fun buildRequest(bodyStr: String, routingHint: String? = null, promptCacheKey: String? = null): Request {
-        val token = getToken()
+        // [T-codex-account-pool] One lease per request, so the token and the Chatgpt-Account-Id
+        // header always belong to the same account even if another chat moves the pool meanwhile.
+        val lease = if (isOAuth && !forceChatCompletions) accountPool?.lease() else null
+        val token = lease?.token ?: getToken()
 
         if (isOAuth && !forceChatCompletions) {
             // Codex OAuth — use ChatGPT backend Responses API
@@ -2983,7 +3030,8 @@ class OpenAIProvider private constructor(
                 .header("Openai-Beta", "responses=experimental")
                 .header("User-Agent", "codex_cli_rs/$CODEX_CLIENT_VERSION (Android; arm64)")
                 .header("Originator", "codex_cli_rs")
-            codexAccountId?.let { builder.header("Chatgpt-Account-Id", it) }
+            (lease?.member?.accountId?.invoke() ?: codexAccountId)?.let { builder.header("Chatgpt-Account-Id", it) }
+            if (lease != null) builder.tag(CodexAccountPool.Lease::class.java, lease)
             // [T-codex-routing-hint] The official Codex client sends
             // `x-codex-routing-hint` on every ChatGPT-backend Responses request
             // (codex-rs/core/src/client.rs build_routing_hint_header), and
@@ -4110,7 +4158,7 @@ class OpenAIProvider private constructor(
 
     private fun mapHttpError(statusCode: Int, body: String): LLMError {
         if (statusCode == 401 || statusCode == 403) return LLMError.InvalidApiKey()
-        if (statusCode == 429) return LLMError.RateLimited()
+        if (statusCode == 429) return LLMError.RateLimited(CodexAccountPool.retryAfterMs(body, System.currentTimeMillis()))
 
         val message = try {
             val json = JSONObject(body)

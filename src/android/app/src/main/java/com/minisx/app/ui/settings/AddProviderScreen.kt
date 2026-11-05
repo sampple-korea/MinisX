@@ -514,6 +514,9 @@ private fun ConfigureProviderScreen(
                 label = label,
                 providerRepository = providerRepository,
                 onSaved = onSaved,
+                // [T-multi-openai-accounts] A signed-in account suggests its e-mail as the name,
+                // unless the user already typed one.
+                onSuggestLabel = { suggested -> if (!labelEdited) label = suggested },
             )
         }
 
@@ -712,10 +715,13 @@ private fun ColumnScope.OAuthConfigSection(
     label: String,
     providerRepository: ProviderRepository,
     onSaved: () -> Unit,
+    onSuggestLabel: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pendingInstanceId = remember { UUID.randomUUID().toString() }
+    // [T-multi-openai-accounts] "email - plan" of the account that just signed in (OpenAI only).
+    var accountSummary by remember { mutableStateOf<String?>(null) }
     var isAuthenticating by remember { mutableStateOf(false) }
     var isAuthenticated by remember { mutableStateOf(false) }
     var maskedToken by remember { mutableStateOf<String?>(null) }
@@ -824,6 +830,11 @@ private fun ColumnScope.OAuthConfigSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                accountSummary?.let { summary ->
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.add_provider_openai_account), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(summary, style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
         Spacer(Modifier.height(20.dp))
@@ -905,7 +916,29 @@ private fun ColumnScope.OAuthConfigSection(
                                         maskedToken = maskOAuthToken(key)
                                     }
                                     ProviderType.openAI -> {
-                                        val key = OpenAIOAuthManager.login(context, pendingInstanceId, providerRepository)
+                                        // [T-multi-openai-accounts] With another ChatGPT account already
+                                        // added, make the sign-in page ask who is signing in rather than
+                                        // silently reusing the browser's session.
+                                        val others = providerRepository.config.value.instances.filter {
+                                            it.providerType == ProviderType.openAI && it.credentialType == ProviderCredential.oauth
+                                        }
+                                        val key = OpenAIOAuthManager.login(
+                                            context, pendingInstanceId, providerRepository,
+                                            forceAccountPrompt = others.isNotEmpty(),
+                                        )
+                                        val signedIn = OpenAIOAuthManager(context, pendingInstanceId)
+                                        val duplicate = OpenAIOAuthManager.duplicateOf(
+                                            signedIn.accountId,
+                                            others.associate { it.id to OpenAIOAuthManager(context, it.id).accountId },
+                                        )
+                                        if (duplicate != null) {
+                                            signedIn.logout()
+                                            val existing = others.first { it.id == duplicate }.label
+                                            throw Exception(context.getString(R.string.add_provider_openai_account_duplicate, existing))
+                                        }
+                                        val email = signedIn.email
+                                        accountSummary = listOfNotNull(email, signedIn.planType).joinToString(" · ").ifEmpty { null }
+                                        if (email != null) onSuggestLabel("${providerType.displayName} ($email)")
                                         maskedToken = maskOAuthToken(key)
                                     }
                                     ProviderType.xAI -> {

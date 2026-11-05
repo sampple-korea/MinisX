@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="add_provider_openai_account">Account</string>
+    <string name="add_provider_openai_account_duplicate">This ChatGPT account is already added as \"%1$s\". Sign in with a different account.</string>
+    <string name="provider_detail_openai_account">Account: %1$s</string>
+    <string name="provider_detail_accounts">Accounts</string>
+    <string name="provider_detail_accounts_footer">Add more ChatGPT accounts to this provider. They are used in turn: the first one until it hits its usage limit, then the next, and back to the first once its limit resets.</string>
+    <string name="provider_detail_accounts_unnamed">Account %1$d</string>
+    <string name="provider_detail_accounts_signed_out">signed out</string>
+    <string name="provider_detail_accounts_in_use">in use</string>
+    <string name="provider_detail_accounts_standby">standby</string>
+    <string name="provider_detail_accounts_cooling">limit reached, back at %1$s</string>
+    <string name="provider_detail_accounts_add">Add account</string>
+    <string name="provider_detail_accounts_remove">Remove</string>
+    <string name="provider_detail_accounts_duplicate">That ChatGPT account is already added here. Sign in with a different account.</string>
+</resources>
