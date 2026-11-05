@@ -1,61 +1,106 @@
 #!/usr/bin/env python3
-"""Regenerates the MinisX launcher icon: a white "M" with one diagonal cut on a black squircle.
+"""Regenerates the MinisX launcher icon: a wide, flat-topped "M" woven from two gradient pieces
+(a back "M" with the left leg and a long diagonal bar in front, separated by a black gap) on a
+black squircle.
 
 Writes (under src/android/app/src/main/res):
   mipmap-*/ic_launcher_foreground{,_dark,_light}.png   adaptive-icon foregrounds (108dp layer)
   mipmap-night-*/ic_launcher_foreground.png
   mipmap-*/ic_launcher.png, mipmap-night-*/ic_launcher.png   legacy full icons
   drawable/ic_launcher_monochrome.xml                  Android 13 themed-icon layer
-and a 1024px preview next to this script's output dir argument (default: ./minisx-icon-preview.png).
 
 Needs: pip install pillow shapely
-Usage: python3 scripts/gen_icon.py [preview.png]
+Usage: python3 scripts/gen_icon.py [--palette violet|aurora|mono] [preview.png]
 """
 import math
 import os
 import sys
 
 from PIL import Image, ImageDraw, ImageFilter
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import LineString, box
+from shapely.affinity import translate
+from shapely.ops import unary_union
 
 RES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "android", "app", "src", "main", "res")
 
-# --- the glyph, in a 0..100 box centred on (50, 50) ----------------------------------------
-# A heavy, sharp-cornered "M" (one stroked path: left leg, deep valley, right leg) with a single
-# thin diagonal cut through it, rising to the right - the same kind of cut that splits the X in
-# the X logo, and a nod to the "X" in MinisX. Only one cut: more of them made the letter busy.
-STROKE = 16.0
-CUT = 3.2
-PATH = [(25, 84), (25, 20), (50, 66), (75, 20), (75, 84)]
-CUT_LINE = [(10, 51), (90, 25)]
+# (back piece gradient, front piece gradient); gradient = (colour at start, colour at end, angle in degrees)
+PALETTES = {
+    "violet": (((120, 64, 240), (236, 96, 170), 60), ((255, 110, 150), (255, 172, 110), 90)),
+    "aurora": (((44, 108, 232), (36, 176, 214), 60), ((64, 228, 216), (30, 198, 200), 90)),
+    "mono": (((222, 226, 232), (150, 156, 168), 90), ((255, 255, 255), (190, 196, 206), 90)),
+}
+
+# --- the glyph, in a 0..100 box ---------------------------------------------------------------
+# Flat top and bottom (pointed tops made the letter look narrower than it is). Back piece: left leg
+# plus a diagonal falling to the lower right. Front piece: a long diagonal rising to the top right,
+# then the right leg. The front piece is cut out of the back piece with a gap, so it reads as passing
+# in front of it, like the strokes of the X logo.
+W = 20.0
+GAP = 3.8
+XL, XR = 20.0, 80.0
+TOP, BOT = 12.0, 88.0
 
 
-def glyph():
-    from shapely.affinity import translate
+def _stroke(pts):
+    return LineString(pts).buffer(W / 2, cap_style=2, join_style=2, mitre_limit=6)
 
-    body = LineString(PATH).buffer(STROKE / 2, cap_style=2, join_style=2, mitre_limit=6)
-    cut = LineString(CUT_LINE).buffer(CUT / 2, cap_style=2)
-    g = body.difference(cut)
-    minx, miny, maxx, maxy = g.bounds
-    return translate(g, 50 - (minx + maxx) / 2, 50 - (miny + maxy) / 2)
+
+def pieces():
+    clip = box(-50, TOP, 150, BOT)
+    front = _stroke([(XL - 11, BOT + 20), (XR, TOP - 6), (XR, BOT + 20)]).intersection(clip)
+    back = _stroke([(XL, BOT + 20), (XL, TOP - 6), (XR - 5, BOT + 10), (XR + 4, BOT + 20)]).intersection(clip)
+    back = back.difference(front.buffer(GAP, join_style=2, mitre_limit=6))
+    # morphological opening drops the tiny teeth the cut leaves behind
+    back = back.buffer(-2.2, join_style=2, mitre_limit=8).buffer(2.2, join_style=2, mitre_limit=8)
+    parts = [p for p in (back.geoms if back.geom_type == "MultiPolygon" else [back]) if p.area >= 40]
+    back = unary_union(parts)
+    allg = unary_union([back, front])
+    minx, miny, maxx, maxy = allg.bounds
+    dx, dy = 50 - (minx + maxx) / 2, 50 - (miny + maxy) / 2
+    return translate(back, dx, dy), translate(front, dx, dy)
 
 
 def polys(g):
     return list(g.geoms) if g.geom_type == "MultiPolygon" else [g]
 
 
-def draw_glyph(size, scale, color, supersample=4):
-    """Glyph on a transparent size x size canvas; `scale` = fraction of the canvas the 100-box fills."""
-    s = size * supersample
-    img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    k = s * scale / 100.0
-    off = s * (1 - scale) / 2
-    for p in polys(glyph()):
-        d.polygon([(off + x * k, off + y * k) for x, y in p.exterior.coords], fill=color)
-        for hole in p.interiors:
-            d.polygon([(off + x * k, off + y * k) for x, y in hole.coords], fill=(0, 0, 0, 0))
-    return img.resize((size, size), Image.LANCZOS)
+def far(g):
+    return max(math.hypot(x - 50, y - 50) for p in polys(g) for x, y in p.exterior.coords)
+
+
+def gradient(size, spec):
+    c1, c2, ang = spec
+    ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+    img = Image.new("RGB", (size, size))
+    px = img.load()
+    for y in range(size):
+        for x in range(size):
+            t = min(1.0, max(0.0, ((x / size - 0.5) * ca + (y / size - 0.5) * sa) + 0.5))
+            px[x, y] = tuple(int(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
+    return img
+
+
+def mask(g, size, k, ss=3):
+    s = size * ss
+    m = Image.new("L", (s, s), 0)
+    d = ImageDraw.Draw(m)
+    c = s / 2
+    for p in polys(g):
+        d.polygon([(c + (x - 50) * k * ss, c + (y - 50) * k * ss) for x, y in p.exterior.coords], fill=255)
+        for h in p.interiors:
+            d.polygon([(c + (x - 50) * k * ss, c + (y - 50) * k * ss) for x, y in h.coords], fill=0)
+    return m.resize((size, size), Image.LANCZOS)
+
+
+def draw_glyph(size, reach, palette):
+    """Glyph on a transparent canvas; `reach` = distance of the farthest corner from the centre,
+    as a fraction of the canvas."""
+    back, front = pieces()
+    px_per_unit = reach * size / far(unary_union([back, front]))
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    for g, spec in ((back, PALETTES[palette][0]), (front, PALETTES[palette][1])):
+        out.paste(gradient(size, spec).convert("RGBA"), (0, 0), mask(g, size, px_per_unit))
+    return out
 
 
 def squircle_mask(size, supersample=4, n=5.0):
@@ -65,7 +110,6 @@ def squircle_mask(size, supersample=4, n=5.0):
     r = s / 2
     for y in range(s):
         dy = abs((y + 0.5 - r) / r)
-        # superellipse |x|^n + |y|^n <= 1  ->  x extent for this row
         t = 1 - dy ** n
         if t <= 0:
             continue
@@ -77,7 +121,7 @@ def squircle_mask(size, supersample=4, n=5.0):
 
 
 def background(size):
-    """Near-black with a soft lift in the upper middle, like the reference icons."""
+    """Near-black with a soft lift in the upper middle."""
     img = Image.new("RGB", (size, size), (0, 0, 0))
     glow = Image.new("L", (size, size), 0)
     ImageDraw.Draw(glow).ellipse([size * 0.1, -size * 0.25, size * 0.9, size * 0.55], fill=70)
@@ -85,9 +129,9 @@ def background(size):
     return Image.composite(Image.new("RGB", (size, size), (52, 53, 58)), img, glow)
 
 
-def full_icon(size):
+def full_icon(size, palette):
     bg = background(size).convert("RGBA")
-    bg.alpha_composite(draw_glyph(size, 0.58, (244, 244, 246, 255)))
+    bg.alpha_composite(draw_glyph(size, 0.37, palette))
     out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     out.paste(bg, (0, 0), squircle_mask(size))
     return out
@@ -104,19 +148,19 @@ def save(img, *parts):
 
 def monochrome_xml():
     # themed icons are clipped to a circle of radius 33 around (54, 54) in the 108 viewport
-    g = glyph()
-    far = max(math.hypot(x - 50, y - 50) for p in polys(g) for x, y in p.exterior.coords)
-    k = 31.0 / far
+    back, front = pieces()
+    k = 31.0 / far(unary_union([back, front]))
     parts = []
-    for p in polys(g):
-        for ring in [p.exterior, *p.interiors]:
-            pts = [(54 + (x - 50) * k, 54 + (y - 50) * k) for x, y in list(ring.coords)[:-1]]
-            parts.append("M " + " L ".join(f"{x:.2f},{y:.2f}" for x, y in pts) + " Z")
+    for g in (back, front):
+        for p in polys(g):
+            for ring in [p.exterior, *p.interiors]:
+                pts = [(54 + (x - 50) * k, 54 + (y - 50) * k) for x, y in list(ring.coords)[:-1]]
+                parts.append("M " + " L ".join(f"{x:.2f},{y:.2f}" for x, y in pts) + " Z")
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         "<!--\n  Monochrome layer for Android 13+ themed icons: the MinisX \"M\" (see scripts/gen_icon.py),\n"
-        "  filled with the even-odd rule so the cut stays open. Sized to stay inside the circular\n"
-        "  mask (radius 33 around the centre). Generated - edit scripts/gen_icon.py instead.\n-->\n"
+        "  both pieces with the gap between them. Sized to stay inside the circular mask (radius 33\n"
+        "  around the centre). Generated - edit scripts/gen_icon.py instead.\n-->\n"
         '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
         '    android:width="108dp"\n    android:height="108dp"\n    android:viewportWidth="108"\n    android:viewportHeight="108">\n'
         '    <path\n        android:fillColor="#FFFFFFFF"\n        android:fillType="evenOdd"\n'
@@ -125,23 +169,31 @@ def monochrome_xml():
 
 
 def main():
-    white, black = (255, 255, 255, 255), (12, 12, 14, 255)
+    args = sys.argv[1:]
+    palette = "violet"
+    if "--palette" in args:
+        i = args.index("--palette")
+        palette = args[i + 1]
+        del args[i : i + 2]
+    preview = args[0] if args else "minisx-icon-preview.png"
     for name, d in DENS.items():
         fg = round(108 * d)
         leg = round(48 * d)
-        # the launcher layer is inset 15% by the adaptive-icon xml, so the glyph fills most of the layer
-        save(draw_glyph(fg, 0.80, white), f"mipmap-{name}", "ic_launcher_foreground.png")
-        save(draw_glyph(fg, 0.80, white), f"mipmap-night-{name}", "ic_launcher_foreground.png")
-        save(draw_glyph(fg, 0.80, white), f"mipmap-{name}", "ic_launcher_foreground_dark.png")
-        save(draw_glyph(fg, 0.80, black), f"mipmap-{name}", "ic_launcher_foreground_light.png")
-        icon = full_icon(leg)
+        # the launcher layer is inset 15% by the adaptive-icon xml, so 0.44 of the layer here is
+        # 0.31 on screen: inside the 66dp circular safe zone.
+        glyph = draw_glyph(fg, 0.44, palette)
+        for folder, fname in ((f"mipmap-{name}", "ic_launcher_foreground.png"),
+                              (f"mipmap-night-{name}", "ic_launcher_foreground.png"),
+                              (f"mipmap-{name}", "ic_launcher_foreground_dark.png"),
+                              (f"mipmap-{name}", "ic_launcher_foreground_light.png")):
+            save(glyph, folder, fname)
+        icon = full_icon(leg, palette)
         save(icon, f"mipmap-{name}", "ic_launcher.png")
         save(icon, f"mipmap-night-{name}", "ic_launcher.png")
     with open(os.path.join(RES, "drawable", "ic_launcher_monochrome.xml"), "w", encoding="utf-8") as f:
         f.write(monochrome_xml())
-    out = sys.argv[1] if len(sys.argv) > 1 else "minisx-icon-preview.png"
-    full_icon(1024).save(out)
-    print("wrote icon resources; preview:", out)
+    full_icon(1024, palette).save(preview)
+    print("wrote icon resources; preview:", preview)
 
 
 if __name__ == "__main__":
