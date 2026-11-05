@@ -63,6 +63,8 @@ class LiveSession(
         /** Language name for the model's instructions ("Korean"), or null for auto. */
         val language: String? = null,
         val userAgent: String? = null,
+        /** Extra request headers, e.g. `ChatGPT-Account-Id` when the call signs in with a ChatGPT account. */
+        val extraHeaders: Map<String, String> = emptyMap(),
     )
 
     enum class Phase { CONNECTING, CONNECTED, ENDED }
@@ -120,6 +122,7 @@ class LiveSession(
         val req = Request.Builder().url(url)
             .header("Authorization", "Bearer ${config.apiKey}")
             .apply { config.userAgent?.takeIf { it.isNotBlank() }?.let { header("User-Agent", it) } }
+            .apply { config.extraHeaders.forEach { (k, v) -> header(k, v) } }
             .build()
         ws = client.newWebSocket(req, Listener())
         scope.launch {

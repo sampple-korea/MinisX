@@ -1,5 +1,9 @@
 package com.minisx.app.ui.settings
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.foundation.selection.selectable
 import com.minisx.app.R
 import com.minisx.app.data.repository.AppIconRepository
 import com.minisx.app.ui.components.MinisTextButton
@@ -79,6 +83,9 @@ import kotlin.math.roundToInt
 // -- Preference Keys --
 const val PREF_APPEARANCE = "appearance_prefs"
 const val KEY_THEME_MODE = "theme_mode"            // 0=System, 1=Light, 2=Dark
+const val KEY_CODE_AUTO_COLLAPSE = "code.autoCollapse"   // Boolean, default true: fold code blocks over 10 lines
+const val KEY_CODE_LINE_NUMBERS = "code.lineNumbers"      // Boolean, default false
+const val KEY_THEME_ACCENT = "theme_accent"        // ThemeAccent.key, default "default"
 const val KEY_LAUNCH_SESSION = "launch_session"    // 0=Auto, 1=LastSession, 2=NewChat, 3=Home
 // iOS-aligned key names — match `@AppStorage("returnKeyBehavior")` and
 // `@AppStorage("keepScreenAwakeDuringTasks")` in ContentView.swift so
@@ -267,6 +274,77 @@ fun AppearanceScreen(
                     showDivider = idx < themeRows.size - 1,
                 )
             }
+        }
+
+        // -- Accent colour --
+        // A row of swatches; the choice applies at once (MainActivity listens to the pref).
+        SettingsSection(
+            header = stringResource(R.string.appearance_section_accent),
+            footer = stringResource(R.string.appearance_accent_footer),
+        ) {
+            var accentKey by remember { mutableStateOf(prefs.getString(KEY_THEME_ACCENT, null) ?: com.minisx.app.ui.theme.ThemeAccent.DEFAULT.key) }
+            val dark = androidx.compose.foundation.isSystemInDarkTheme()
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+            ) {
+                for (option in com.minisx.app.ui.theme.ThemeAccent.entries) {
+                    val selected = option.key == accentKey
+                    val name = stringResource(accentNameRes(option))
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (option == com.minisx.app.ui.theme.ThemeAccent.DYNAMIC) {
+                                    androidx.compose.ui.graphics.Brush.sweepGradient(
+                                        listOf(Color(0xFFEF5350), Color(0xFFFFCA28), Color(0xFF66BB6A), Color(0xFF42A5F5), Color(0xFFAB47BC), Color(0xFFEF5350)),
+                                    )
+                                } else {
+                                    androidx.compose.ui.graphics.SolidColor(Color(if (dark) option.darkPrimary else option.lightPrimary))
+                                },
+                            )
+                            .then(
+                                if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier,
+                            )
+                            .selectable(
+                                selected = selected,
+                                role = androidx.compose.ui.semantics.Role.RadioButton,
+                                onClick = {
+                                    accentKey = option.key
+                                    prefs.edit().putString(KEY_THEME_ACCENT, option.key).apply()
+                                },
+                            )
+                            .semantics { contentDescription = name },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (selected) {
+                            androidx.compose.material3.Icon(Icons.Outlined.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+            }
+        }
+
+        // -- Code blocks --
+        SettingsSection(
+            header = stringResource(R.string.appearance_section_code),
+        ) {
+            var codeCollapse by remember { mutableStateOf(prefs.getBoolean(KEY_CODE_AUTO_COLLAPSE, true)) }
+            var codeLines by remember { mutableStateOf(prefs.getBoolean(KEY_CODE_LINE_NUMBERS, false)) }
+            SettingsSwitchRow(
+                title = stringResource(R.string.appearance_code_auto_collapse),
+                checked = codeCollapse,
+                onCheckedChange = { codeCollapse = it; prefs.edit().putBoolean(KEY_CODE_AUTO_COLLAPSE, it).apply() },
+            )
+            SettingsSwitchRow(
+                title = stringResource(R.string.appearance_code_line_numbers),
+                checked = codeLines,
+                onCheckedChange = { codeLines = it; prefs.edit().putBoolean(KEY_CODE_LINE_NUMBERS, it).apply() },
+                showDivider = false,
+            )
         }
 
         // -- Launch Session --
@@ -855,4 +933,14 @@ private fun FontScaleSliderRow(
                 .background(dividerColor),
         )
     }
+}
+
+private fun accentNameRes(accent: com.minisx.app.ui.theme.ThemeAccent): Int = when (accent) {
+    com.minisx.app.ui.theme.ThemeAccent.DEFAULT -> R.string.appearance_accent_default
+    com.minisx.app.ui.theme.ThemeAccent.VIOLET -> R.string.appearance_accent_violet
+    com.minisx.app.ui.theme.ThemeAccent.SAKURA -> R.string.appearance_accent_sakura
+    com.minisx.app.ui.theme.ThemeAccent.OCEAN -> R.string.appearance_accent_ocean
+    com.minisx.app.ui.theme.ThemeAccent.FOREST -> R.string.appearance_accent_forest
+    com.minisx.app.ui.theme.ThemeAccent.AMBER -> R.string.appearance_accent_amber
+    com.minisx.app.ui.theme.ThemeAccent.DYNAMIC -> R.string.appearance_accent_dynamic
 }

@@ -526,12 +526,14 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
             val prefs = remember { getAppearancePrefs(this) }
             var themeMode by remember { mutableIntStateOf(prefs.getInt(KEY_THEME_MODE, 0)) }
             var appBaseLevel by remember { mutableIntStateOf(prefs.getInt(KEY_FONT_APP_BASE, 0)) }
+            var accentKey by remember { mutableStateOf(prefs.getString(com.minisx.app.ui.settings.KEY_THEME_ACCENT, null)) }
 
             DisposableEffect(prefs) {
                 val listener = SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->
                     when (key) {
                         KEY_THEME_MODE -> themeMode = sp.getInt(KEY_THEME_MODE, 0)
                         KEY_FONT_APP_BASE -> appBaseLevel = sp.getInt(KEY_FONT_APP_BASE, 0)
+                        com.minisx.app.ui.settings.KEY_THEME_ACCENT -> accentKey = sp.getString(com.minisx.app.ui.settings.KEY_THEME_ACCENT, null)
                         KEY_KEEP_SCREEN_AWAKE -> applyKeepScreenAwakeFlag(
                             SessionActivityTracker.activeSessions.value.isNotEmpty()
                         )
@@ -568,7 +570,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                 enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
             }
 
-            MinisTheme(darkTheme = darkTheme, fontScale = fontScale) {
+            MinisTheme(darkTheme = darkTheme, fontScale = fontScale, accent = com.minisx.app.ui.theme.ThemeAccent.fromKey(accentKey)) {
                 val navController = rememberNavController().also { this.navController = it }
 
                 // T166: drive `SessionActivityTracker.setPresent` /

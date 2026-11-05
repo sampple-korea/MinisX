@@ -1,5 +1,8 @@
 package com.minisx.app.ui.markdown
 
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Code
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -199,11 +202,57 @@ private fun ParagraphBlock(
 
 // -- Code Block --
 
+/** Code blocks longer than this fold to their first lines (when the setting is on). */
+private const val CODE_FOLD_LINES = 10
+
+/** File extension for "download" from a fence language; unknown languages save as .txt. */
+internal fun codeFileExtension(language: String): String = when (language.trim().lowercase()) {
+    "kotlin", "kt" -> "kt"
+    "python", "py" -> "py"
+    "javascript", "js" -> "js"
+    "typescript", "ts" -> "ts"
+    "java" -> "java"
+    "c" -> "c"
+    "cpp", "c++" -> "cpp"
+    "go" -> "go"
+    "rust", "rs" -> "rs"
+    "bash", "sh", "shell", "zsh" -> "sh"
+    "json" -> "json"
+    "yaml", "yml" -> "yml"
+    "xml" -> "xml"
+    "html" -> "html"
+    "svg" -> "svg"
+    "css" -> "css"
+    "sql" -> "sql"
+    "markdown", "md" -> "md"
+    else -> "txt"
+}
+
 @Composable
 private fun CodeBlockView(block: MarkdownParser.Block.CodeBlock) {
     val context = LocalContext.current
     val codeColor = Color(0xFF4EC9B0) // Green code text
     val bgColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    val prefs = remember { com.minisx.app.ui.settings.getAppearancePrefs(context) }
+    val autoCollapse = remember { prefs.getBoolean(com.minisx.app.ui.settings.KEY_CODE_AUTO_COLLAPSE, true) }
+    val lineNumbers = remember { prefs.getBoolean(com.minisx.app.ui.settings.KEY_CODE_LINE_NUMBERS, false) }
+    val language = block.language.trim().lowercase()
+    val previewable = language == "html" || language == "svg"
+
+    val lines = remember(block.code) { block.code.trimEnd('\n').split('\n') }
+    val foldable = autoCollapse && lines.size > CODE_FOLD_LINES
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var preview by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val shown = if (foldable && !expanded) lines.take(CODE_FOLD_LINES) else lines
+
+    val saveFile = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/plain"),
+    ) { uri ->
+        if (uri != null) runCatching {
+            context.contentResolver.openOutputStream(uri)?.use { it.write(block.code.toByteArray(Charsets.UTF_8)) }
+        }
+    }
+    val iconTint = MaterialTheme.colorScheme.onSurfaceVariant
 
     Column(
         modifier = Modifier
@@ -211,7 +260,7 @@ private fun CodeBlockView(block: MarkdownParser.Block.CodeBlock) {
             .clip(RoundedCornerShape(8.dp))
             .background(bgColor),
     ) {
-        // Header with language label + copy button
+        // Header: language label, then preview (html / svg), download, copy.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -222,41 +271,99 @@ private fun CodeBlockView(block: MarkdownParser.Block.CodeBlock) {
             Text(
                 text = block.language.ifEmpty { "code" },
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = iconTint,
             )
-            IconButton(
-                onClick = {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("code", block.code))
-                },
-                modifier = Modifier.height(28.dp),
-            ) {
-                Icon(
-                    Icons.Default.ContentCopy,
-                    contentDescription = androidx.compose.ui.res.stringResource(com.minisx.app.R.string.copy_code_block),
-                    modifier = Modifier.height(16.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (previewable) {
+                    IconButton(onClick = { preview = !preview }, modifier = Modifier.height(28.dp)) {
+                        Icon(
+                            if (preview) Icons.Default.Code else Icons.Default.Visibility,
+                            contentDescription = androidx.compose.ui.res.stringResource(
+                                if (preview) com.minisx.app.R.string.code_block_show_code else com.minisx.app.R.string.code_block_preview,
+                            ),
+                            modifier = Modifier.height(16.dp),
+                            tint = iconTint,
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = { saveFile.launch("code." + codeFileExtension(language)) },
+                    modifier = Modifier.height(28.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Download,
+                        contentDescription = androidx.compose.ui.res.stringResource(com.minisx.app.R.string.code_block_download),
+                        modifier = Modifier.height(16.dp),
+                        tint = iconTint,
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(ClipData.newPlainText("code", block.code))
+                    },
+                    modifier = Modifier.height(28.dp),
+                ) {
+                    Icon(
+                        Icons.Default.ContentCopy,
+                        contentDescription = androidx.compose.ui.res.stringResource(com.minisx.app.R.string.copy_code_block),
+                        modifier = Modifier.height(16.dp),
+                        tint = iconTint,
+                    )
+                }
             }
         }
 
-        // Scrollable code content
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 400.dp)
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-        ) {
-            Text(
-                text = block.code,
-                style = TextStyle(
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                    color = codeColor,
-                    lineHeight = 18.sp,
-                ),
+        if (preview && previewable) {
+            // The block rendered as a page. Scripts stay off: a chat message must not run code by itself.
+            androidx.compose.ui.viewinterop.AndroidView(
+                modifier = Modifier.fillMaxWidth().height(240.dp),
+                factory = { ctx ->
+                    android.webkit.WebView(ctx).apply {
+                        settings.javaScriptEnabled = false
+                        setBackgroundColor(android.graphics.Color.WHITE)
+                        loadDataWithBaseURL(null, block.code, "text/html", "UTF-8", null)
+                    }
+                },
             )
+        } else {
+            val textStyle = TextStyle(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                color = codeColor,
+                lineHeight = 18.sp,
+            )
+            // Scrollable code content, with an optional line-number gutter of the same line height.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = if (foldable && !expanded) 400.dp else 560.dp)
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            ) {
+                Row {
+                    if (lineNumbers) {
+                        Text(
+                            text = shown.indices.joinToString("\n") { (it + 1).toString() },
+                            style = textStyle.copy(color = iconTint.copy(alpha = 0.45f), textAlign = androidx.compose.ui.text.style.TextAlign.End),
+                            modifier = Modifier.padding(end = 10.dp),
+                        )
+                    }
+                    Text(text = shown.joinToString("\n"), style = textStyle)
+                }
+            }
+            if (foldable) {
+                androidx.compose.material3.TextButton(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        if (expanded) androidx.compose.ui.res.stringResource(com.minisx.app.R.string.code_block_collapse)
+                        else androidx.compose.ui.res.stringResource(com.minisx.app.R.string.code_block_expand, lines.size - CODE_FOLD_LINES),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+            }
         }
     }
 }

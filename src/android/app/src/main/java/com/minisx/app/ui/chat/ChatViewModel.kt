@@ -16349,10 +16349,19 @@ class ChatViewModel(
         // must be dropped when browser_use is switched off (same prompt/schema
         // drift rule as the parent's browser bullet below).
         val browserToolEnabled = com.minisx.app.tools.AgentToolSwitch.BROWSER.isEnabled(context)
+        // {{date}}, {{model}} ... in the personality text are filled in here (see PromptVariables).
+        val promptVariables = com.minisx.app.agent.PromptVariables.values(
+            now = java.time.ZonedDateTime.now(),
+            model = currentModel?.displayName,
+            device = android.os.Build.MODEL,
+            language = lang,
+        )
         val identitySection = helperConfig?.let {
             com.minisx.app.agent.jobs.HelperRunner.identitySection(it, browserEnabled = browserToolEnabled)
         }
-            ?: com.minisx.app.agent.SystemPromptBuilder.identitySection(context)
+            ?: com.minisx.app.agent.PromptVariables.apply(
+                com.minisx.app.agent.SystemPromptBuilder.identitySection(context), promptVariables,
+            )
         // [T-memory-toggle-gates-injection-and-tools-android] Mirror the iOS
         // gate: when memory is disabled for this session, replace the
         // "memory_write / memory_get" tool bullets and the "Memory system:"
@@ -16603,6 +16612,17 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
             if (!isHelper && advisorEntry() != null) {
                 append("\n\n")
                 append(com.minisx.app.agent.advisor.Advisor.PROMPT_SECTION)
+            }
+            // AGENTS.md: the user's standing instructions (user-wide first, then this chat's workspace).
+            val agentsMd = runCatching {
+                com.minisx.app.agent.AgentsMd.load(
+                    java.io.File(context.filesDir, "minis-global/shared"),
+                    java.io.File(com.minisx.app.data.session.SessionStorage(context.filesDir).sessionDir(activeSessionId), "workspace"),
+                )
+            }.getOrNull()
+            if (agentsMd != null) {
+                append("\n\n")
+                append(com.minisx.app.agent.PromptVariables.apply(agentsMd, promptVariables))
             }
             if (skillFragment != null) {
                 append("\n\n")

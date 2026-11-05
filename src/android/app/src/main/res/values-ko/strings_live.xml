@@ -13,5 +13,5 @@
     <string name="live_channel_name">실시간 음성</string>
     <string name="live_notification_title">MinisX 라이브</string>
     <string name="live_notification_text">음성 대화 중</string>
-    <string name="live_error_no_provider">실시간 음성은 API 키가 있는 OpenAI 프로바이더가 필요해요 (설정 → 프로바이더). ChatGPT 로그인으로는 쓸 수 없어요.</string>
+    <string name="live_error_no_provider">실시간 음성은 OpenAI 프로바이더(API 키 또는 ChatGPT 로그인)가 필요해요 (설정 → 프로바이더).</string>
 </resources>

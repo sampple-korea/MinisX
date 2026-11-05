@@ -129,10 +129,17 @@ data class ContextPolicy(
         fun forUserCap(contextWindow: Int): ContextPolicy = ContextPolicy(
             offloadThreshold = (contextWindow * 0.70).toInt(),
             offloadTarget = (contextWindow * 0.55).toInt(),
-            compactThreshold = (contextWindow * 0.85).toInt(),
+            compactThreshold = codexAutoCompactLimit(contextWindow),
             exhaustedOnly = false,
             manualCompactAllowed = true,
         )
+
+        /**
+         * Codex compacts when the conversation reaches 90% of the model's context window
+         * (openai/codex, protocol/src/openai_models.rs: `context_window * 9 / 10`), checked before a turn
+         * and after every sampling request. Same line here, for every window large enough to compact.
+         */
+        fun codexAutoCompactLimit(contextWindow: Int): Int = (contextWindow.toLong() * 9 / 10).toInt()
 
         fun forContextWindow(contextWindow: Int): ContextPolicy = when {
             contextWindow < 32_000 -> ContextPolicy(
@@ -152,14 +159,14 @@ data class ContextPolicy(
             contextWindow < 128_000 -> ContextPolicy(
                 offloadThreshold = contextWindow - 20_000,
                 offloadTarget = contextWindow - 30_000,
-                compactThreshold = contextWindow - 10_000,
+                compactThreshold = codexAutoCompactLimit(contextWindow),
                 exhaustedOnly = false,
                 manualCompactAllowed = true,
             )
             else -> ContextPolicy(
                 offloadThreshold = contextWindow - 40_000,
                 offloadTarget = contextWindow - 60_000,
-                compactThreshold = contextWindow - 20_000,
+                compactThreshold = codexAutoCompactLimit(contextWindow),
                 exhaustedOnly = false,
                 manualCompactAllowed = true,
             )

@@ -152,13 +152,67 @@ private val MinisShapes = Shapes(
     extraLarge = RoundedCornerShape(28.dp),   // Dialog, BottomSheet
 )
 
+/**
+ * The accent the user picked in Settings > Appearance. Only the colour roles that carry the accent
+ * change; the neutral grouped surfaces stay, so every preset keeps the same calm look. [DYNAMIC]
+ * takes the roles from the wallpaper (Material You) on Android 12+, and falls back to [DEFAULT].
+ */
+enum class ThemeAccent(
+    val key: String,
+    val lightPrimary: Long, val lightContainer: Long, val lightOnContainer: Long,
+    val darkPrimary: Long, val darkContainer: Long, val darkOnContainer: Long,
+) {
+    DEFAULT("default", 0xFF528AD2, 0xFFD6E4F7, 0xFF0B2A4F, 0xFF6A94CE, 0xFF1F3F66, 0xFFD6E4F7),
+    VIOLET("violet", 0xFF7A4DFF, 0xFFE6DDFF, 0xFF2A0F73, 0xFF9B7BFF, 0xFF3D2A80, 0xFFE6DDFF),
+    SAKURA("sakura", 0xFFB5527A, 0xFFFFDCE8, 0xFF58102F, 0xFFFFA8C5, 0xFF6E2A47, 0xFFFFDCE8),
+    OCEAN("ocean", 0xFF0A7C94, 0xFFC8EEF6, 0xFF00323C, 0xFF58C7DD, 0xFF0F4A58, 0xFFC8EEF6),
+    FOREST("forest", 0xFF3B8052, 0xFFD2EFDB, 0xFF0A3319, 0xFF7BCB92, 0xFF1F4D31, 0xFFD2EFDB),
+    AMBER("amber", 0xFFB0720F, 0xFFFFE6BD, 0xFF4A2E00, 0xFFFFC25C, 0xFF5E3F08, 0xFFFFE6BD),
+    DYNAMIC("dynamic", 0xFF528AD2, 0xFFD6E4F7, 0xFF0B2A4F, 0xFF6A94CE, 0xFF1F3F66, 0xFFD6E4F7);
+
+    companion object {
+        fun fromKey(key: String?): ThemeAccent = entries.firstOrNull { it.key == key } ?: DEFAULT
+    }
+}
+
+private fun androidx.compose.material3.ColorScheme.withAccent(
+    accent: ThemeAccent,
+    dark: Boolean,
+    context: android.content.Context,
+): androidx.compose.material3.ColorScheme {
+    if (accent == ThemeAccent.DEFAULT) return this
+    if (accent == ThemeAccent.DYNAMIC) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return this
+        val d = if (dark) androidx.compose.material3.dynamicDarkColorScheme(context) else androidx.compose.material3.dynamicLightColorScheme(context)
+        return copy(
+            primary = d.primary, onPrimary = d.onPrimary,
+            primaryContainer = d.primaryContainer, onPrimaryContainer = d.onPrimaryContainer,
+            secondary = d.secondary, secondaryContainer = d.secondaryContainer, onSecondaryContainer = d.onSecondaryContainer,
+            tertiary = d.tertiary, tertiaryContainer = d.tertiaryContainer, onTertiaryContainer = d.onTertiaryContainer,
+        )
+    }
+    val primary = Color(if (dark) accent.darkPrimary else accent.lightPrimary)
+    val container = Color(if (dark) accent.darkContainer else accent.lightContainer)
+    val onContainer = Color(if (dark) accent.darkOnContainer else accent.lightOnContainer)
+    return copy(
+        primary = primary,
+        onPrimary = if (dark) Color(0xFF101014) else Color.White,
+        primaryContainer = container,
+        onPrimaryContainer = onContainer,
+        secondaryContainer = container,
+        onSecondaryContainer = onContainer,
+    )
+}
+
 @Composable
 fun MinisTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     fontScale: Float = 1f,
+    accent: ThemeAccent = ThemeAccent.DEFAULT,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val colorScheme = (if (darkTheme) DarkColorScheme else LightColorScheme).withAccent(accent, darkTheme, context)
     val typography = scaledTypography(fontScale)
     val chatPalette = if (darkTheme) DarkChatPalette else LightChatPalette
 

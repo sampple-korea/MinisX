@@ -28,26 +28,48 @@ object LiveSetup {
     }
 
     /**
-     * Realtime voice needs an OpenAI-protocol provider with an API key (a ChatGPT /
-     * Codex sign-in does not reach the Realtime endpoint). The last one used wins;
-     * otherwise the first that qualifies.
+     * The provider Live signs in with. Like Codex, a ChatGPT sign-in works as well as an API key: Codex
+     * hands its ChatGPT access token to the same Realtime client it uses for keys (openai/codex,
+     * codex-api realtime endpoint, auth mode `Chatgpt`). An API-key provider wins when there is one; the
+     * last one used is preferred; otherwise the first ChatGPT sign-in is used, with its account id header.
+     * Whether the Realtime endpoint accepts that token depends on the account, so a refusal is shown to the
+     * user as it comes (see [LiveSession]).
      */
-    fun resolve(context: Context, repository: ProviderRepository): Resolved {
-        val candidates = repository.config.value.instances.filter {
-            it.isEnabled && it.credentialType == ProviderCredential.apiKey &&
-                (it.providerType == ProviderType.openAI || it.providerType == ProviderType.openAIResponses) &&
-                !repository.loadApiKey(it.id).isNullOrBlank()
+    suspend fun resolve(context: Context, repository: ProviderRepository): Resolved {
+        val openAi = repository.config.value.instances.filter {
+            it.isEnabled && (it.providerType == ProviderType.openAI || it.providerType == ProviderType.openAIResponses)
         }
+        val keyed = openAi.filter { it.credentialType == ProviderCredential.apiKey && !repository.loadApiKey(it.id).isNullOrBlank() }
+        val chatgpt = openAi.filter {
+            it.credentialType == ProviderCredential.oauth && com.minisx.app.auth.OAuthManager.hasStoredCredential(context, it.id)
+        }
+        val candidates = keyed + chatgpt
         if (candidates.isEmpty()) return Resolved.NoProvider
         val saved = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_INSTANCE, null)
         val instance = candidates.firstOrNull { it.id == saved } ?: candidates.first()
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_INSTANCE, instance.id).apply()
+        val language = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH).takeIf { it.isNotBlank() }
+        if (instance.credentialType == ProviderCredential.oauth) {
+            val manager = com.minisx.app.auth.OpenAIOAuthManager(context, instance.id)
+            val token = manager.validAccessToken() ?: return Resolved.NoProvider
+            return Resolved.Ok(
+                LiveSession.Config(
+                    apiKey = token,
+                    baseUrl = instance.customBaseURL,
+                    voice = voice(context),
+                    language = language,
+                    userAgent = instance.customUserAgent,
+                    extraHeaders = buildMap { manager.accountId?.let { put("ChatGPT-Account-Id", it) } },
+                ),
+                instance,
+            )
+        }
         return Resolved.Ok(
             LiveSession.Config(
                 apiKey = repository.loadApiKey(instance.id)!!.trim(),
                 baseUrl = instance.customBaseURL,
                 voice = voice(context),
-                language = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH).takeIf { it.isNotBlank() },
+                language = language,
                 userAgent = instance.customUserAgent,
             ),
             instance,
