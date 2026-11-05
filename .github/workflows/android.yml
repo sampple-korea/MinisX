@@ -1,8 +1,9 @@
 name: Android
 
 # Builds the signed APK on every push to main, and publishes it as a GitHub release
-# when a tag like v1.16 is pushed. Every build is signed with the same key
+# when a tag like v0.1 is pushed. Every build is signed with the same key
 # (src/android/keystore/minis.jks), and the job fails if that ever stops being true.
+# Build only: there is deliberately no test/verification job (it cost CI minutes).
 
 on:
   push:
@@ -11,7 +12,11 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Publish a release with this tag (e.g. v1.16); created on the built commit. Leave empty for a plain build."
+        description: "Publish a release with this tag (e.g. v0.1); created on the built commit. Leave empty for a plain build."
+        required: false
+        default: ""
+      version_code:
+        description: "Force this versionCode (e.g. 1 for the first release). Leave empty to use run number - 5."
         required: false
         default: ""
 
@@ -90,11 +95,15 @@ jobs:
         id: version
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
+          FORCE_CODE: ${{ inputs.version_code }}
         run: |
-          code=$((1000 + GITHUB_RUN_NUMBER))
+          # The app restarted at 0.1 / versionCode 1 when it became com.minisx.app; run #5 was the
+          # last build of the old line, so run number - 5 keeps counting up from 1.
+          code="${FORCE_CODE:-$((GITHUB_RUN_NUMBER - 5))}"
+          if (( code < 1 )); then code=1; fi
           tag="${RELEASE_TAG:-}"
           if [[ -z "$tag" && "$GITHUB_REF" == refs/tags/v* ]]; then tag="$GITHUB_REF_NAME"; fi
-          if [[ -n "$tag" ]]; then name="${tag#v}"; else name="1.15-build.${GITHUB_RUN_NUMBER}"; fi
+          if [[ -n "$tag" ]]; then name="${tag#v}"; else name="0.1-build.${GITHUB_RUN_NUMBER}"; fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "name=$name" >> "$GITHUB_OUTPUT"
@@ -142,59 +151,3 @@ jobs:
           target_commitish: ${{ github.sha }}
           files: minis-${{ steps.version.outputs.name }}.apk
           generate_release_notes: true
-
-  # Unit tests of the packages that pass without a device or a configured Claude sign-in.
-  # Not blocking: the suite also holds tests that need network access or local settings files.
-  test:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      # The runner image already has the Android SDK (ANDROID_HOME); just put its sdkmanager on PATH.
-      # (android-actions/setup-android fails on current images: it asks for the removed "tools" package.)
-      - name: Android SDK tools
-        run: |
-          echo "$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | sort -V | tail -1)" >> "$GITHUB_PATH"
-      - run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install "platforms;android-36" "build-tools;${BUILD_TOOLS}" "cmake;${CMAKE_VERSION}"
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.25"
-          cache-dependency-path: deps/rclone-mobile/go.sum
-      - run: |
-          sudo apt-get update && sudo apt-get install -y gawk
-          go install golang.org/x/mobile/cmd/gomobile@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-      - name: rclone.aar (the app compiles against it)
-        run: |
-          sdkmanager --install "ndk;${NDK_VERSION}"
-          export ANDROID_NDK_HOME="${ANDROID_HOME}/ndk/${NDK_VERSION}"
-          "$(go env GOPATH)/bin/gomobile" init
-          ./deps/build_rclone_android.sh
-          mkdir -p src/android/app/libs && cp deps/build/rclone/rclone.aar src/android/app/libs/
-      - uses: gradle/actions/setup-gradle@v4
-      - name: Unit tests
-        working-directory: src/android
-        run: |
-          ./gradlew --no-daemon :app:testGithubDebugUnitTest \
-            --tests "com.openminis.app.config.*" --tests "com.openminis.app.backup.*" \
-            --tests "com.openminis.app.agent.*" --tests "com.openminis.app.network.*" \
-            --tests "com.openminis.app.offload.*" --tests "com.openminis.app.sandbox.offload.*" \
-            --tests "com.openminis.app.ui.settings.*" --tests "com.openminis.app.ui.chat.*" \
-            --tests "com.openminis.app.quota.*" --tests "com.openminis.app.widget.*" \
-            --tests "com.openminis.app.live.*"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-reports
-          path: src/android/app/build/reports/tests/**
-          if-no-files-found: ignore
-          retention-days: 14

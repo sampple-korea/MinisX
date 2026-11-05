@@ -177,12 +177,12 @@ Version numbers come from `build.gradle.kts` unless you pass `-Pminis.versionCod
 
 | Trigger | What happens |
 |---|---|
-| push to `main` | builds the signed release APK, uploads it as the `minis-apk` artifact (90 days), runs the unit tests (non-blocking) |
-| tag `v*` (e.g. `git tag v1.16 && git push --tags`) | the same, and attaches the APK to a GitHub release; `versionName` is the tag |
-| manual run | the same as a push |
+| push to `main` | builds the signed release APK, uploads it as the `minis-apk` artifact (90 days) |
+| tag `v*` (e.g. `git tag v0.2 && git push --tags`) | the same, and attaches the APK to a GitHub release; `versionName` is the tag |
+| manual run | the same as a push; with `release_tag` (e.g. `v0.1`) it also creates that tag + release on the built commit, and `version_code` can force the versionCode |
 
 The job checks the APK's certificate against the fingerprint above and fails if it differs.
-`versionCode` is `1000 + run number`.
+`versionCode` is the run number minus 5 (the app restarted at 0.1 / versionCode 1 as `com.minisx.app`), or the `version_code` input.
 
 The in-app updater looks for new releases of `sampple-korea/MinisX`. The repository is
 private, so the unauthenticated GitHub API cannot see them: the app simply finds no update
@@ -193,7 +193,7 @@ private, so the unauthenticated GitHub API cannot see them: the app simply finds
 Some unit tests use Robolectric, which downloads Android jars from Maven the
 first time; they fail in a sandbox with no outbound access. A few tests also
 need the build-time customization file (see above) and fail without it. Filter
-with `--tests "com.openminis.app.config.*"` to run a package.
+with `--tests "com.minisx.app.config.*"` to run a package.
 
 ```sh
 ./gradlew :app:testGithubDebugUnitTest      # JVM unit tests

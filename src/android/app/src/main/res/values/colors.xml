@@ -4,7 +4,7 @@
     <!--
       T-android-shortcut-icons-blank: foreground glyph color for the
       app-icon shortcut adaptive icons. Dark glyph on the light
-      @color/ic_launcher_background (#EFF2F6); the values-night variant
+      @color/ic_launcher_background (#050506); the values-night variant
       flips to a light glyph on the dark night background (#2C3034) so
       the shortcuts stay legible in both themes. Fixed colors (not theme
       attrs) because the launcher process renders shortcut icons and

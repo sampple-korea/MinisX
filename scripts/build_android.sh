@@ -6,7 +6,7 @@
 #   ./scripts/build_android.sh              signed release APK  (default)
 #   ./scripts/build_android.sh debug        signed debug APK
 #   ./scripts/build_android.sh release --clean-native    rebuild proot / rclone too
-#   any other argument goes to Gradle, e.g. -Pminis.versionCode=1001 -Pminis.versionName=1.16
+#   any other argument goes to Gradle, e.g. -Pminis.versionCode=2 -Pminis.versionName=0.2
 #
 # Needs: JDK 17+, Android SDK (ANDROID_HOME), NDK r28+ (ANDROID_NDK_HOME), Go 1.25+,
 # gomobile, gawk, curl. See BUILDING.md.
@@ -24,7 +24,7 @@ for arg in "$@"; do
   case "$arg" in
     release|debug) VARIANT="$arg" ;;
     --clean-native) CLEAN_NATIVE=1 ;;
-    *) GRADLE_ARGS+=("$arg") ;; # e.g. -Pminis.versionCode=1001
+    *) GRADLE_ARGS+=("$arg") ;; # e.g. -Pminis.versionCode=2
   esac
 done
 

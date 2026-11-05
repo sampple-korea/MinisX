@@ -5,7 +5,7 @@
 until it says otherwise.
 
 **Android is the existing implementation** (`android-a11y-cli`,
-`src/android/app/src/main/java/com/openminis/app/sandbox/offload/AccessibilityOffloadHandler.kt`).
+`src/android/app/src/main/java/com/minisx/app/sandbox/offload/AccessibilityOffloadHandler.kt`).
 Windows adds `windows-a11y-cli` with the same commands, flags and `data` keys.
 iOS has no equivalent: apps cannot read or drive other apps there, and it must
 not pretend to (no command is installed).

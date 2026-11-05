@@ -50,7 +50,7 @@ static void closeInheritedFds(void) {
 }
 
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_forkExec(
+Java_com_minisx_app_sandbox_PtyBridge_forkExec(
     JNIEnv *env, jclass clazz,
     jstring jCmd, jobjectArray jArgv, jobjectArray jEnvp,
     jstring jCwd, jint cols, jint rows, jintArray outPid)
@@ -178,7 +178,7 @@ Java_com_openminis_app_sandbox_PtyBridge_forkExec(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_readBytes(
+Java_com_minisx_app_sandbox_PtyBridge_readBytes(
     JNIEnv *env, jclass clazz, jint fd, jbyteArray buf, jint off, jint len)
 {
     if (fd < 0 || len <= 0) return -EINVAL;
@@ -192,7 +192,7 @@ Java_com_openminis_app_sandbox_PtyBridge_readBytes(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_writeBytes(
+Java_com_minisx_app_sandbox_PtyBridge_writeBytes(
     JNIEnv *env, jclass clazz, jint fd, jbyteArray buf, jint off, jint len)
 {
     if (fd < 0 || len <= 0) return -EINVAL;
@@ -214,7 +214,7 @@ Java_com_openminis_app_sandbox_PtyBridge_writeBytes(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_setWindowSize(
+Java_com_minisx_app_sandbox_PtyBridge_setWindowSize(
     JNIEnv *env, jclass clazz, jint fd, jint cols, jint rows)
 {
     if (fd < 0) return -EINVAL;
@@ -228,7 +228,7 @@ Java_com_openminis_app_sandbox_PtyBridge_setWindowSize(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_closeFd(
+Java_com_minisx_app_sandbox_PtyBridge_closeFd(
     JNIEnv *env, jclass clazz, jint fd)
 {
     if (fd < 0) return 0;
@@ -237,7 +237,7 @@ Java_com_openminis_app_sandbox_PtyBridge_closeFd(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_sendSignal(
+Java_com_minisx_app_sandbox_PtyBridge_sendSignal(
     JNIEnv *env, jclass clazz, jint pid, jint sig)
 {
     if (pid <= 0) return -EINVAL;
@@ -249,7 +249,7 @@ Java_com_openminis_app_sandbox_PtyBridge_sendSignal(
 // (WEXITSTATUS) on normal exit, or -(128+sig) on termination by signal.
 // Returns -errno on waitpid() failure.
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_waitFor(
+Java_com_minisx_app_sandbox_PtyBridge_waitFor(
     JNIEnv *env, jclass clazz, jint pid)
 {
     if (pid <= 0) return -EINVAL;
@@ -293,7 +293,7 @@ Java_com_openminis_app_sandbox_PtyBridge_waitFor(
 // sigtimedwait takes it off the pending set; this thread makes no write in
 // the window, so none can arrive before the re-block.
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_unblockSigpipe(
+Java_com_minisx_app_sandbox_PtyBridge_unblockSigpipe(
     JNIEnv *env, jclass clazz)
 {
     sigset_t set, old, pending;
@@ -316,7 +316,7 @@ Java_com_openminis_app_sandbox_PtyBridge_unblockSigpipe(
 
 // [T-shell-stall-yes-head] Re-block SIGPIPE on the calling thread. 0 or -errno.
 JNIEXPORT jint JNICALL
-Java_com_openminis_app_sandbox_PtyBridge_blockSigpipe(
+Java_com_minisx_app_sandbox_PtyBridge_blockSigpipe(
     JNIEnv *env, jclass clazz)
 {
     sigset_t set;
