@@ -5,10 +5,13 @@ import android.os.Build
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.BasalMetabolicRateRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.DistanceRecord
+import androidx.health.connect.client.records.ElevationGainedRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.FloorsClimbedRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.HydrationRecord
@@ -17,11 +20,14 @@ import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.SpeedRecord
+import androidx.health.connect.client.records.StepsCadenceRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.Vo2MaxRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.Metadata
+import androidx.health.connect.client.aggregate.AggregateMetric
 import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
@@ -120,6 +126,10 @@ class HealthOffloadHandler(private val context: Context) : NativeOffloadHandler 
                 JSONObject().put("time", fmt(r.time)).put("rmssd_ms", round(r.heartRateVariabilityMillis))
                     .put("note", "Health Connect reports RMSSD, not SDNN")
             }
+            "basal-energy" -> dailyAggregate(client, args, sub, BasalMetabolicRateRecord::class,
+                BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL, "kcal") { it.inKilocalories }
+            "cadence" -> cadence(client, args)
+            "elevation" -> elevation(client, args)
             "sleep" -> sleep(client, args)
             "workouts" -> workouts(client, args)
             "nutrition" -> nutrition(client, args)
@@ -130,8 +140,8 @@ class HealthOffloadHandler(private val context: Context) : NativeOffloadHandler 
             "delete" -> delete(client, args)
             else -> OffloadEnvelope.error(
                 TOOL, sub, "unknown_command",
-                "Unknown command '$sub'. Valid commands: status, types, steps, heart-rate, resting-heart-rate, vo2-max, " +
-                    "sleep, workouts, weight, blood-oxygen, blood-glucose, hrv, nutrition, summary, batch, log, " +
+                "Unknown command '$sub'. Valid commands: status, types, steps, basal-energy, heart-rate, resting-heart-rate, vo2-max, " +
+                    "sleep, workouts, cadence, elevation, weight, blood-oxygen, blood-glucose, hrv, nutrition, summary, batch, log, " +
                     "log-blood-pressure, delete. Use --help for details.",
                 args, 2,
             )
@@ -265,6 +275,80 @@ class HealthOffloadHandler(private val context: Context) : NativeOffloadHandler 
         }
         val data = JSONObject().put("days", days).put("total", total).put("range", rangeJson(start, end))
         return OffloadEnvelope.ok(TOOL, "steps", data, args)
+    }
+
+    /** One value per day for an aggregate metric (basal energy, …). */
+    private suspend fun <T : Any> dailyAggregate(
+        client: HealthConnectClient,
+        args: OffloadArgs,
+        action: String,
+        record: KClass<out Record>,
+        metric: AggregateMetric<T>,
+        unit: String,
+        convert: (T) -> Double,
+    ): NativeOffloadResult {
+        ensureRead(client, action, args, record)?.let { return it }
+        val (start, end) = OffloadDates.range(args)
+        val zone = ZoneId.systemDefault()
+        val groups = client.aggregateGroupByPeriod(
+            AggregateGroupByPeriodRequest(
+                metrics = setOf(metric),
+                timeRangeFilter = TimeRangeFilter.between(
+                    LocalDateTime.ofInstant(start, zone).toLocalDate().atStartOfDay(),
+                    LocalDateTime.ofInstant(end, zone),
+                ),
+                timeRangeSlicer = Period.ofDays(1),
+            ),
+        )
+        var total = 0.0
+        val days = JSONArray()
+        for (g in groups) {
+            val v = g.result[metric]?.let(convert) ?: 0.0
+            total += v
+            days.put(JSONObject().put("date", g.startTime.atZone(zone).toOffsetDateTime().toString()).put(unit, round(v)))
+        }
+        return OffloadEnvelope.ok(TOOL, action, JSONObject().put("days", days).put("total_$unit", round(total)).put("range", rangeJson(start, end)), args)
+    }
+
+    /** Flights climbed and elevation gained, per day. */
+    private suspend fun elevation(client: HealthConnectClient, args: OffloadArgs): NativeOffloadResult {
+        ensureRead(client, "elevation", args, FloorsClimbedRecord::class, ElevationGainedRecord::class)?.let { return it }
+        val (start, end) = OffloadDates.range(args)
+        val zone = ZoneId.systemDefault()
+        val groups = client.aggregateGroupByPeriod(
+            AggregateGroupByPeriodRequest(
+                metrics = setOf(FloorsClimbedRecord.FLOORS_CLIMBED_TOTAL, ElevationGainedRecord.ELEVATION_GAINED_TOTAL),
+                timeRangeFilter = TimeRangeFilter.between(
+                    LocalDateTime.ofInstant(start, zone).toLocalDate().atStartOfDay(),
+                    LocalDateTime.ofInstant(end, zone),
+                ),
+                timeRangeSlicer = Period.ofDays(1),
+            ),
+        )
+        val days = JSONArray()
+        for (g in groups) {
+            days.put(JSONObject().put("date", g.startTime.atZone(zone).toOffsetDateTime().toString())
+                .put("floors", round(g.result[FloorsClimbedRecord.FLOORS_CLIMBED_TOTAL] ?: 0.0))
+                .put("elevation_m", round(g.result[ElevationGainedRecord.ELEVATION_GAINED_TOTAL]?.inMeters ?: 0.0)))
+        }
+        return OffloadEnvelope.ok(TOOL, "elevation", JSONObject().put("days", days).put("range", rangeJson(start, end)), args)
+    }
+
+    /** Walking speed and step cadence samples, newest first (iOS `cadence`: walking speed + step length). */
+    private suspend fun cadence(client: HealthConnectClient, args: OffloadArgs): NativeOffloadResult {
+        ensureRead(client, "cadence", args, SpeedRecord::class, StepsCadenceRecord::class)?.let { return it }
+        val (start, end) = OffloadDates.range(args)
+        val limit = args.getInt("limit") ?: DEFAULT_LIMIT
+        val speed = readAll(client, SpeedRecord::class, start, end)
+            .flatMap { r -> r.samples.map { it.time to it.speed.inMetersPerSecond } }.sortedByDescending { it.first }
+        val cad = readAll(client, StepsCadenceRecord::class, start, end)
+            .flatMap { r -> r.samples.map { it.time to it.rate } }.sortedByDescending { it.first }
+        val data = JSONObject()
+            .put("speed", JSONArray().also { a -> speed.take(limit).forEach { (t, v) -> a.put(JSONObject().put("time", fmt(t)).put("m_per_s", round(v))) } })
+            .put("cadence", JSONArray().also { a -> cad.take(limit).forEach { (t, v) -> a.put(JSONObject().put("time", fmt(t)).put("steps_per_min", round(v))) } })
+            .put("range", rangeJson(start, end))
+            .put("note", "Health Connect has no step-length series; speed and cadence are what it records.")
+        return OffloadEnvelope.ok(TOOL, "cadence", data, args)
     }
 
     private suspend fun heartRate(client: HealthConnectClient, args: OffloadArgs): NativeOffloadResult {
@@ -566,8 +650,8 @@ class HealthOffloadHandler(private val context: Context) : NativeOffloadHandler 
         private val BOOLEAN_FLAGS = setOf("today")
 
         private val BATCHABLE = setOf(
-            "steps", "heart-rate", "resting-heart-rate", "vo2-max", "sleep", "workouts", "weight",
-            "blood-oxygen", "blood-glucose", "hrv", "nutrition", "summary",
+            "steps", "basal-energy", "heart-rate", "resting-heart-rate", "vo2-max", "sleep", "workouts", "weight",
+            "blood-oxygen", "blood-glucose", "hrv", "nutrition", "summary", "cadence", "elevation",
         )
         private val BATCH_ALIASES = mapOf(
             "hrv-sdnn" to "hrv", "oxygen-saturation" to "blood-oxygen", "active-energy" to "summary",
@@ -584,6 +668,9 @@ class HealthOffloadHandler(private val context: Context) : NativeOffloadHandler 
 
         private val TYPE_TABLE = listOf(
             TypeInfo("steps", "Step count, daily totals", "count", true, true),
+            TypeInfo("basal-energy", "Resting (basal) energy, daily totals", "kcal", true, false),
+            TypeInfo("cadence", "Walking speed and step cadence samples", "m/s, steps/min", true, false),
+            TypeInfo("elevation", "Floors climbed and elevation gained, daily", "floors, m", true, false),
             TypeInfo("heart-rate", "Heart rate samples", "bpm", true, true),
             TypeInfo("resting-heart-rate", "Resting heart rate", "bpm", true, true),
             TypeInfo("vo2-max", "Cardio fitness (VO2 max)", "mL/(kg·min)", true, false),
@@ -621,9 +708,12 @@ COMMANDS:
   status               Is Health Connect available, which permissions are granted
   types                List the supported data types
   steps                Step count (daily buckets)
+  basal-energy         Resting (basal) energy, daily kcal
   heart-rate           Heart rate samples
   resting-heart-rate   Resting heart rate
   vo2-max              VO2 max
+  cadence              Walking speed and step cadence samples
+  elevation            Floors climbed / elevation gained, daily
   sleep                Sleep sessions with stage minutes
   workouts             Exercise sessions   (--type running filters by name)
   weight               Body mass
