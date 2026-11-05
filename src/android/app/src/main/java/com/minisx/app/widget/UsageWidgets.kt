@@ -88,7 +88,9 @@ abstract class UsageWidget(
     @Composable
     private fun Content(context: Context, name: String, model: UsageWidgetModel) {
         val size = LocalSize.current
-        val tiny = size.height < 80.dp && model.state == UsageWidgetModel.State.READY
+        // Under ~118dp the full layout (title row, number, gauge, extra rows, footer) does not fit and
+        // the footer was cut off; the one-line layout below is built for that.
+        val tiny = size.height < 118.dp && model.state == UsageWidgetModel.State.READY
         val wide = size.width >= 200.dp
         val link = when {
             model.instanceId != null -> "minis://settings/providers/${model.instanceId}"
@@ -101,7 +103,7 @@ abstract class UsageWidget(
             .clickable(actionStartActivity(UsageWidgets.deepLink(context, link)))
         if (tiny) {
             Row(frame.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                TinyReady(model, name, refresh)
+                TinyReady(context, model, name, refresh, showReset = size.height >= 60.dp)
             }
             return
         }
@@ -137,7 +139,9 @@ abstract class UsageWidget(
 
     /** One line for a 2x1 widget: the number, the gauge, and the refresh glyph. */
     @Composable
-    private fun RowScope.TinyReady(model: UsageWidgetModel, name: String, refresh: androidx.glance.action.Action?) {
+    private fun RowScope.TinyReady(
+        context: Context, model: UsageWidgetModel, name: String, refresh: androidx.glance.action.Action?, showReset: Boolean,
+    ) {
         val top = model.tightest ?: return
         val low = UsageWidgetModel.isLow(top.remainingPercent)
         Text(
@@ -155,6 +159,14 @@ abstract class UsageWidget(
             )
             Spacer(GlanceModifier.height(3.dp))
             Gauge(top.remainingPercent, 8, 6.dp, GlanceModifier.fillMaxWidth())
+            val resets = top.resetsAt?.takeIf { showReset }?.let { context.getString(R.string.usage_widget_resets, QuotaText.relative(context, it)) }
+            if (resets != null) {
+                Spacer(GlanceModifier.height(3.dp))
+                Text(
+                    resets, maxLines = 1,
+                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
+                )
+            }
         }
         if (refresh != null) {
             Text(
