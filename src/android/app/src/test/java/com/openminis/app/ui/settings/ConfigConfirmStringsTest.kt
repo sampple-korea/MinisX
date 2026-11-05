@@ -1,10 +1,6 @@
 package com.openminis.app.ui.settings
 
 import com.openminis.app.ProductionSources
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -12,18 +8,17 @@ import java.io.File
 
 /**
  * [T-config-confirm-i18n] The minis-config approval dialog reads in the app
- * language, like iOS ConfigConfirmSheet. Found on the Pixel 4a in Chinese:
+ * language, like iOS ConfigConfirmSheet did. Found on the Pixel 4a in Chinese:
  * the title, Cancel / Apply / Reject All and the risk hints were English
- * literals. Every string must equal the iOS catalog's text in every locale
- * iOS translates it into, and the config screens must not grow new literals.
+ * literals. The English wording is pinned here, and the config screens must
+ * not grow new literals.
  */
 class ConfigConfirmStringsTest {
 
     private val main = ProductionSources.mainRoot()!!
     private val res = File(main.parentFile.parentFile.parentFile.parentFile, "res")
-    private val repo = generateSequence(main) { it.parentFile }.first { File(it, "src/ios/Localizable.xcstrings").exists() }
 
-    /** Android resource → iOS catalog key. */
+    /** Android resource → the English wording of the dialog. */
     private val keys = mapOf(
         "config_confirm_title_one" to "Confirm change",
         "config_confirm_title_many" to "Confirm %lld changes",
@@ -48,25 +43,12 @@ class ConfigConfirmStringsTest {
             .associate { it.groupValues[1] to it.groupValues[2].replace("\\'", "'").replace("\\\"", "\"") }
     }
 
-    private val catalog: JsonObject by lazy {
-        Json.parseToJsonElement(File(repo, "src/ios/Localizable.xcstrings").readText()).jsonObject["strings"]!!.jsonObject
-    }
-
-    private fun ios(key: String, locale: String): String? =
-        (catalog[key] as? JsonObject)?.get("localizations")?.let { it as? JsonObject }?.get(locale)
-            ?.let { it as? JsonObject }?.get("stringUnit")?.let { it as? JsonObject }?.get("value")?.jsonPrimitive?.content
-
     @Test
-    fun `every dialog string matches iOS in every locale iOS has`() {
+    fun `the English dialog strings are the published wording`() {
         val problems = ArrayList<String>()
         val base = strings("values")
         for ((name, key) in keys) {
             if (base[name] != key.replace("%lld", "%1\$d")) problems += "values/$name = ${base[name]}"
-            for ((loc, dir) in locales) {
-                val expected = ios(key, loc)?.replace("%lld", "%1\$d") ?: continue
-                val actual = strings(dir)[name]
-                if (actual != expected) problems += "$dir/$name: '$actual' != iOS '$expected'"
-            }
         }
         assertEquals(emptyList<String>(), problems)
     }

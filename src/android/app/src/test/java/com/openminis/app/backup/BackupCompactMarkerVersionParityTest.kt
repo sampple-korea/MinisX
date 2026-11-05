@@ -1,6 +1,5 @@
 package com.openminis.app.backup
 
-import com.openminis.app.IosSources
 import com.openminis.app.data.db.CompactMarkerEntity
 import com.openminis.app.data.db.MessageEntity
 import kotlinx.serialization.json.JsonNull
@@ -46,42 +45,33 @@ class BackupCompactMarkerVersionParityTest {
     private data class SwiftProp(val name: String, val optional: Boolean)
 
     /**
-     * Stored properties of a Swift struct, INCLUDING `var x: T = default`.
-     * Computed properties (`{` on the line) are excluded. The struct is found
-     * wherever iOS declares it (f492946c7 moved these models out of
-     * ChatStore.swift into ChatStoreModels.swift).
+     * Stored properties (including defaulted vars) of the iOS `CompactMarker` and
+     * `RawMessage` structs, pinned from ChatStoreModels.swift at the point the iOS
+     * tree was removed. Both use synthesized Codable, so every non-optional one is
+     * a key an Android-written package must carry to decode on iOS.
      */
-    private fun storedProps(header: String): List<SwiftProp> {
-        val chatStore = IosSources.declaring(header)
-        val start = chatStore.indexOf(header)
-        require(start >= 0) { "declaration not found: $header" }
-        var depth = 0
-        var i = chatStore.indexOf('{', start)
-        val bodyStart = i
-        while (i < chatStore.length) {
-            when (chatStore[i]) {
-                '{' -> depth++
-                '}' -> { depth--; if (depth == 0) break }
-            }
-            i++
-        }
-        val body = chatStore.substring(bodyStart + 1, i)
-        val prop = Regex("""^    (?:let|var) (\w+): ([^=/{\n]+?)\s*(?:=[^{]*)?(?://.*)?$""")
-        return body.lines().mapNotNull { line ->
-            if (line.contains("{")) return@mapNotNull null
-            val m = prop.find(line) ?: return@mapNotNull null
-            SwiftProp(m.groupValues[1], m.groupValues[2].trim().endsWith("?"))
-        }
-    }
+    private val swiftDeclarations: Map<String, List<SwiftProp>> = mapOf(
+        "struct CompactMarker: " to listOf(
+            SwiftProp("id", false), SwiftProp("sessionId", false), SwiftProp("summary", false),
+            SwiftProp("firstKeptSortOrder", false), SwiftProp("compactedCount", false), SwiftProp("createdAt", false),
+            SwiftProp("uiBoundarySortOrder", true), SwiftProp("boundaryMessageId", true),
+            SwiftProp("firstKeptMessageId", true), SwiftProp("lastCompactedMessageId", true), SwiftProp("version", false),
+        ),
+        "struct RawMessage: " to listOf(
+            SwiftProp("id", false), SwiftProp("sessionId", false), SwiftProp("role", false), SwiftProp("parts", false),
+            SwiftProp("createdAt", false), SwiftProp("tokenUsage", true), SwiftProp("reasoningContent", true),
+            SwiftProp("streamInterruptCount", false), SwiftProp("sortOrder", false), SwiftProp("errorInfo", true),
+            SwiftProp("modelId", true), SwiftProp("modelDisplayName", true), SwiftProp("providerType", true),
+            SwiftProp("reasoningEchoJSON", true), SwiftProp("providerInstanceId", true),
+        ),
+    )
+
+    private fun storedProps(header: String): List<SwiftProp> =
+        swiftDeclarations[header] ?: error("declaration not pinned: $header")
 
     /** Keys a synthesized Decodable requires: every non-optional stored property. */
     private fun requiredKeys(header: String): Set<String> =
         storedProps(header).filterNot { it.optional }.map { it.name }.toSet()
-
-    /** A custom decoder can sit in the struct body or in an extension in any file. */
-    private fun hasCustomDecoder(typeName: String): Boolean =
-        IosSources.anyMatches(Regex("""extension $typeName\b""")) ||
-            IosSources.declaring("struct $typeName:").substringAfter("struct $typeName:").substringBefore("\n}\n").contains("init(from decoder")
 
     private val v2Marker = CompactMarkerEntity(
         id = "C-2", sessionId = "S-1", summary = "sum", firstKeptSortOrder = Int.MAX_VALUE,
@@ -105,8 +95,8 @@ class BackupCompactMarkerVersionParityTest {
         val raw = storedProps("struct RawMessage: ").map { it.name }
         assertTrue("RawMessage.sortOrder must be seen: $raw", "sortOrder" in raw)
         assertTrue("RawMessage.streamInterruptCount must be seen: $raw", "streamInterruptCount" in raw)
-        // The requirement below is only true for SYNTHESIZED Codable.
-        assertTrue("CompactMarker grew a custom decoder; revisit this test", !hasCustomDecoder("CompactMarker"))
+        // The requirement below holds because iOS decodes CompactMarker with SYNTHESIZED
+        // Codable (no custom init(from:)) - true when the iOS tree was removed.
     }
 
     // -- iOS decode parity -------------------------------------------------------

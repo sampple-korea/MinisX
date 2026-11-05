@@ -344,17 +344,6 @@ class UserAskCoreTest {
         assertTrue(desc.contains("Never offered to sub agents. In a run you are not watching, the card stays open and your answer is sent as your next message."))
     }
 
-    @Test fun `the description is byte-identical to iOS`() {
-        val ios = com.openminis.app.ProductionSources.mainRoot()?.let { root ->
-            var dir: java.io.File? = root
-            repeat(8) { dir = dir?.parentFile }   // .../src/android/app/src/main/java/com/openminis/app -> .../src
-            java.io.File(dir, "ios/Agent/Chat/UserAskCore.swift").takeIf { it.exists() }?.readText()
-        } ?: return   // iOS sources absent (Android-only checkout)
-        val block = ios.substringAfter("static let toolDescription = \"\"\"\n").substringBefore("\n    \"\"\"")
-        val swift = block.lines().joinToString("\n") { it.removePrefix("    ") }
-        assertEquals(swift, UserAskPromptText.TOOL_DESCRIPTION)
-    }
-
     @Test fun `definition carries the nested questions schema`() {
         val d = UserAskPromptText.definition()
         assertEquals("user_ask", d.name)

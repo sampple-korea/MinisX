@@ -30,22 +30,22 @@ import java.io.File
  */
 class ContextOverflowRejectionParityTest {
 
-    private val repoRoot: File by lazy {
-        var dir: File? = ProductionSources.mainRoot()
-        while (dir != null && !File(dir, "src/ios").isDirectory) dir = dir.parentFile
-        requireNotNull(dir) { "repo root with src/ios not found" }
-    }
-
-    private fun iosMarkers(): List<String> {
-        val src = File(repoRoot, "src/ios/Agent/Chat/ContextPolicy.swift").readText()
-        val start = src.indexOf("static let overflowMarkers = [")
-        require(start >= 0) { "iOS overflowMarkers not found" }
-        val body = src.substring(start, src.indexOf(']', start))
-        return Regex("\"([^\"]+)\"").findAll(body).map { it.groupValues[1] }.toList()
-    }
+    /**
+     * The overflow wordings the iOS app recognised (`ContextSizeMeter.overflowMarkers`
+     * in ContextPolicy.swift at the point the iOS tree was removed). Pinned here
+     * so an Android build keeps recognising every provider message iOS did.
+     */
+    private fun iosMarkers(): List<String> = listOf(
+        "maximum context length", "context length exceeded", "context_length_exceeded",
+        "reduce the length of the messages", "too many tokens", "prompt is too long",
+        "request too large", "exceeds the maximum", "input is too long",
+        "exceeds the context window", "input exceeds the context",
+        "input length and `max_tokens` exceed context limit: A + B > W", "exceed context limit",
+        "上下文长度", "超出最大长度", "内容过长",
+    )
 
     @Test
-    fun `iOS marker list was read`() {
+    fun `the pinned marker list is intact`() {
         val markers = iosMarkers()
         assertTrue("expected a non-trivial list, got $markers", markers.size >= 10)
         assertTrue(markers.contains("prompt is too long"))

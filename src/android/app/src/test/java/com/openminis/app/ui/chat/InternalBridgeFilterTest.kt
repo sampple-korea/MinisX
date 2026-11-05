@@ -70,19 +70,6 @@ class InternalBridgeFilterTest {
     }
 
     @Test
-    fun `the interrupt note is word for word the iOS one`() {
-        // Walk up to the repo root; skip on an Android-only checkout.
-        var dir: java.io.File? = java.io.File("").absoluteFile
-        var ios: java.io.File? = null
-        while (dir != null && ios == null) {
-            ios = java.io.File(dir, "src/ios/Agent/Chat/ChatStoreModels.swift").takeIf { it.exists() }
-            dir = dir.parentFile
-        }
-        if (ios == null) return
-        assertTrue(ios.readText().contains("\"" + ChatMessage.QUEUED_INTERRUPT_REMINDER_TEXT + "\""))
-    }
-
-    @Test
     fun `a message that merely mentions interruption is not flagged`() {
         // Substring / fuzzy matches must not trip the filter — only the exact
         // known bridge strings (after trim) count.

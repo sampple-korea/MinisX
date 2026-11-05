@@ -39,9 +39,11 @@ import kotlin.math.sqrt
  */
 class MapsOffloadHandler(private val context: Context) : NativeOffloadHandler {
 
-    private val http: OkHttpClient by lazy {
-        OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build()
-    }
+    private val baseClient = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build()
+
+    /** Through Settings > Network (proxy / Tailscale), like every other client in the app. */
+    private val http: OkHttpClient
+        get() = com.openminis.app.network.NetworkHttp.client(com.openminis.app.network.NetworkHttp.DEFAULT_TAG, baseClient)
 
     override fun handle(request: NativeOffloadRequest): NativeOffloadResult {
         val args = OffloadArgs(request.argv.drop(1))

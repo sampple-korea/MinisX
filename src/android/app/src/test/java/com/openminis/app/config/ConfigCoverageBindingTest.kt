@@ -122,18 +122,16 @@ class ConfigCoverageBindingTest {
         }
     }
 
-    // -- Sub agents: same surface as iOS --
+    // -- Sub agents: the leaves agents address with `minis-config` --
 
     private val subAgents by lazy { source("config/collections/SubAgentsCollection.kt") }
 
     @Test
-    fun `sub agent paths match the iOS collection`() {
-        val ios = File("../../ios/Shared/Config/Collections/SubAgentsCollection.swift")
-        assertTrue("iOS source not found: ${ios.absolutePath}", ios.isFile)
-        val iosLeaves = Regex("""path: "subagents\.\\\(seg\)\.(\w+)"""").findAll(ios.readText()).map { it.groupValues[1] }.toSet()
+    fun `sub agent paths are the published set`() {
+        // The same six leaves the iOS app exposed, so skills written for either platform address them alike.
+        val expected = setOf("built_in", "description", "instructions", "model_group", "name", "thinking")
         val androidLeaves = Regex("""path = "subagents\.\${'$'}seg\.(\w+)"""").findAll(subAgents).map { it.groupValues[1] }.toSet()
-        assertTrue("iOS leaves: $iosLeaves", iosLeaves.size >= 6)
-        assertEquals(iosLeaves, androidLeaves)
+        assertEquals(expected, androidLeaves)
         assertTrue(subAgents.contains("path = \"subagents.order\""))
         assertTrue(subAgents.contains("path = \"subagents\""))
     }

@@ -1,25 +1,27 @@
 # Building Minis
 
 Minis ships a full Linux sandbox inside the app, so a first build is not just
-"open the project and press Run": the native dependencies (iSH on iOS, PRoot on
-Android, FFmpeg, LAME) and the Alpine rootfs are **built from source by the
-scripts in `deps/`**, not committed as binaries. Budget ~30–60 minutes for the
-first build; afterwards the artifacts are cached on disk and normal builds are
-fast.
+"open the project and press Run": the native dependencies (PRoot, rclone) and
+the Alpine rootfs are **built from source by the scripts in `deps/` and
+`scripts/`**, not committed as binaries. Budget ~30–60 minutes for the first
+build; afterwards the artifacts are cached on disk and normal builds are fast.
 
-Read the section for your platform end to end before starting — the steps are
-ordered by dependency, and skipping one produces confusing link errors later.
+Read this end to end before starting — the steps are ordered by dependency, and
+skipping one produces confusing errors later.
+
+This repository is **Android only**. The iOS app lived in `src/ios` up to commit
+`1a71df0`; it is still in git history if you need to read it.
 
 ---
 
 ## Common setup
 
-Clone with submodules — the iSH and PRoot forks are submodules, and a clone
-without them will fail at the native build step:
+Clone with submodules — the PRoot fork is a submodule, and a clone without it
+will fail at the native build step:
 
 ```sh
-git clone --recurse-submodules https://github.com/OpenMinis/OpenMinis.git
-cd OpenMinis
+git clone --recurse-submodules https://github.com/sampple-korea/MinisX.git
+cd MinisX
 
 # Already cloned without --recurse-submodules?
 git submodule update --init --recursive
@@ -27,7 +29,6 @@ git submodule update --init --recursive
 
 | Submodule | Repository | Used by |
 |---|---|---|
-| `deps/ish` | [OpenMinis/ish-arm64](https://github.com/OpenMinis/ish-arm64) | iOS sandbox kernel |
 | `deps/proot` | [OpenMinis/proot](https://github.com/OpenMinis/proot) | Android sandbox |
 
 ### Build-time customization
@@ -36,9 +37,6 @@ Some values are injected at build time and are **not** in this repository.
 Copy the templates before building:
 
 ```sh
-cp src/ios/Configs/ProviderCustomization.xcconfig.example \
-   src/ios/Configs/ProviderCustomization.xcconfig
-
 cp src/android/app/provider-customization.properties.example \
    src/android/app/provider-customization.properties
 ```
@@ -69,98 +67,14 @@ without setting this.
 
 ---
 
-## iOS
-
-### Requirements
-
-| Tool | Version / notes |
-|---|---|
-| macOS | Apple Silicon strongly recommended (see the simulator note below) |
-| Xcode | With the iOS SDK; the project targets **iOS 26.2** and **Swift 6.0** |
-| Metal Toolchain | `xcodebuild -downloadComponent MetalToolchain` — recent Xcode ships it as a separate component |
-| Homebrew packages | `brew install ninja llvm libarchive pkg-config` |
-| Python 3 + Meson | `pip3 install meson` |
-| Go | **1.25+** (`brew install go`), for rclone |
-
-`llvm` is needed to compile the guest VDSO, `libarchive` to unpack the rootfs,
-and Meson/Ninja to build the iSH kernel.
-
-The Metal Toolchain matters even though the build succeeds without it: FFmpeg's
-`configure` probes for the `metal` compiler and, when it is missing, **silently
-drops** the Metal-backed `yadif_videotoolbox` deinterlace filter. Check with
-`xcrun -sdk iphoneos metal --version` before running `build_ffmpeg.sh`.
-
-### 1. Build the native dependencies
-
-Run these from the repository root, **in this order** — FFmpeg links against
-LAME, so LAME must exist first or MP3 encoding is silently dropped:
-
-```sh
-./deps/build_lame.sh          # → deps/lame-build/lib/libmp3lame.a
-./deps/build_ffmpeg.sh        # → deps/frameworks/*.framework  (LGPL config)
-./deps/build_ish.sh           # → deps/libs/*.a, deps/include/, deps/resources/
-./deps/prepare_alpine_rootfs.sh   # → deps/resources/alpine-rootfs.zip
-./deps/build_rclone_ios.sh    # → deps/frameworks/Rclone.xcframework
-```
-
-What each produces:
-
-- **`build_lame.sh`** — LAME 3.100 as a static library for arm64.
-- **`build_ffmpeg.sh`** — FFmpeg 6.1.2 as per-library `.framework` bundles plus
-  an umbrella `FFmpeg.framework`. Configured **LGPL**: do not add
-  `--enable-gpl` or `--enable-nonfree` — see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
-- **`build_ish.sh`** — `libish`, `libish_emu`, `libfakefs` from the `deps/ish`
-  submodule, plus headers and the VDSO.
-- **`prepare_alpine_rootfs.sh`** — downloads Alpine aarch64 minirootfs and
-  converts it to iSH's fakefs format.
-- **`build_rclone_ios.sh`** — rclone as a static-library XCFramework (device
-  and simulator slices) for the backup feature's remote destinations (SMB /
-  WebDAV / SFTP / S3 / FTP). Needs only the Go toolchain, not gomobile. The
-  linked backends are listed in `deps/rclone-mobile/backends/backends.go`.
-
-The Xcode project references `deps/libs/`, `deps/include/`, `deps/frameworks/`
-and `deps/resources/` relative to the project, so nothing needs to be copied
-by hand.
-
-### 2. Build the app
-
-```sh
-open src/ios/Minis.xcodeproj
-```
-
-Select the **Minis** scheme and build. For a device build, set your own team
-under *Signing & Capabilities* — the project ships with an empty
-`DEVELOPMENT_TEAM`.
-
-From the command line:
-
-```sh
-xcodebuild -project src/ios/Minis.xcodeproj -scheme Minis \
-           -configuration Debug -destination 'generic/platform=iOS' \
-           CODE_SIGNING_ALLOWED=NO build
-```
-
-> **Simulator builds need simulator-architecture dependencies.** The scripts
-> above build for **device arm64**. Linking a simulator build against them
-> fails with `building for 'iOS-simulator', but linking in object file built
-> for 'iOS'` (or a missing-symbol error for x86_64 on Intel Macs). Build for a
-> device destination, or rebuild the native deps for the simulator SDK.
-
-### Targets
-
-`Minis` (app), `MinisShare` (share extension), `AgentWidgetExtension`,
-`MinisFileProvider`, plus `MinisTests` / `MinisUITests`.
-
----
-
-## Android
+## Build
 
 ### Requirements
 
 | Tool | Version / notes |
 |---|---|
 | JDK | **17** (`sourceCompatibility`/`targetCompatibility` are 17) |
-| Android SDK | **compileSdk 36**, targetSdk 35, **minSdk 26** |
+| Android SDK | **compileSdk 36**, targetSdk 35, **minSdk 26**; point Gradle at it with `ANDROID_HOME` or `sdk.dir` in `src/android/local.properties` |
 | Android NDK | **r28+** — set `$ANDROID_NDK_HOME`, or install via Android Studio |
 | CMake | 3.22.1 (install through the SDK Manager) |
 | Go + gomobile | Go **1.25+**, then `go install golang.org/x/mobile/cmd/gomobile@latest && gomobile init` — for rclone |
@@ -218,58 +132,49 @@ step is needed.
 
 ```sh
 cd src/android
-./gradlew :app:assembleDebug          # → app/build/outputs/apk/debug/
-./gradlew :app:installDebug           # install onto a connected device
+./gradlew :app:assembleGithubDebug    # → app/build/outputs/apk/github/debug/
+./gradlew :app:installGithubDebug     # install onto a connected device
 ```
+
+There are two distribution flavors, `github` (the default; self-update on) and
+`store`. `assembleDebug` builds both; `compileGithubDebugKotlin` is the quick
+"does it compile" check.
 
 Release builds are configured with the debug signing config, so no keystore is
 required to produce one locally.
 
 ### Tests
 
+Some unit tests use Robolectric, which downloads Android jars from Maven the
+first time; they fail in a sandbox with no outbound access. A few tests also
+need the build-time customization file (see above) and fail without it. Filter
+with `--tests "com.openminis.app.config.*"` to run a package.
+
 ```sh
-./gradlew :app:testDebugUnitTest        # JVM unit tests
-./gradlew :app:connectedAndroidTest     # instrumented; needs a device/emulator
+./gradlew :app:testGithubDebugUnitTest      # JVM unit tests
+./gradlew :app:connectedGithubDebugAndroidTest   # instrumented; needs a device/emulator
 ```
 
 ---
 
 ## Troubleshooting
 
-**`deps/ish` or `deps/proot` is empty** — the submodules were not initialised:
+**`deps/proot` is empty** — the submodule was not initialised:
 `git submodule update --init --recursive`.
 
-**iOS: `Undefined symbols … _vstats_version` / `symbol(s) not found`** — FFmpeg
-was not built, or was built for a different architecture than the one you are
-linking. Rerun `./deps/build_ffmpeg.sh` and build for a device destination.
-
-**iOS: `linking in object file built for 'iOS'` on a simulator build** — see
-the simulator note above.
-
-**iOS: MP3 encoding unavailable** — `build_lame.sh` did not run before
-`build_ffmpeg.sh`. Rerun both in order.
-
-**iOS: `There is no XCFramework found at '…/deps/frameworks/Rclone.xcframework'`**
-— rclone was not built. Run `./deps/build_rclone_ios.sh`.
-
-**iOS: `cannot execute tool 'metal' due to missing Metal Toolchain`** in the
-FFmpeg build log, or the `yadif_videotoolbox` filter is absent — install it with
-`xcodebuild -downloadComponent MetalToolchain`, then rerun
-`./deps/build_ffmpeg.sh`.
-
-**Android: `Could not find :rclone:`** — `rclone.aar` is not in
+**`Could not find :rclone:`** — `rclone.aar` is not in
 `src/android/app/libs/`. Run `./deps/build_rclone_android.sh` and copy
 `deps/build/rclone/rclone.aar` there.
 
-**Android: `Android NDK not found`** — set `ANDROID_NDK_HOME` to your NDK r28+
+**`Android NDK not found`** — set `ANDROID_NDK_HOME` to your NDK r28+
 installation, e.g.
 `export ANDROID_NDK_HOME=~/Library/Android/sdk/ndk/28.0.12433566`.
 
-**Android: app starts but the shell does not** — the sandbox assets are
+**app starts but the shell does not** — the sandbox assets are
 missing. Rerun `./deps/build_proot.sh` and
 `./scripts/prepare_android_sandbox.sh`, then rebuild.
 
-**Android: every command returns `[Shell not running] (exit code: -1)`** —
+**every command returns `[Shell not running] (exit code: -1)`** —
 the proot ELF loaders are missing from the APK. Check that
 `src/android/app/src/main/jniLibs/arm64-v8a/` contains `libproot-loader.so`
 (and `libproot-loader32.so`); if not, rerun `./deps/build_proot.sh`, which
@@ -291,7 +196,6 @@ from the customization file; see [Build-time customization](#build-time-customiz
 
 ## Licensing note
 
-Minis is **GPLv3** because it links iSH (GPLv3) and PRoot (GPLv2). If you
-change how the native dependencies are built, keep FFmpeg on its LGPL
-configuration and preserve the vendored `LICENSE` files. See
+Minis is **GPLv3**, and bundles PRoot (GPLv2). If you change how the native
+dependencies are built, preserve the vendored `LICENSE` files. See
 [LICENSE](LICENSE) and [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

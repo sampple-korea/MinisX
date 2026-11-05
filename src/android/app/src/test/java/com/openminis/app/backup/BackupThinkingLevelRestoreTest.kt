@@ -106,14 +106,7 @@ class BackupThinkingLevelRestoreTest {
         }
     }
 
-    private fun swiftThinkingLevelCases(): List<String> {
-        var dir: File? = ProductionSources.mainRoot()
-        while (dir != null && !File(dir, "src/ios").isDirectory) dir = dir.parentFile
-        val source = File(requireNotNull(dir), "src/ios/Providers/LLMTypes.swift").readText()
-        val start = source.indexOf("enum ThinkingLevel: String")
-        require(start >= 0) { "enum ThinkingLevel not found in LLMTypes.swift" }
-        val body = source.substring(source.indexOf('{', start) + 1, source.indexOf("static func", start))
-        return Regex("""^\s*case (\w+)\s*$""", RegexOption.MULTILINE)
-            .findAll(body).map { it.groupValues[1] }.toList()
-    }
+    /** The cases of iOS `enum ThinkingLevel` (Providers/LLMTypes.swift when the iOS tree was removed). */
+    private fun swiftThinkingLevelCases(): List<String> =
+        listOf("off", "low", "medium", "high", "xhigh", "max", "ultra")
 }

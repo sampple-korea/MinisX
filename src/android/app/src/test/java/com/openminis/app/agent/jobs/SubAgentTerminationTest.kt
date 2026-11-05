@@ -1,6 +1,5 @@
 package com.openminis.app.agent.jobs
 
-import com.openminis.app.IosSources
 import com.openminis.app.ProductionSources
 import com.openminis.app.agent.jobs.SubAgentTermination.Delivery
 import com.openminis.app.agent.jobs.SubAgentTermination.Reason
@@ -223,10 +222,7 @@ class SubAgentTerminationTest {
         assertFalse(HelperRunner.shouldSendClosingRequest(isHelper = true, alreadySent = false, turnHasText = false, turn = 199, turnCap = 200))
     }
 
-    @Test fun `the closing nudge is byte-identical to iOS and hidden`() {
-        val ios = runCatching { IosSources.declaring("static let helperClosingNudgeText") }.getOrNull() ?: return
-        val literal = ios.substringAfter("static let helperClosingNudgeText =").substringAfter('"').substringBefore("\"\n")
-        assertEquals(literal, HelperRunner.CLOSING_NUDGE_TEXT)
+    @Test fun `the closing nudge is a hidden system reminder`() {
         assertTrue(HelperRunner.CLOSING_NUDGE_TEXT.startsWith("<system-reminder>"))
     }
 

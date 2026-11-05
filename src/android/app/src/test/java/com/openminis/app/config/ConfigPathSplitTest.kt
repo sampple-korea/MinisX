@@ -13,8 +13,7 @@ import org.junit.Test
  * [T-config-path-dotted-id] OpenMinis#390 — config paths address an entry by
  * its RAW id, dots included. Android half of iOS cef38f13b
  * (MinisTests/Standalone/ConfigPathSplitTests.swift); the fixture table and
- * the expected message texts are the same, and the message templates are
- * compared against the iOS source so neither side can drift alone.
+ * the expected message texts are the same as iOS had.
  */
 class ConfigPathSplitTest {
 
@@ -189,54 +188,29 @@ class ConfigPathSplitTest {
         assertEquals("No registered field at 'appearance.nope'.", registry.explainUnknownPath("appearance.nope"))
     }
 
-    // -- Cross-platform parity with the iOS source --------------------------------
+    // -- Message texts ---------------------------------------------------------------
 
     private val repoRoot: File by lazy {
         var dir: File? = File("").absoluteFile
-        while (dir != null && !File(dir, "src/ios").isDirectory) dir = dir.parentFile
-        requireNotNull(dir) { "repo root with src/ios not found" }
+        while (dir != null && !File(dir, "src/android").isDirectory) dir = dir.parentFile
+        requireNotNull(dir) { "repo root with src/android not found" }
     }
-    private fun ios(rel: String) = File(repoRoot, "src/ios/$rel").readText()
     private fun android(rel: String) =
         File(repoRoot, "src/android/app/src/main/java/com/openminis/app/$rel").readText()
 
-    /**
-     * A source line with every string interpolation replaced by `{}`. Done on
-     * the whole line BEFORE literals are cut out, because interpolations carry
-     * quotes of their own (`joined(separator: ", ")`, `joinToString(", ")`).
-     */
-    private fun skeleton(line: String): String = line
-        .replace(Regex("""\\\((?:[^()]|\([^()]*\))*\)"""), "{}") // Swift \(…), one nested (…)
-        .replace(Regex("""\$\{[^}]*\}"""), "{}")                 // Kotlin ${…}
-        .replace(Regex("""\$[A-Za-z_][A-Za-z0-9_]*"""), "{}")     // Kotlin $name
-
-    /** Every double-quoted literal, interpolations as `{}`, on lines containing [marker]. */
-    private fun literalsWith(source: String, marker: String): Set<String> =
-        source.lines().filter { it.contains(marker) }
-            .flatMap { line ->
-                Regex(""""((?:[^"\\]|\\.)*)"""").findAll(skeleton(line)).map { it.groupValues[1] }.toList()
-            }
-            .filter { it.contains(marker) }
-            .toSet()
-
     @Test
-    fun `explainUnknownPath texts match iOS byte for byte, modulo interpolation`() {
-        val iosSrc = ios("Shared/Config/ConfigRegistry.swift")
-        val andSrc = android("config/ConfigRegistry.kt")
+    fun `explainUnknownPath keeps the published message texts`() {
+        val src = android("config/ConfigRegistry.kt")
         for (marker in listOf(
             "No topic '", "names an entry, not a field. Append a field, e.g. ",
             "Unknown field '", "No entry '", "No registered field at '",
         )) {
-            val a = literalsWith(andSrc, marker)
-            val i = literalsWith(iosSrc, marker)
-            assertTrue("Android has '$marker'", a.isNotEmpty())
-            assertEquals("'$marker' text differs from iOS", i, a)
+            assertTrue("ConfigRegistry has '$marker'", src.contains(marker))
         }
     }
 
     @Test
-    fun `--help PATHS section matches iOS`() {
-        val iosHelp = ios("NativeOffloads/ConfigOffload.m")
+    fun `--help PATHS section is documented`() {
         val andHelp = android("sandbox/offload/ConfigOffloadHandler.kt")
         for (line in listOf(
             "PATHS:\\n",
@@ -244,18 +218,13 @@ class ConfigPathSplitTest {
             "  `get <topic>` prints it — dots and slashes are fine, no escaping, e.g.\\n",
             "    get models.<uuid>/glm-5.1.contextWindow\\n",
         )) {
-            assertTrue("iOS help has: $line", iosHelp.contains("\"$line\""))
             assertTrue("Android help has: $line", andHelp.contains("\"$line\""))
         }
     }
 
     @Test
-    fun `topic-help path_note matches iOS`() {
-        val marker = "Child paths are "
-        val a = literalsWith(android("config/ConfigBridge.kt"), marker)
-        val i = literalsWith(ios("NativeOffloads/ConfigOffloadBridge.swift"), marker)
-        assertTrue(a.isNotEmpty())
-        assertEquals(i, a)
+    fun `topic-help emits the path_note`() {
+        assertTrue(android("config/ConfigBridge.kt").contains("Child paths are "))
         assertTrue(
             "topic-help emits it",
             android("sandbox/offload/ConfigOffloadHandler.kt").contains("ConfigBridge.pathNoteForTopic(topic)?.let { put(\"path_note\", it) }"),

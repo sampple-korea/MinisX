@@ -51,7 +51,7 @@ import os
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CATALOG = os.path.join(REPO, "src/ios/Resources/models-dev-api.json")
+CATALOG = os.path.join(REPO, "src/android/app/src/main/assets/models-dev-api.json")
 
 
 def normalized_model_key(model_id):

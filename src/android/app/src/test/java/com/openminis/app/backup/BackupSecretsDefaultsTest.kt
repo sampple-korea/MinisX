@@ -27,53 +27,21 @@ import java.io.File
  */
 class BackupSecretsDefaultsTest {
 
-    private val repoRoot: File by lazy {
-        var dir: File? = ProductionSources.mainRoot()
-        while (dir != null && !File(dir, "src/ios").isDirectory) dir = dir.parentFile
-        requireNotNull(dir) { "repo root with src/ios not found" }
-    }
-
     /**
-     * Non-optional stored properties of `struct <name>` in iOS
-     * BackupSecrets.swift - the keys a synthesized decoder requires.
-     * Only the struct's own members are read (nested structs are skipped).
+     * Non-optional stored properties of the iOS `BackupSecrets` structs
+     * (Agent/Backup/BackupSecrets.swift at the point the iOS tree was removed):
+     * the keys iOS's synthesized decoder requires, so an Android-written
+     * package must carry every one of them to restore on iOS.
      */
-    private fun iosRequiredKeys(structName: String): List<String> {
-        val src = File(repoRoot, "src/ios/Agent/Backup/BackupSecrets.swift").readText()
-        val start = src.indexOf("struct $structName: Codable {")
-        require(start >= 0) { "struct $structName not found" }
-        var depth = 0
-        var i = src.indexOf('{', start)
-        val bodyStart = i
-        while (i < src.length) {
-            when (src[i]) {
-                '{' -> depth++
-                '}' -> { depth--; if (depth == 0) break }
-            }
-            i++
-        }
-        // Keep only depth-1 text, so nested struct bodies / init bodies drop out.
-        val body = StringBuilder()
-        depth = 0
-        for (c in src.substring(bodyStart + 1, i)) {
-            if (c == '}') depth--
-            if (depth == 0) body.append(c)
-            if (c == '{') depth++
-        }
-        val prop = Regex("""^\s+(?:let|var) (\w+): ([^=/\n]+?)\s*(?:=.*)?(?://.*)?$""")
-        return body.lines()
-            .filter { !it.contains("{") } // computed properties
-            .mapNotNull { prop.find(it) }
-            .filter { !it.groupValues[2].trim().endsWith("?") }
-            .map { it.groupValues[1] }
+    private fun iosRequiredKeys(structName: String): List<String> = when (structName) {
+        "BackupSecrets" -> listOf("v", "providers", "envVars", "mcpOAuth")
+        "ProviderSecret" -> listOf("instanceId")
+        "MCPOAuthSecret" -> listOf("serverId", "token")
+        "EnvVarSecret" -> listOf("name", "value")
+        else -> error("unknown struct $structName")
     }
 
     private fun parse(text: String): JsonObject = Json.parseToJsonElement(text).jsonObject
-
-    @Test
-    fun `the iOS struct still has the four required sections this test relies on`() {
-        assertEquals(listOf("v", "providers", "envVars", "mcpOAuth"), iosRequiredKeys("BackupSecrets"))
-    }
 
     @Test
     fun `an env-only package writes v and every empty section`() {

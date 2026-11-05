@@ -1,6 +1,5 @@
 package com.openminis.app.agent.userask
 
-import com.openminis.app.IosSources
 import com.openminis.app.ProductionSources
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -78,10 +77,6 @@ class UserAskReviewFixesTest {
 
     @Test fun `a run that does not offer user_ask refuses it with iOS's message`() {
         assertEquals("Error: user_ask is not available in this run.", UserAskPromptText.NOT_AVAILABLE)
-        if (IosSources.root != null) {
-            val ios = IosSources.declaring("toolOutput = \"${UserAskPromptText.NOT_AVAILABLE}\"")
-            assertTrue("iOS refuses inside the user_ask case", ios.contains("guard userAskExposed else {"))
-        }
         val vm = ProductionSources.read("ui/chat/ChatViewModel.kt")
         assertTrue(vm.contains("com.openminis.app.agent.userask.UserAskPromptText.TOOL_NAME -> if (!userAskExposedThisRun) {"))
         val guard = vm.substringAfter("UserAskPromptText.TOOL_NAME -> if (!userAskExposedThisRun) {").take(2000)

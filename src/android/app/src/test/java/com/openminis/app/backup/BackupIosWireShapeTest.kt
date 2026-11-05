@@ -1,6 +1,5 @@
 package com.openminis.app.backup
 
-import com.openminis.app.IosSources
 import com.openminis.app.ProductionSources
 import com.openminis.app.data.db.ChatSessionEntity
 import com.openminis.app.data.db.FolderEntity
@@ -26,7 +25,7 @@ import org.junit.Test
  * from an Android -> iOS restore that still reported success.
  *
  * These tests check the REAL exporter output against the Swift declarations
- * parsed from the iOS sources, so either side drifting breaks the build here.
+ * (pinned below), so an exporter change that breaks iOS-restorability fails here.
  */
 class BackupIosWireShapeTest {
 
@@ -34,47 +33,27 @@ class BackupIosWireShapeTest {
 
     private data class SwiftProp(val name: String, val optional: Boolean)
 
-    private val repoRoot: File by lazy {
-        var dir: File? = ProductionSources.mainRoot()
-        while (dir != null && !File(dir, "src/ios").isDirectory) dir = dir.parentFile
-        requireNotNull(dir) { "repo root with src/ios not found" }
-    }
-
-    private fun swiftSource(rel: String): String = File(repoRoot, rel).readText()
-
-    /** Stored properties of `struct <name>` (computed `{ … }` ones excluded). */
-    private fun storedProps(source: String, header: String): List<SwiftProp> {
-        val start = source.indexOf(header)
-        require(start >= 0) { "declaration not found: $header" }
-        // Walk braces to the end of the struct body.
-        var depth = 0
-        var i = source.indexOf('{', start)
-        val bodyStart = i
-        while (i < source.length) {
-            when (source[i]) {
-                '{' -> depth++
-                '}' -> { depth--; if (depth == 0) break }
-            }
-            i++
-        }
-        val body = source.substring(bodyStart + 1, i)
-        val prop = Regex("""^\s+(?:let|var) (\w+): ([^=/{\n]+?)\s*(?://.*)?$""")
-        return body.lines().mapNotNull { line ->
-            val m = prop.find(line) ?: return@mapNotNull null
-            if (line.contains("{")) return@mapNotNull null
-            SwiftProp(m.groupValues[1], m.groupValues[2].trim().endsWith("?"))
-        }
-    }
-
-    // Found wherever iOS declares them (f492946c7 moved both out of ChatStore.swift).
-    private val iosSession by lazy { storedProps(IosSources.declaring("struct ChatSession: "), "struct ChatSession: ") }
-    private val iosFolder by lazy { storedProps(IosSources.declaring("struct ChatFolder: "), "struct ChatFolder: ") }
-    private val iosSessionRecord by lazy {
-        storedProps(
-            swiftSource("src/ios/Agent/Backup/BackupImporter+Categories.swift"),
-            "struct SessionRecord: ",
-        )
-    }
+    /**
+     * The stored properties of the iOS declarations this wire shape must satisfy,
+     * pinned from the iOS sources (`ChatSession`, `ChatFolder`, and the importer's
+     * `SessionRecord`, src/ios at the point the iOS tree was removed). A package
+     * the Android exporter writes has to decode with these, field for field.
+     */
+    private val iosSession = listOf(
+        SwiftProp("id", false), SwiftProp("title", true), SwiftProp("category", true), SwiftProp("modelId", false),
+        SwiftProp("createdAt", false), SwiftProp("updatedAt", false), SwiftProp("lastMessage", true),
+        SwiftProp("source", true), SwiftProp("lastSyncedAt", true), SwiftProp("remoteDeviceId", true),
+        SwiftProp("remoteDeviceName", true), SwiftProp("pinnedAt", true), SwiftProp("folderId", true),
+        SwiftProp("parentSessionId", true), SwiftProp("parentToolUseId", true),
+    )
+    private val iosFolder = listOf(
+        SwiftProp("id", false), SwiftProp("name", false), SwiftProp("icon", true), SwiftProp("color", true),
+        SwiftProp("origin", false), SwiftProp("sortIndex", false), SwiftProp("pinnedAt", true),
+        SwiftProp("desc", true), SwiftProp("createdAt", false), SwiftProp("updatedAt", false),
+    )
+    private val iosSessionRecord = listOf(
+        SwiftProp("session", false), SwiftProp("memoryEnabled", false), SwiftProp("modelBinding", true),
+    )
 
     // -- Fixtures -------------------------------------------------------------
 

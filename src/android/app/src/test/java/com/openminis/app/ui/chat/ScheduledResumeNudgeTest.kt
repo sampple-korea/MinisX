@@ -1,6 +1,5 @@
 package com.openminis.app.ui.chat
 
-import com.openminis.app.IosSources
 import com.openminis.app.ProductionSources
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -14,14 +13,7 @@ class ScheduledResumeNudgeTest {
 
     private val vm by lazy { ProductionSources.read("ui/chat/ChatViewModel.kt") }
 
-    @Test fun `nudge text is the iOS text verbatim and hidden`() {
-        // Wherever iOS declares it (f492946c7 moved it to ChatStoreModels.swift);
-        // a missing declaration fails instead of comparing the whole file.
-        if (IosSources.root != null) {
-            val decl = "static let scheduledResumeNudgeText ="
-            val iosText = IosSources.declaring(decl).substringAfter(decl).substringAfter("\"").substringBefore("\"\n")
-            assertTrue("iOS: $iosText", iosText == ChatMessage.SCHEDULED_RESUME_NUDGE_TEXT)
-        }
+    @Test fun `nudge text is a hidden system reminder`() {
         assertTrue(ChatMessage.SCHEDULED_RESUME_NUDGE_TEXT.startsWith("<system-reminder>"))
     }
 

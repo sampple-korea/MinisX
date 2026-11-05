@@ -88,9 +88,8 @@ class ToolDurationPersistTest {
         assertEquals(3000L, reload(ios.replace("9.4217", "3"))["toolu_01"])
     }
 
-    @Test fun `the wire matches iOS's declaration`() {
-        val ios = com.openminis.app.IosSources.declaring("struct ToolSnapshot: ")
-        assertTrue(ios.contains("let duration: TimeInterval?  // Execution duration in seconds"))
+    @Test fun `the wire key is duration, in seconds`() {
+        // Backups written by the iOS app carry the same key (TimeInterval seconds).
         assertEquals("duration", ToolDurationWire.KEY)
     }
 

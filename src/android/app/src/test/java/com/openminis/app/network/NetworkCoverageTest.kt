@@ -196,6 +196,8 @@ class NetworkCoverageTest {
             "provider/openai/CodexModelsApi.kt", "provider/openai/OpenAIModelsApi.kt", "provider/openai/OpenAIProvider.kt",
             "provider/openrouter/OpenRouterModelsApi.kt", "provider/voice/VoiceProvider.kt", "quota/QuotaAdapters.kt",
             "mcp/oauth/MCPOAuthDiscovery.kt",
+            // android-maps (OSM Nominatim / OSRM) goes through the module like Weather does.
+            "sandbox/offload/MapsOffloadHandler.kt",
             // MCPOAuthController's own default client is unused in the app: the
             // screen injects mcpOAuthHttp (NetworkHttp.following, NetworkFollowingClientTest).
             "mcp/oauth/MCPOAuthController.kt", "ui/settings/MCPIntegrationsScreen.kt",

@@ -1,6 +1,5 @@
 package com.openminis.app.provider
 
-import com.openminis.app.IosSources
 import com.openminis.app.ProductionSources
 import com.openminis.app.data.model.AgentContentPart
 import com.openminis.app.data.model.LLMMessage
@@ -303,10 +302,6 @@ class ChatCompletionsToolPairingTest {
 
     @Test fun `one placeholder wording, shared with the Responses path and iOS`() {
         assertEquals(ResponsesToolPairing.PLACEHOLDER_OUTPUT, ChatCompletionsToolPairing.PLACEHOLDER_REPLY)
-        if (IosSources.root != null) {
-            val ios = IosSources.declaring("private static func sanitizeToolCallAdjacency(")
-            assertTrue(ios.contains("\"content\": \"${ChatCompletionsToolPairing.PLACEHOLDER_REPLY}\""))
-        }
         // The history repair's own text: the provider must know it to let a real result win.
         val vm = ProductionSources.read("ui/chat/ChatViewModel.kt")
         val repair = vm.substringAfter("private fun sanitizeAgentHistory() {").substringBefore("\n    }\n")

@@ -50,15 +50,4 @@ class ToolTitleReminderTest {
             ToolTitleReminder.TEXT,
         )
     }
-
-    /** Same text and marker as iOS, so a synced session is recognised on both. */
-    @Test fun textMatchesIOS() {
-        val ios = File("../../ios/Agent/Chat/AIChatViewModel+ConcurrentTools.swift")
-        if (!ios.exists()) return
-        val src = ios.readText()
-        assertTrue(src.contains("static let marker = \"${ToolTitleReminder.MARKER}\""))
-        val iosText = Regex("static let text = \"(.*)\"").find(src)!!.groupValues[1]
-            .replace("\\(marker)", ToolTitleReminder.MARKER)
-        assertEquals(iosText, ToolTitleReminder.TEXT)
-    }
 }
