@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerates the MinisX launcher icon: a white, double-lined "M" on a black squircle.
+"""Regenerates the MinisX launcher icon: a white "M" with one diagonal cut on a black squircle.
 
 Writes (under src/android/app/src/main/res):
   mipmap-*/ic_launcher_foreground{,_dark,_light}.png   adaptive-icon foregrounds (108dp layer)
@@ -17,30 +17,26 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFilter
 from shapely.geometry import LineString, Polygon
-from shapely.ops import unary_union
 
 RES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "android", "app", "src", "main", "res")
 
 # --- the glyph, in a 0..100 box centred on (50, 50) ----------------------------------------
-# One continuous path (left leg, valley, right leg) stroked with sharp mitred corners; a thin
-# slit along the same path turns the stroke into two parallel lines, like the split strokes of
-# the X logo. The legs are slightly splayed and the valley is deep so it reads as an "M", not "W".
-STROKE = 15.0
-SLIT = 3.4
-PATH = [(24, 84), (24, 18), (50, 56), (76, 18), (76, 84)]
+# A heavy, sharp-cornered "M" (one stroked path: left leg, deep valley, right leg) with a single
+# thin diagonal cut through it, rising to the right - the same kind of cut that splits the X in
+# the X logo, and a nod to the "X" in MinisX. Only one cut: more of them made the letter busy.
+STROKE = 16.0
+CUT = 3.2
+PATH = [(25, 84), (25, 20), (50, 66), (75, 20), (75, 84)]
+CUT_LINE = [(10, 51), (90, 25)]
 
 
 def glyph():
-    line = LineString(PATH)
-    body = line.buffer(STROKE / 2, cap_style=2, join_style=2, mitre_limit=4)
-    slit = line.buffer(SLIT / 2, cap_style=2, join_style=2, mitre_limit=4)
-    # extend the slit past both leg ends so the legs split cleanly
-    for (x0, y0), (x1, y1) in ((PATH[0], (PATH[0][0], PATH[0][1] + 4)), (PATH[-1], (PATH[-1][0], PATH[-1][1] + 4))):
-        slit = unary_union([slit, LineString([(x0, y0), (x1, y1)]).buffer(SLIT / 2, cap_style=2)])
-    g = body.difference(slit)
-    # centre the bounding box on (50, 50)
-    minx, miny, maxx, maxy = g.bounds
     from shapely.affinity import translate
+
+    body = LineString(PATH).buffer(STROKE / 2, cap_style=2, join_style=2, mitre_limit=6)
+    cut = LineString(CUT_LINE).buffer(CUT / 2, cap_style=2)
+    g = body.difference(cut)
+    minx, miny, maxx, maxy = g.bounds
     return translate(g, 50 - (minx + maxx) / 2, 50 - (miny + maxy) / 2)
 
 
@@ -119,7 +115,7 @@ def monochrome_xml():
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         "<!--\n  Monochrome layer for Android 13+ themed icons: the MinisX \"M\" (see scripts/gen_icon.py),\n"
-        "  filled with the even-odd rule so the slit stays open. Sized to stay inside the circular\n"
+        "  filled with the even-odd rule so the cut stays open. Sized to stay inside the circular\n"
         "  mask (radius 33 around the centre). Generated - edit scripts/gen_icon.py instead.\n-->\n"
         '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
         '    android:width="108dp"\n    android:height="108dp"\n    android:viewportWidth="108"\n    android:viewportHeight="108">\n'

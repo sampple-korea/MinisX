@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Monochrome layer for Android 13+ themed icons: the MinisX "M" (see scripts/gen_icon.py),
-  filled with the even-odd rule so the slit stays open. Sized to stay inside the circular
+  filled with the even-odd rule so the cut stays open. Sized to stay inside the circular
   mask (radius 33 around the centre). Generated - edit scripts/gen_icon.py instead.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -12,5 +12,5 @@
     <path
         android:fillColor="#FFFFFFFF"
         android:fillType="evenOdd"
-        android:pathData="M 54.00,70.77 L 64.20,55.86 L 64.20,78.89 L 67.40,78.89 L 67.40,45.51 L 54.00,65.11 L 40.60,45.51 L 40.60,78.89 L 43.80,78.89 L 43.80,55.86 Z M 72.48,78.89 L 72.48,29.11 L 54.00,56.12 L 35.52,29.11 L 35.52,78.89 L 38.72,78.89 L 38.72,39.45 L 54.00,61.78 L 69.28,39.45 L 69.28,78.89 Z" />
+        android:pathData="M 54.00,78.83 L 63.08,62.13 L 63.08,79.50 L 71.63,79.50 L 71.63,50.10 L 57.37,54.73 L 54.00,60.94 L 51.64,56.59 L 36.37,61.56 L 36.37,79.50 L 44.92,79.50 L 44.92,62.13 Z M 71.63,28.50 L 58.56,52.55 L 71.63,48.30 Z M 36.37,28.50 L 36.37,59.76 L 50.81,55.07 Z" />
 </vector>
