@@ -143,7 +143,10 @@ android {
             ndk {
                 debugSymbolLevel = "FULL"
             }
-            isMinifyEnabled = true
+            // Code shrinking and obfuscation (R8) are OFF on purpose: this is a personal, open-source app, so there is
+            // nothing to hide, and R8 was a large share of the release build time. The proguard rules stay in
+            // the repository in case it is ever switched back on.
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

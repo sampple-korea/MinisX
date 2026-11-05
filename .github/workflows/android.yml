@@ -133,15 +133,11 @@ jobs:
             -Pminis.versionName=${{ steps.version.outputs.name }}
 
       - name: Check the signature
+        # Minimal: only that the APK carries the expected release certificate (so it installs over the last one).
         run: |
           apk=$(ls src/android/app/build/outputs/apk/github/release/*.apk | head -1)
-          out="$ANDROID_HOME/build-tools/${BUILD_TOOLS}/apksigner"
-          "$out" verify --print-certs "$apk" | tee /tmp/certs.txt
-          actual=$(grep -m1 'certificate SHA-256 digest' /tmp/certs.txt | awk '{print $NF}')
-          if [ "$actual" != "$EXPECTED_CERT_SHA256" ]; then
-            echo "::error::APK is signed with $actual, expected $EXPECTED_CERT_SHA256"
-            exit 1
-          fi
+          actual=$("$ANDROID_HOME/build-tools/${BUILD_TOOLS}/apksigner" verify --print-certs "$apk" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}')
+          [ "$actual" = "$EXPECTED_CERT_SHA256" ] || { echo "::error::APK is signed with $actual, expected $EXPECTED_CERT_SHA256"; exit 1; }
           cp "$apk" "minis-${{ steps.version.outputs.name }}.apk"
 
       - uses: actions/upload-artifact@v4
