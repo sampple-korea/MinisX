@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- [T-mc-usage-widget] Subscription usage widgets (idea from Mobile Codex). -->
+    <string name="usage_widget_label_codex">Codex usage</string>
+    <string name="usage_widget_label_claude">Claude usage</string>
+    <string name="usage_widget_label_kimi">Kimi Code usage</string>
+    <string name="usage_widget_name_codex">Codex</string>
+    <string name="usage_widget_name_claude">Claude</string>
+    <string name="usage_widget_name_kimi">Kimi Code</string>
+    <string name="usage_widget_desc_codex">How much of your Codex subscription allowance is left, and when it resets.</string>
+    <string name="usage_widget_desc_claude">How much of your Claude subscription allowance is left, and when it resets.</string>
+    <string name="usage_widget_desc_kimi">How much of your Kimi Code allowance is left, and when it resets.</string>
+    <string name="usage_widget_no_provider">Add a %1$s provider in Settings.</string>
+    <string name="usage_widget_no_data">No usage data yet. Tap ↻ to check.</string>
+    <string name="usage_widget_resets">Resets %1$s</string>
+    <string name="usage_widget_updated">Updated %1$s</string>
+</resources>

@@ -583,6 +583,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         // [T-provider-quota] Upstream balance / quota cache; refreshes only while
         // the app is in the foreground.
         com.openminis.app.quota.QuotaStore.start(this, providerRepository)
+        // Usage widgets redraw when the quota numbers change.
+        com.openminis.app.widget.UsageWidgets.start(this)
         envVarRepository = EnvVarRepository(this)
         // [T-android-safemode-lateinit-crash-147] SkillRepository parses
         // third-party content (skills imported from external hubs), which

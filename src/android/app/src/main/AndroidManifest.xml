@@ -310,6 +310,43 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- [T-mc-usage-widget] Subscription usage widgets (Codex / Claude / Kimi Code). -->
+        <receiver
+            android:name=".widget.CodexUsageWidgetReceiver"
+            android:exported="true"
+            android:label="@string/usage_widget_label_codex">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/usage_widget_codex_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.ClaudeUsageWidgetReceiver"
+            android:exported="true"
+            android:label="@string/usage_widget_label_claude">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/usage_widget_claude_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.KimiUsageWidgetReceiver"
+            android:exported="true"
+            android:label="@string/usage_widget_label_kimi">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/usage_widget_kimi_info" />
+        </receiver>
+
         <!-- [T-android-widget] Home-screen quick-entry widget. -->
         <receiver
             android:name=".widget.MinisWidgetReceiver"

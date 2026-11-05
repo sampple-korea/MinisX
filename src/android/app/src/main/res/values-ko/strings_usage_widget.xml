@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="usage_widget_label_codex">Codex 사용량</string>
+    <string name="usage_widget_label_claude">Claude 사용량</string>
+    <string name="usage_widget_label_kimi">Kimi Code 사용량</string>
+    <string name="usage_widget_name_codex">Codex</string>
+    <string name="usage_widget_name_claude">Claude</string>
+    <string name="usage_widget_name_kimi">Kimi Code</string>
+    <string name="usage_widget_desc_codex">Codex 구독 한도가 얼마나 남았고 언제 초기화되는지 보여 줍니다.</string>
+    <string name="usage_widget_desc_claude">Claude 구독 한도가 얼마나 남았고 언제 초기화되는지 보여 줍니다.</string>
+    <string name="usage_widget_desc_kimi">Kimi Code 한도가 얼마나 남았고 언제 초기화되는지 보여 줍니다.</string>
+    <string name="usage_widget_no_provider">설정에서 %1$s 프로바이더를 추가하세요.</string>
+    <string name="usage_widget_no_data">아직 사용량 정보가 없어요. ↻ 를 눌러 확인하세요.</string>
+    <string name="usage_widget_resets">%1$s 초기화</string>
+    <string name="usage_widget_updated">%1$s 갱신</string>
+</resources>

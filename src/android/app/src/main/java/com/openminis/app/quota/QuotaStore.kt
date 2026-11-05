@@ -806,6 +806,9 @@ object QuotaStore {
 
     private fun storeFile(): File? = appContext?.let { File(File(it.noBackupFilesDir, "quota"), "store.json") }
 
+    /** Loads the persisted cache if it has not been (widgets read the state outside any UI flow). */
+    suspend fun awaitLoaded() = withContext(Dispatchers.IO) { ensureLoaded() }
+
     private fun ensureLoaded() {
         if (loaded) return
         synchronized(lock) {
