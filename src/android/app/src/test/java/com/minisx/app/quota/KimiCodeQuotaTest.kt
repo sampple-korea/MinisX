@@ -249,7 +249,7 @@ class KimiCodeQuotaTest {
             assertFalse("no $spoof identity", adapter.contains(spoof, ignoreCase = false) && !adapter.contains("MoonshotAI/kimi-cli"))
         }
         val ua = ProductionSources.read("provider/UserAgentOverride.kt")
-        assertTrue(ua.contains("\"Minis/\${BuildConfig.VERSION_NAME} (Android \$release; \$model)\""))
+        assertTrue(ua.contains("\"MinisX/\${BuildConfig.VERSION_NAME} (Android \$release; \$model)\""))
     }
 
     // ── B. Vendor routing ───────────────────────────────────────────────────

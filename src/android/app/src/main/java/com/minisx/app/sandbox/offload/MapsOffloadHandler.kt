@@ -193,7 +193,7 @@ class MapsOffloadHandler(private val context: Context) : NativeOffloadHandler {
         private const val NOMINATIM = "https://nominatim.openstreetmap.org"
         private const val OSRM = "https://router.project-osrm.org"
         // Nominatim's usage policy requires an identifying User-Agent.
-        private const val USER_AGENT = "Minis-Android/1.0 (android-maps CLI)"
+        private const val USER_AGENT = "MinisX-Android/1.0 (android-maps CLI)"
 
         private val HELP = """android-maps — search places, get directions, estimate travel times (JSON)
 

@@ -164,7 +164,7 @@ class MCPServerProcess:
         return reply.get("result")
 
     def _handshake(self):
-        # Startup/handshake timeout is per-server configurable (Minis config,
+        # Startup/handshake timeout is per-server configurable (MinisX config,
         # not MCP protocol). resolve_startup_timeout returns the effective
         # seconds plus a warning for any invalid value (which we log rather
         # than silently swallow). Default is DEFAULT_STARTUP_TIMEOUT.

@@ -4657,7 +4657,7 @@ class ChatViewModel(
      * claiming a compaction the user was told had FAILED. On the next reload
      * that marker grayed the range and re-inserted the divider, and pressing
      * Compact again reported the messages as already compacted — the reported
-     * "retry 后再点 compact 误显示已 compact 到此处".
+     * "after a retry, tapping compact wrongly shows 'already compacted here'".
      *
      * Restores the in-memory cache to the marker that was current BEFORE this
      * attempt (usually null), so `effectiveAgentHistory()` keeps sending the
@@ -5361,10 +5361,8 @@ class ChatViewModel(
             append(conversationText)
             append("\n\n---\nEND OF CONVERSATION TO COMPACT.\n\n")
             append(
-                "Now generate a structured context summary following the system prompt " +
-                    "instructions. Do NOT continue the conversation above — summarize it. " +
-                    "Write everything in past tense, framed as \"what was discussed / what " +
-                    "was done\", NOT as an ongoing goal or todo list."
+                "Now write the handoff summary following the system prompt " +
+                    "instructions. Do NOT continue the conversation above — summarize it."
             )
         }
         val model = currentModel
@@ -5859,26 +5857,20 @@ class ChatViewModel(
      * System prompt for the single-shot summarisation call. Matches iOS
      * wording so cross-device summaries stay stylistically aligned.
      */
+    /**
+     * Codex's own compaction prompt (openai/codex, codex-rs/prompts/templates/compact/prompt.md),
+     * used verbatim: the summary is a handoff note for the model that resumes the task.
+     */
     private val compactSummarySystemPrompt: String = """
-        You are a context compaction engine. Your summary will REPLACE the original messages in the conversation context window. The agent will read your summary as past context, then proceed based on the user's NEXT message — your summary is background, not a standing work order. Write the summary in the same language the user used in the conversation.
+        You are performing a CONTEXT CHECKPOINT COMPACTION. Create a handoff summary for another LLM that will resume the task.
 
-        MUST PRESERVE (never omit or shorten):
-        - All file paths, directory names, URLs, UUIDs, and identifiers — copy verbatim
-        - Commands executed and their outcomes (success/failure/output)
-        - What was requested and what was done (record as past events, not as ongoing goals)
-        - Key decisions made and their rationale
-        - Errors encountered and how they were resolved
-        - Important constraints, rules, or user preferences mentioned
-        - Any tool calls and their results that affect current state
+        Include:
+        - Current progress and key decisions made
+        - Important context, constraints, or user preferences
+        - What remains to be done (clear next steps)
+        - Any critical data, examples, or references needed to continue
 
-        STRUCTURE:
-        1. Start with a one-line description of what the conversation was about (use past tense — "User asked X, agent did Y", NOT "Goal: X").
-        2. Then a concise narrative of what happened, preserving technical details.
-        3. End with a "What had been done so far" section listing completed work — NOT a "todo" or "pending" list. Do not invent ongoing objectives or carry-over tasks from old turns; if the user wants to continue, they will say so in their next message.
-
-        PRIORITIZE recent context over older history — recent decisions and recent file/path references are most useful for continuity.
-
-        Do NOT translate or alter code snippets, file paths, identifiers, or error messages. Be concise but never lose information the agent needs.
+        Be concise, structured, and focused on helping the next LLM seamlessly continue the work.
     """.trimIndent()
 
     // T203 part 2: these MUST be declared before `init { loadSession() }` below.
@@ -6449,8 +6441,8 @@ class ChatViewModel(
             // "existing session" path, found `thinking_override` NULL — nothing
             // had ever written one — and fell back to OFF. The child then ran
             // every turn with no reasoning effort even though the group it was
-            // bound to specified one, which is the reported "子代理不携带分组
-            // 指定的思考强度 / API 后台请求没有思考强度".
+            // bound to specified one, which is the reported "sub-agents do not carry the thinking
+            // effort set by the group / background API requests have no thinking effort".
             //
             // Gated on the override being ABSENT, so this is a default, not an
             // override: a session where the user explicitly chose a level
@@ -7613,7 +7605,7 @@ class ChatViewModel(
         // user's next message silently became a queued prompt waiting on a
         // turn that would never finish under a model they had already left.
         // Nothing visibly happened — no reply, no error — which is exactly
-        // the "切换模型后卡死停滞" the report describes.
+        // the "freezes after switching models" the report describes.
         //
         // [T-android-switch-model-seam-cleanup] Placed AFTER the early returns:
         // those returns mean "this entry is unusable" (unknown id, missing
@@ -11378,7 +11370,7 @@ class ChatViewModel(
                     // changing direction with nothing to explain why, and a
                     // relaunch — which rebuilds agentHistory from the DB — lost
                     // the instruction outright. Observed on device: three
-                    // "补充黄牛行情" steers were delivered (status=queued, all
+                    // "add the scalper prices" steers were delivered (status=queued, all
                     // consumed) and left no trace in any child transcript.
                     //
                     // Written as its own message rather than merged into the
@@ -12957,7 +12949,7 @@ class ChatViewModel(
                 // Previously null was folded into `finishedCleanly`, so a
                 // PARTIAL reply — bytes arrived, then the socket died — was
                 // persisted silently as if complete. The reply just stopped with
-                // no error and no way to retry: the "断流" reports. Mirrors iOS
+                // no error and no way to retry: the "stream cut off" reports. Mirrors iOS
                 // d6604021.
                 // Only the PARTIAL case is handled here. An EMPTY turn with a null
                 // stopReason keeps falling through to the empty-turn handling
@@ -13901,7 +13893,7 @@ class ChatViewModel(
             }
 
             // [T-android-queued-message-interrupt-on-toolclose] iOS d14174d3
-            // parity. User report: "怎么样了" queued bubble (dashed border,
+            // parity. User report: "how is it going" queued bubble (dashed border,
             // red X) stayed pending behind a long sync→export→read→gh-issue
             // tool chain — drainQueuedPrompts() only fires when the WHOLE
             // tool loop converges, so the queued prompt waited for the
@@ -16153,8 +16145,8 @@ class ChatViewModel(
         // AssistantUsage row for it, and tapping blank space in the reply did
         // nothing. Leaving and re-entering the session ran loadSession(),
         // which parsed the row from the DB, and only then did the capsule
-        // appear. That was the reported symptom exactly: "刚 streaming 完的
-        // 没有，重新进入会话后就又有了".
+        // appear. That was the reported symptom exactly: "the one that just finished streaming has none,
+        // but after re-entering the session it is there again".
         //
         // Derived from the persisted entity — `ChatTokenUsage.parse(entity.
         // tokenUsage)` + `entity.createdAt` — precisely as the load path does
@@ -16355,7 +16347,7 @@ Memory system (currently DISABLED):
             " For delegating a whole task that needs tools and multiple rounds, use the subagent_task tool instead."
         } else ""
         val browserPromptBullet = if (browserToolEnabled) """- browser_use: Web browsing (navigate, screenshot, click, type, get_text, scroll, scroll_and_collect, get_readable, get_backbone, fetch, etc.). Starts with a desktop Chrome user agent. Use screenshot to see the page.
-  当 browser_use 触达 Google 登录 / OAuth 页（accounts.google.com、signin.google.com、myaccount.google.com、oauth2.googleapis.com 等）或网页返回 "disallowed_useragent" / 403 包含 "browser is not secure" 字样时，**不要重试或尝试登录** — Google 永久禁止 in-app WebView 完成登录，重试只会浪费 turn。改为告诉用户："此页面需要在系统 Chrome 完成登录" 并给出可点击的 Markdown link [在 Chrome 中打开](https://accounts.google.com/...)。点该 link 时 app 会跳出 Custom Tab；用户在 Chrome 完成操作后，请他**把所需结果（邮件正文 / 文档摘要 / 表格数据）粘贴回 chat**，你再继续帮他处理。这是 Android 平台限制，不是 bug。${toolListMemoryBullets}""" else ""
+  When browser_use reaches a Google sign-in / OAuth page (accounts.google.com, signin.google.com, myaccount.google.com, oauth2.googleapis.com, etc.), or a page returns "disallowed_useragent" / a 403 containing "browser is not secure", **do not retry or try to sign in** — Google permanently blocks sign-in inside an in-app WebView, so retrying only wastes turns. Instead tell the user (in their language) that this page must be signed in to in the system Chrome, and give a clickable Markdown link [Open in Chrome](https://accounts.google.com/...). Tapping that link opens a Custom Tab; once the user has finished in Chrome, ask them to **paste the result they need (mail body / document summary / table data) back into the chat**, then continue from there. This is an Android platform limit, not a bug.${toolListMemoryBullets}""" else ""
         // [T-port-user-ask] The only user_ask text in the system prompt, and
         // only when the tool is in this run (iOS 92e19f6ae). Everything else
         // travels with the tool definition itself.
@@ -16428,6 +16420,25 @@ Tool call style:
 Tone and style:
 - Reply in the language that best matches the user's input. Only switch languages when the user explicitly asks.
 - Be concise. Prefer action over explanation — when the user asks for something that can be done via shell, do it directly.
+
+Editing constraints:
+- Default to ASCII when editing or creating files. Introduce non-ASCII characters only with a clear reason or when the file already uses them.
+- Add succinct comments only ahead of code that is not self-explanatory; never narrate the obvious ("assigns the value to the variable").
+- Prefer file_edit for changes to a single file. Use scripting only when it is clearly more efficient (bulk search-and-replace, generated files, formatters).
+- The workspace may contain changes you did not make. NEVER revert them unless explicitly asked. If they touch files you are working on, read them and work with them; if they are unrelated, leave them alone. If unexpected changes appear while you work, stop and ask the user how to proceed.
+- NEVER run destructive commands (rm -rf outside scratch directories, git reset --hard, git checkout --) unless the user asked for it or approved it. Do not amend commits unless asked.
+
+Special requests:
+- If a simple request can be answered by running a command (for example the current time with `date`), run it.
+- If the user asks for a "review", use a code-review mindset: findings come first, ordered by severity with file and line references, then open questions or assumptions, then a brief summary. If you find nothing, say so and name any residual risks or testing gaps.
+
+Presenting your work and final message:
+- Be concise, in a friendly teammate tone. Ask only when needed, and mirror the user's style.
+- Lead with the outcome. For code changes, explain what changed and then where and why. Suggest next steps only when they are natural, as a numbered list when there are several so the user can answer with one number.
+- The user cannot see command output unless you relay it: summarize the important lines instead of dumping logs.
+- Do not paste large files you wrote; link them (e.g. [name](minis://workspace/name)).
+- The user reads on a phone: avoid wide tables and nested lists, and skip heavy formatting for simple confirmations.
+- If you could not verify something (a test you could not run, a device you could not reach), say so plainly.
 
 Android framework commands (available to run via shell_execute):
 CLI tools at /usr/local/bin with the `android-` prefix give you access to Android framework capabilities and on-device control. Invoke them from shell_execute like any other binary — they are already on PATH. Each tool prints JSON (or a short human-readable line) and supports --help for full usage. Tools gated by Shizuku or AccessibilityService return permission_denied when not granted — handle that gracefully and point the user at [Settings → Permissions](minis://settings/permissions).
@@ -19606,7 +19617,7 @@ internal object RequestContextBuilder {
         summaryTokens: Int,
     ): Int? {
         val anchorId = history.lastOrNull()?.dbMessageId ?: return null
-        val summary = "摘".repeat(summaryTokens)
+        val summary = "요".repeat(summaryTokens)
         val marker = CompactMarkerEntity(
             id = "simulated", sessionId = "", summary = summary, firstKeptSortOrder = 0,
             compactedCount = 0, createdAt = 0, lastCompactedMessageId = anchorId, version = 2,
@@ -19628,7 +19639,7 @@ internal object RequestContextBuilder {
         if (compaction == null || summary.isNullOrBlank() || marker == null) return history.toList().also { trace?.mode = CompactionMode.NONE }
 
         val summaryWrappedText = "<context-summary>\n" +
-            "The following is a summary of the earlier conversation that was compacted to save context space.\n" +
+            COMPACT_SUMMARY_PREFIX + "\n" +
             "Treat it as background context only. The user's most recent message (below or in the next turn) takes precedence — if it changes the task, the goal, or any numbers/scope, follow the new instruction and do not resume the old plan from this summary. Do not re-run discovery (reading memory, scanning skills, re-reading files) unless the new instruction requires it.\n\n" +
             summary +
             "\n</context-summary>"
@@ -20346,3 +20357,14 @@ internal object ToolResultWrap {
         return append(sessionId(), "user", partsJson)
     }
 }
+
+/**
+ * Codex's own text placed in front of a compaction summary
+ * (openai/codex, codex-rs/prompts/templates/compact/summary_prefix.md), used verbatim.
+ */
+internal const val COMPACT_SUMMARY_PREFIX =
+    "Another language model started to solve this problem and produced a summary of its thinking process. " +
+        "You also have access to the state of the tools that were used by that language model. " +
+        "Use this to build on the work that has already been done and avoid duplicating work. " +
+        "Here is the summary produced by the other language model, use the information in this summary " +
+        "to assist with your own analysis:"

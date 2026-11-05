@@ -1451,7 +1451,7 @@ private suspend fun saveImageToGallery(context: Context, src: File): Boolean =
                     put(MediaStore.Images.Media.MIME_TYPE, mime)
                     put(
                         MediaStore.Images.Media.RELATIVE_PATH,
-                        Environment.DIRECTORY_PICTURES + "/Minis",
+                        Environment.DIRECTORY_PICTURES + "/MinisX",
                     )
                     put(MediaStore.Images.Media.IS_PENDING, 1)
                 }

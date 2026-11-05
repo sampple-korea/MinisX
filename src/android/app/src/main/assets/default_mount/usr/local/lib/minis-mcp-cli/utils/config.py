@@ -23,7 +23,7 @@ CONFIG_DIR = "/var/minis/mcp-servers"
 CONFIG_PATH = os.path.join(CONFIG_DIR, "servers.json")
 
 # Startup / handshake timeout for a STDIO MCP server's first `initialize` RPC.
-# This is a Minis server-configuration knob, NOT part of the MCP protocol (MCP
+# This is a MinisX server-configuration knob, NOT part of the MCP protocol (MCP
 # only standardizes the JSON-RPC exchange after the client connects, not the
 # client's local process-launch timeout). Slow-starting servers (e.g. a cold
 # `uvx mcp-atlassian` that fetches packages) can take well over a minute before
@@ -36,7 +36,7 @@ MAX_STARTUP_TIMEOUT = 900
 # clients, in descending priority. resolve_startup_timeout() reads these in
 # order and uses the first present.
 STARTUP_TIMEOUT_KEYS = (
-    "startupTimeoutSeconds",   # Minis primary field (camelCase)
+    "startupTimeoutSeconds",   # MinisX primary field (camelCase)
     "startup_timeout_sec",     # snake_case compat
     "startupTimeout",          # compat alias
     "handshakeTimeout",        # compat alias
@@ -169,7 +169,7 @@ def resolve_max_stdio_servers(default, env=None):
     """[T-mcp-pool-stdio-cap] How many STDIO servers the daemon keeps alive at
     once. Returns (value, warning).
 
-    Read from the environment (Minis Settings > Environment Variables reach the
+    Read from the environment (MinisX Settings > Environment Variables reach the
     guest shell, and the daemon inherits the env of the CLI that forked it), not
     from servers.json: the app rewrites servers.json with only `mcpServers`, so
     any extra top-level key would be dropped on the next edit. An unset, empty
