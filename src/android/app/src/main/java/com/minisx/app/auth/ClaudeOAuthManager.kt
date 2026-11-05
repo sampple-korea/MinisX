@@ -113,7 +113,7 @@ class ClaudeOAuthManager(context: Context, instanceId: String) : OAuthManager(co
 
     override val authURL = "https://claude.ai/oauth/authorize"
     /**
-     * [OpenMinis#360] `claude.ai`, not the older `console.anthropic.com`. The
+     * [upstream#360] `claude.ai`, not the older `console.anthropic.com`. The
      * old host answers the OAuth token POST with a Cloudflare challenge page
      * (HTTP 403, "Just a moment...") rather than JSON, so both login and
      * silent refresh fail. Paired with [applyClaudeCliMimicryHeaders] on every

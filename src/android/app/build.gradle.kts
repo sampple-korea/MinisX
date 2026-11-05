@@ -129,7 +129,7 @@ android {
             signingConfig = appSigning
         }
         release {
-            // [OpenMinis#363] Produce native-debug-symbols.zip alongside the
+            // [upstream#363] Produce native-debug-symbols.zip alongside the
             // APK so a stripped release .so can still be symbolicated after
             // the fact (`ndk-stack -sym`, or upload to Play Console). Without
             // it every native frame in a field report is a bare PC and the

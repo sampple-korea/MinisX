@@ -48,7 +48,7 @@ echo "==> $(go version) tags='${GO_TAGS}'"
 gomobile bind -v \
   -target=android/arm64 \
   -androidapi 24 \
-  -javapkg=com.openminis.rclone \
+  -javapkg=com.minisx.rclone \
   -ldflags="-s -w" \
   ${GO_TAGS:+-tags "$GO_TAGS"} \
   -o "$BUILD/rclone.aar" \

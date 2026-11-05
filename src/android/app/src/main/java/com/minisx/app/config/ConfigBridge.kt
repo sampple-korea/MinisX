@@ -74,7 +74,7 @@ object ConfigBridge {
     // -- list-topics / topic-help --
 
     /**
-     * [T-config-path-dotted-id] OpenMinis#390. For a collection topic, how to
+     * [T-config-path-dotted-id] upstream#390. For a collection topic, how to
      * write a child path — surfaced by `topic-help` next to the field list,
      * whose example paths now carry raw ids. Null for flat topics. Same text
      * as iOS `ConfigOffloadBridge.pathNoteForTopic` (cef38f13b).

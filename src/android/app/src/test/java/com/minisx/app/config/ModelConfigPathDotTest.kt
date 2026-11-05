@@ -13,7 +13,7 @@ import org.junit.Test
  *
  * History: [T-android-config-model-id-dot] (440465f7b / 2bb448166, port of iOS
  * eaf30cda5) escaped dots as `~d` so the registry's `limit = 3` splitter would
- * not cut the id. That worked but was undiscoverable (OpenMinis#390). Since
+ * not cut the id. That worked but was undiscoverable (upstream#390). Since
  * [T-config-path-dotted-id] (iOS cef38f13b) the registry takes everything
  * between the first and last dot as the id, so paths carry the RAW id — see
  * ConfigPathSplitTest. What remains here is the legacy escape: builds from

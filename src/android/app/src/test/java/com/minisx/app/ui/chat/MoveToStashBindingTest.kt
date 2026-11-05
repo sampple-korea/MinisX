@@ -7,7 +7,7 @@ import org.junit.Test
 
 /**
  * [T-android-moveto-stash-binding] Regression tests for the "Move to…"
- * stash guard (iOS 6c3093c8 / GH OpenMinis#120).
+ * stash guard (iOS 6c3093c8 / GH upstream#120).
  *
  * Before the fix [ChatViewModelStore.PendingTransfer] carried no target and
  * no timestamp, so `consumePendingTransfer()` handed the content to whichever

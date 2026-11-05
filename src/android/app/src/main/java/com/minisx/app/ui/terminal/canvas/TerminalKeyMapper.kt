@@ -1,7 +1,7 @@
 package com.minisx.app.ui.terminal.canvas
 
 /**
- * [OpenMinis#277] Pure key → byte mappings for hardware-keyboard input in the
+ * [upstream#277] Pure key → byte mappings for hardware-keyboard input in the
  * terminal. Android-free so it can be unit-tested on the JVM; see
  * `TerminalKeyMapperTest`. Mirrors iOS `TerminalControlKeyMapper` and
  * `TerminalKeyInputView.sendModifiedArrow` / its F1-F12 table.

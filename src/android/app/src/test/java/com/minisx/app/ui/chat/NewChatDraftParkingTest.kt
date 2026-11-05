@@ -10,7 +10,7 @@ import org.junit.Test
 import java.io.File
 
 /**
- * [OpenMinis#433] Text typed in a NEW chat and never sent was lost when the
+ * [upstream#433] Text typed in a NEW chat and never sent was lost when the
  * user went back and tapped New Chat again. The draft's view model was still
  * cached in [ChatViewModelStore], but every New Chat minted a fresh
  * `__new__<uuid>`, so nothing could ever reach it again.

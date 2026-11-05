@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [FIX-261022-07 / OpenMinis#443, #472] A scrolled-away reader's text stays
+ * [FIX-261022-07 / upstream#443, #472] A scrolled-away reader's text stays
  * put when the bottom-most visible row grows or the list's viewport resizes.
  */
 class ReadingAnchorTest {

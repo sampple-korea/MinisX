@@ -191,11 +191,11 @@ object PRootKernel {
         // to re-link these sentinels when populating site-packages from cache,
         // and PRoot rejects the second link with EPERM. Force uv to symlink
         // package files instead so the sentinels are never used as link
-        // sources. Reported as openminis/openminis#7.
+        // sources. Reported as upstream#7.
         // Mirrored in default_mount/etc/profile.d/minis.sh for login shells.
         customEnvironment.putIfAbsent("UV_LINK_MODE", "symlink")
 
-        // [T-git-createobject-rename] openminis/openminis#375 / #409: Git's
+        // [T-git-createobject-rename] upstream#375 / #409: Git's
         // default core.createObject=link makes gc / repack / commit call
         // link(), which link2symlink turns into .l2s.* sentinels inside
         // .git/objects (undeletable once Git chmods the pack dir 0555).

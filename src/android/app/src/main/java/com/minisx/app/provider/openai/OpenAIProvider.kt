@@ -701,7 +701,7 @@ class OpenAIProvider private constructor(
         get() = basePath.lowercase().contains("moonshot") || model.id.lowercase().contains("kimi")
 
     /**
-     * [OpenMinis#191] OpenRouter does NOT enable Anthropic prompt caching
+     * [upstream#191] OpenRouter does NOT enable Anthropic prompt caching
      * automatically — unlike the OpenAI / Grok / Moonshot / Groq models it
      * hosts, which cache with no opt-in. Claude requests must carry an explicit
      * `cache_control` breakpoint or nothing is cached at all, which is why the
@@ -730,7 +730,7 @@ class OpenAIProvider private constructor(
     private val isDashScope: Boolean = basePath.contains("dashscope")
 
     /**
-     * [T-android-mistral-reasoning-422] (GH OpenMinis#87, iOS 29065ca0)
+     * [T-android-mistral-reasoning-422] (GH upstream#87, iOS 29065ca0)
      * Detect Mistral's OpenAI-compatible endpoint.
      *
      * Mistral's AssistantMessage is a CLOSED schema
@@ -755,7 +755,7 @@ class OpenAIProvider private constructor(
 
     /**
      * [T-android-cerebras-reasoning-400] Talking to Cerebras' inference API
-     * (OpenMinis#361). Mirrors iOS OpenAIProvider.isCerebras.
+     * (upstream#361). Mirrors iOS OpenAIProvider.isCerebras.
      *
      * Cerebras validates strictly in two ways that both bite us:
      *  - its assistant message is a CLOSED schema, exactly like Mistral's, so
@@ -773,7 +773,7 @@ class OpenAIProvider private constructor(
     private val isCerebras: Boolean = basePath.lowercase().contains("cerebras.ai")
 
     /**
-     * [OpenMinis#163] Talking to xAI's own API (api.x.ai), as opposed to a relay
+     * [upstream#163] Talking to xAI's own API (api.x.ai), as opposed to a relay
      * that merely serves grok-named models. Mirrors iOS OpenAIProvider.isXAI.
      *
      * Scopes the "catalog declares no effort tiers → omit reasoning_effort" skip
@@ -804,7 +804,7 @@ class OpenAIProvider private constructor(
      *     `minimal`); the vendor-native `thinking:{}` shape is not honored.
      *   • Azure OpenAI ([isAzure]) — reasoning is `reasoning_effort` for every
      *     model surfaced through the deployment.
-     *   • Venice.ai (`api.venice.ai`) — [OpenMinis#86] resells deepseek / claude /
+     *   • Venice.ai (`api.venice.ai`) — [upstream#86] resells deepseek / claude /
      *     aion behind one OpenAI-compatible surface. Its ChatCompletionRequest
      *     schema is `additionalProperties: false`, so an unknown root key is
      *     rejected at validation time — BEFORE model dispatch — with
@@ -2386,14 +2386,14 @@ class OpenAIProvider private constructor(
         // OpenAIAgentProvider.swift's `if !provider.isMistral` gate around this
         // same call (4592ca9b). Until now [isMistral] only suppressed the
         // message-level echo ([forbidReasoningField], 0839f019 / GH
-        // OpenMinis#87) — the request-parameter half of that fix was never
+        // upstream#87) — the request-parameter half of that fix was never
         // ported, so an enabled thinking level still put `reasoning_effort` on
         // the wire to api.mistral.ai.
         if (!isMistral) {
             injectThinkingParams(body, thinkingLevel, maxTokens)
         }
 
-        // [OpenMinis#191] Opt this request into Anthropic prompt caching.
+        // [upstream#191] Opt this request into Anthropic prompt caching.
         // OpenRouter passes the field through to Anthropic but never injects it
         // for us, so without it Claude requests cache nothing at all.
         //
@@ -2454,7 +2454,7 @@ class OpenAIProvider private constructor(
         // history while Mistral forbids it, and neither advertises
         // supportsReasoning via /v1/models — opposite requirements on the same
         // generic openAI provider path. Hence a spec-driven vendor flag.
-        // [T-android-cerebras-reasoning-400] Cerebras (OpenMinis#361) has the
+        // [T-android-cerebras-reasoning-400] Cerebras (upstream#361) has the
         // same closed assistant schema: echoing a captured reasoning_content in
         // history answers `400 … property
         // 'messages.N.assistant.reasoning_content' is unsupported`, so turn 1
@@ -3192,7 +3192,7 @@ class OpenAIProvider private constructor(
             instanceId = thinkingRuleInstanceId,
             supportsReasoning = model.supportsReasoning,
             declaredEffortValues = model.reasoningEffortValues,
-            // [OpenMinis#163] null (catalog silent) must read as false here —
+            // [upstream#163] null (catalog silent) must read as false here —
             // only an affirmative declaration may suppress the field.
             declaresNoEffortTiers = model.declaresNoEffortTiers == true,
             level = level,
@@ -3206,7 +3206,7 @@ class OpenAIProvider private constructor(
             offEffort = explicitOffEffort(),
         )
         val trace = ThinkingRuleResolver.apply(body, ctx)
-        // [T-thinking-rules-observability] Design §8 / GH OpenMinis#100: which rule
+        // [T-thinking-rules-observability] Design §8 / GH upstream#100: which rule
         // actually won must be inspectable, or a rule layer just replaces one hidden
         // variable with a more complicated one. minis-config exposure is Phase 2.
         com.minisx.app.logging.AppLogger.info(
@@ -3594,7 +3594,7 @@ class OpenAIProvider private constructor(
         when {
             // [T-android-mistral-reasoning-422] Mistral rejects the reasoning
             // request parameter outright (`422 extra_forbidden body.reasoning`,
-            // GH OpenMinis#87). The gate added alongside injectThinkingParams
+            // GH upstream#87). The gate added alongside injectThinkingParams
             // covers only the Chat Completions path; this builder is a SECOND,
             // independent injection site that a Mistral instance with
             // useResponsesAPI enabled reaches ungated. For Mistral the answer to
@@ -3620,7 +3620,7 @@ class OpenAIProvider private constructor(
             !thinkingLevel.isEnabled && model.supportsReasoning == true &&
                 !model.id.lowercase().let { it.contains("mimo") || it.contains("agnes") } -> {
                 explicitOffEffort()?.let { offEffort ->
-                    // [OpenMinis#377] Clamp the off tier onto what this model
+                    // [upstream#377] Clamp the off tier onto what this model
                     // accepts. explicitOffEffort() answers "which vendor is
                     // this" (official OpenAI → "none") and never "what does
                     // this model take" — so gpt-6-astra, which declares

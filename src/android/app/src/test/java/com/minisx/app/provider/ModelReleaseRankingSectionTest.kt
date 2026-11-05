@@ -53,7 +53,7 @@ class ModelReleaseRankingSectionTest {
 
     /**
      * The headline behaviour: a section of mixed vintages reads newest-first, and
-     * the STALE model is not at the top. OpenMinis#83 was filed as "GPT-5.3 CodeX
+     * the STALE model is not at the top. upstream#83 was filed as "GPT-5.3 CodeX
      * Spark cannot call tools" — the real cause was that the backend refuses that
      * model and the refusal renders as an empty assistant turn. The user picked a
      * dead model off the top of the list and concluded the app was broken, which

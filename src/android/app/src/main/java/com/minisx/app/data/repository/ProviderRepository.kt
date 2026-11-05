@@ -990,7 +990,7 @@ class ProviderRepository(private val context: Context) {
 
     /**
      * [T-model-release-ranking] Newest / most capable model first, so a picker
-     * never opens on a stale (or, as in OpenMinis#83, an uncallable) model.
+     * never opens on a stale (or, as in upstream#83, an uncallable) model.
      *
      * The ordering itself now lives in [ModelEntryRanking] so the model-picker
      * sheets can apply the SAME order to lists they build straight from a
@@ -3233,7 +3233,7 @@ class ProviderRepository(private val context: Context) {
                     if (entry.isCustom) put("isCustom", true)
                     entry.baseModel.contextWindow?.let { put("contextWindow", it) }
                     entry.baseModel.maxOutputTokens?.let { put("maxOutputTokens", it) }
-                    // [OpenMinis#438] Additive; older builds and iOS ignore it.
+                    // [upstream#438] Additive; older builds and iOS ignore it.
                     if (entry.baseModel.limitsReportedByEndpoint == true) put("limitsReportedByEndpoint", true)
                     entry.baseModel.supportsReasoning?.let { put("supportsReasoning", it) }
                     entry.baseModel.interleavedReasoningField?.let { put("interleavedReasoningField", it) }

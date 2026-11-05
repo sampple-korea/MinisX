@@ -116,7 +116,7 @@ class GeminiProvider(
     }
 
     /**
-     * [OpenMinis#470] POSTs the body [bodyFor] builds to `models/<id>:<method>`.
+     * [upstream#470] POSTs the body [bodyFor] builds to `models/<id>:<method>`.
      * A 400 whose text is about the thinking parameter (see
      * [GeminiThinkingRetry.formatFor]) is sent once more in the other shape;
      * when that succeeds the shape is remembered for this instance and model.
@@ -172,7 +172,7 @@ class GeminiProvider(
         tools: List<AgentToolDefinition>,
         thinkingLevel: ThinkingLevel,
     ): Flow<LLMStreamChunk> = callbackFlow {
-        // [OpenMinis#470] A thinking-parameter 400 arrives before any byte of the
+        // [upstream#470] A thinking-parameter 400 arrives before any byte of the
         // stream, so the retry inside never follows output already sent.
         val response = executeWithThinkingRetry("streamGenerateContent?alt=sse") { format ->
             buildRequestBody(messages, systemPrompt, maxTokens, temperature, imageParts, tools, thinkingLevel, format)
@@ -249,7 +249,7 @@ class GeminiProvider(
         // [T-android-thinking-level-arch] Already clamped to the model ceiling by
         // LLMProvider.streamMessage/sendMessage before reaching here.
         thinkingLevel: ThinkingLevel = ThinkingLevel.OFF,
-        // [OpenMinis#470] Set only by executeWithThinkingRetry.
+        // [upstream#470] Set only by executeWithThinkingRetry.
         thinkingFormat: ThinkingRuleResolver.GeminiThinkingFormat? = null,
     ): JSONObject {
         val body = JSONObject()
@@ -259,7 +259,7 @@ class GeminiProvider(
         // functionCall 400s ("Function call is missing a thought_signature").
         // Only gemini-3.x and later enforce this, so gate the whole special-case on it
         // to leave 1.x/2.x/flash behaviour byte-for-byte unchanged.
-        // [OpenMinis#470] By major version (3+), so gemini-4 is covered too.
+        // [upstream#470] By major version (3+), so gemini-4 is covered too.
         val requiresSig = ThinkingRuleResolver.isGeminiLevelFamily(model.id)
         // Tool-call ids we CANNOT safely replay as a functionCall because their
         // signature is missing (old sessions, non-3.x-origin history, dropped
@@ -410,7 +410,7 @@ class GeminiProvider(
         }
         body.put("contents", contents)
 
-        // [OpenMinis#226] Audio-output models reject systemInstruction with 400
+        // [upstream#226] Audio-output models reject systemInstruction with 400
         // "Developer instruction is not enabled for this model", the same way they reject
         // a thinking config. Keyed off the declared output modality (the property actually
         // responsible) rather than the model id. Dropping it costs nothing: the preamble

@@ -20,7 +20,7 @@ data class ThinkingResolveContext(
     val supportsReasoning: Boolean?,
     val declaredEffortValues: List<String>?,
     /**
-     * [OpenMinis#163] The catalog affirmatively declares this model has NO effort
+     * [upstream#163] The catalog affirmatively declares this model has NO effort
      * tiers (it reasons, but takes no `reasoning_effort`). Distinct from
      * `declaredEffortValues == null`, which also means "the catalog never heard
      * of it" — only the affirmative case suppresses the field. Defaults false so
@@ -42,7 +42,7 @@ data class ThinkingResolveContext(
     val isMistral: Boolean,
     val isDashScope: Boolean,
     /**
-     * [T-android-cerebras-reasoning-400] Endpoint is Cerebras (OpenMinis#361).
+     * [T-android-cerebras-reasoning-400] Endpoint is Cerebras (upstream#361).
      * Mirrors iOS ThinkingResolveContext.isCerebras.
      *
      * Same shape of problem as [isDashScope]: the `*qwen*` rule matches on the
@@ -52,7 +52,7 @@ data class ThinkingResolveContext(
      */
     val isCerebras: Boolean = false,
     /**
-     * [OpenMinis#163] Endpoint is xAI's own API (api.x.ai), not a relay that
+     * [upstream#163] Endpoint is xAI's own API (api.x.ai), not a relay that
      * merely serves grok-named models. Scopes the empty-tier skip to the vendor
      * where the 400 was actually observed. Defaults false so existing
      * construction sites are unchanged.
@@ -66,7 +66,7 @@ data class ThinkingResolveContext(
 )
 
 /**
- * Why a particular wire shape was chosen. Design §8 / GH OpenMinis#100: the resolved
+ * Why a particular wire shape was chosen. Design §8 / GH upstream#100: the resolved
  * outcome must be inspectable, otherwise a user-editable rule layer just replaces one
  * hidden variable with a more complicated one.
  */
@@ -150,7 +150,7 @@ object ThinkingRuleResolver {
      * total prohibition that outranks every shape below it.
      */
     fun builtInRules(ctx: ThinkingResolveContext): List<ThinkingRule> = buildList {
-        // Mistral — GH OpenMinis#87 / iOS 4592ca9b / 29065ca0. Total prohibition: the
+        // Mistral — GH upstream#87 / iOS 4592ca9b / 29065ca0. Total prohibition: the
         // request rejects `reasoning` (422 extra_forbidden) and AssistantMessage is a
         // closed schema that rejects `reasoning_content`. Must outrank everything.
         if (ctx.isMistral) {
@@ -165,7 +165,7 @@ object ThinkingRuleResolver {
             )
         }
 
-        // Cerebras — OpenMinis#361. Endpoint-scoped, and it must sit ABOVE the
+        // Cerebras — upstream#361. Endpoint-scoped, and it must sit ABOVE the
         // `*qwen*` rule further down: stage A stops at the first scope match, and
         // Cerebras re-hosts `qwen-3.8-27b`, which would otherwise be handed Qwen's
         // native `enable_thinking` (a field Cerebras does not accept). Their
@@ -240,7 +240,7 @@ object ThinkingRuleResolver {
                 label = "openai-native",
             ),
         )
-        // [OpenMinis#377] gpt-6 and newer. The predicate above is a hand-maintained
+        // [upstream#377] gpt-6 and newer. The predicate above is a hand-maintained
         // prefix list, so every new OpenAI generation is invisible to it until someone
         // adds a row: gpt-6-astra matched neither "o*" nor "gpt-5*" and fell through to
         // the generic tail, which is a different wire shape than the one OpenAI documents
@@ -474,13 +474,13 @@ object ThinkingRuleResolver {
             }
 
             is ThinkingWireFormat.ReasoningEffort -> {
-                // [OpenMinis#377] Keep in step with the rule rows above: a generation
+                // [upstream#377] Keep in step with the rule rows above: a generation
                 // missing here sends the tier through a different arm of the `when`.
                 val isOpenAINative = lid.startsWith("o") ||
                     lid.startsWith("gpt-5") ||
                     lid.startsWith("gpt-6")
                 val declaresEffort = !ctx.declaredEffortValues.isNullOrEmpty()
-                // [OpenMinis#163] xAI-scoped skip. grok-build-0.1 answers
+                // [upstream#163] xAI-scoped skip. grok-build-0.1 answers
                 // reasoning_effort with "HTTP 400: Model grok-build-0.1 does not
                 // support parameter reasoningEffort"; the catalog describes
                 // exactly that state as "reasoning": true with
@@ -531,7 +531,7 @@ object ThinkingRuleResolver {
                         .any { lid.contains(it) }
                     when {
                         isOpenAINative -> {
-                            // [OpenMinis#377] Deliberately still unconditional. Clamping
+                            // [upstream#377] Deliberately still unconditional. Clamping
                             // here was tried and reverted: models.dev lists `none` for
                             // only ~37% of effort-declaring entries (1209/3243 in the
                             // bundled catalog), and o1/o3/o4-mini declare [low,medium,
@@ -578,7 +578,7 @@ object ThinkingRuleResolver {
                 ) {
                     return null to null
                 }
-                // The [OpenMinis#163] xAI empty-tier skip used to sit here; it is now
+                // The [upstream#163] xAI empty-tier skip used to sit here; it is now
                 // hoisted above the OFF dispatch at the top of this branch so one check
                 // governs both levels. Nothing else changed for the enabled path — the
                 // guard is level-independent, so hoisting it cannot alter this path's
@@ -687,7 +687,7 @@ object ThinkingRuleResolver {
             }
 
             // Same shape, conventionally nested under extra_body. Kept distinct because
-            // that is how users think about it (GH OpenMinis#171: DeepSeek's real switch
+            // that is how users think about it (GH upstream#171: DeepSeek's real switch
             // is extra_body.thinking.enabled). iOS writes the key only when enabled —
             // `otherwiseWrite: false` there is the literal `false`, not "omit".
             is ThinkingWireFormat.ExtraBodyToggle -> {
@@ -723,7 +723,7 @@ object ThinkingRuleResolver {
     // §1 is a pure refactor — do not "align" them without a deliberate decision.
 
     /**
-     * [OpenMinis#470] The `(major, minor)` of a Gemini id: the first
+     * [upstream#470] The `(major, minor)` of a Gemini id: the first
      * `gemini-<major>[.-<minor>]` in the lowercased id, so a relay prefix
      * (`google/…`, `models/…`) and a hyphenated version (`gemini-3-8-flash`)
      * both parse. Null for ids with no version number (`gemini-flash-latest`,
@@ -740,7 +740,7 @@ object ThinkingRuleResolver {
     }
 
     /**
-     * [OpenMinis#470] Gemini 3 and every later major version speak
+     * [upstream#470] Gemini 3 and every later major version speak
      * `thinkingLevel`; 2.5 and earlier speak `thinkingBudget`. Replaces the old
      * `contains("gemini-3")` test, which sent gemini-4-argon down the budget /
      * no-config path: Google answers a budget on Gemini 4 with a hard 400, and
@@ -749,7 +749,7 @@ object ThinkingRuleResolver {
     fun isGeminiLevelFamily(modelId: String): Boolean = (geminiVersion(modelId)?.major ?: 0) >= 3
 
     /**
-     * [T-gemini37-minimal-400 / OpenMinis#470] Whether `thinkingLevel: "minimal"`
+     * [T-gemini37-minimal-400 / upstream#470] Whether `thinkingLevel: "minimal"`
      * is accepted: only 3.0–3.6 Flash. 3.7+ Flash answers it with
      *   400 "Thinking level MINIMAL is not supported for this model."
      * (verified on-device), 3.x Pro never had it, and Google documents MINIMAL
@@ -764,7 +764,7 @@ object ThinkingRuleResolver {
     }
 
     /**
-     * [OpenMinis#470] The thinking-config shape a request is forced into after
+     * [upstream#470] The thinking-config shape a request is forced into after
      * Google rejected the one this resolver picked (see `GeminiThinkingRetry`):
      * level instead of budget, budget instead of level, or level with the
      * "minimal" floor raised to "low".
@@ -785,7 +785,7 @@ object ThinkingRuleResolver {
         level: ThinkingLevel,
         format: GeminiThinkingFormat? = null,
     ): JSONObject? {
-        // [T-gemini-tts-thinking-400 / OpenMinis#226] Specialized modalities take
+        // [T-gemini-tts-thinking-400 / upstream#226] Specialized modalities take
         // precedence over EVERY family rule and over the requested level: these models
         // reject the thinking parameter outright, so sending one is a hard 400
         // ("Thinking level is not supported for this model.").
@@ -819,7 +819,7 @@ object ThinkingRuleResolver {
                 else -> geminiFallbackBudget(level)
             }
             null -> when {
-                // [OpenMinis#470] By major version, not `contains("gemini-3")`:
+                // [upstream#470] By major version, not `contains("gemini-3")`:
                 // gemini-4-argon, google/gemini-4-argon and gemini-3-8-flash are
                 // all level models.
                 isGeminiLevelFamily(modelId) ->
@@ -844,7 +844,7 @@ object ThinkingRuleResolver {
                 put("thinkingLevel", if (allowMinimal) "minimal" else "low")
                 return@apply
             }
-            // [OpenMinis#470] gemini-3-pro-preview has only low and high; its
+            // [upstream#470] gemini-3-pro-preview has only low and high; its
             // Medium is sent as high. 3.1 Pro and later have medium.
             val v = geminiVersion(modelId)
             val lowHighOnly = v?.major == 3 && v.minor == null && modelId.lowercase().contains("-pro")
@@ -897,7 +897,7 @@ object ThinkingRuleResolver {
     }
 
     /**
-     * [OpenMinis#470] Budget for a model Google told us takes no level (only
+     * [upstream#470] Budget for a model Google told us takes no level (only
      * reached by the retry). OFF is 128, the floor 2.5 Pro also accepts, since
      * an unknown model may not be able to switch thinking off.
      */
@@ -984,7 +984,7 @@ object ThinkingRuleResolver {
         if (effort == "xhigh" && (lid.contains("mimo") || lid.contains("agnes"))) "high" else effort
 
     /**
-     * [OpenMinis#377] Snap an OFF-tier value onto what the model will actually accept.
+     * [upstream#377] Snap an OFF-tier value onto what the model will actually accept.
      *
      * Distinct from [clampEffort], and the difference is the whole point. clampEffort
      * walks DOWN then UP, so a `["high","max"]` model turns an OFF request into "high" —

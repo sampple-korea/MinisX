@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/OpenMinis/minis-rclone/backends"
+	_ "github.com/sampple-korea/minisx-rclone/backends"
 	"github.com/rclone/rclone/backend/webdav/api"
 	"golang.org/x/net/webdav"
 )

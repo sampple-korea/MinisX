@@ -347,7 +347,7 @@ object ScheduledAgentRunner {
                 //   3. default primary group → write a group binding so the
                 //      session boots through the user's default group.
                 //   4. first visible entry → last-resort fallback.
-                // [OpenMinis#445] A task created by an older `minis-scheduled
+                // [upstream#445] A task created by an older `minis-scheduled
                 // --model` holds the raw flag in modelId; `entry:<id>`,
                 // `group:<id>` or a bare entry id is honoured here as the
                 // binding it names. A bare model id keeps the legacy path.

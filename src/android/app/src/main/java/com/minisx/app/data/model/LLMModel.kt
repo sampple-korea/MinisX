@@ -9,7 +9,7 @@ data class LLMModel(
     val provider: String,
     val contextWindow: Int? = null,
     val maxOutputTokens: Int? = null,
-    // [OpenMinis#438] True when [contextWindow] / [maxOutputTokens] were read
+    // [upstream#438] True when [contextWindow] / [maxOutputTokens] were read
     // from the provider's own /v1/models answer (a custom OpenAI-compatible
     // endpoint reporting context_length / max_output_tokens). Such values are
     // authoritative: models.dev only fills the one the endpoint left out
@@ -28,7 +28,7 @@ data class LLMModel(
     // contents are the ALLOWED tiers, which the request builder clamps onto
     // (the catalog's sets vary: ["low","medium","high"], ["high","max"], …).
     val reasoningEffortValues: List<String>? = null,
-    // [OpenMinis#163] The catalog affirmatively declares NO effort tiers for
+    // [upstream#163] The catalog affirmatively declares NO effort tiers for
     // this model — it reasons, but takes no `reasoning_effort` parameter.
     // Mirrors iOS LLMModel.declaresNoEffortTiers.
     //
@@ -45,7 +45,7 @@ data class LLMModel(
     // Mirrors iOS ModelModality flags. When null, treat as text-in/text-out only.
     val inputModalities: List<String>? = null,
     val outputModalities: List<String>? = null,
-    // [T-openrouter-voice-catalog] OpenMinis#280. Which OpenRouter catalog
+    // [T-openrouter-voice-catalog] upstream#280. Which OpenRouter catalog
     // endpoint this model came from: "tts" (?output_modalities=speech), "stt"
     // (?output_modalities=transcription) or "none" (the default chat
     // catalog). null = not catalog-sourced (custom entries, other providers,

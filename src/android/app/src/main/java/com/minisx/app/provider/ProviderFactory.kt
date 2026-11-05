@@ -1,5 +1,6 @@
 package com.minisx.app.provider
 
+import com.minisx.app.BuildConfig
 import android.content.Context
 import com.minisx.app.auth.OpenAIOAuthManager
 import com.minisx.app.data.model.LLMModel
@@ -159,7 +160,7 @@ object ProviderFactory {
                     model = model,
                     basePath = "https://openrouter.ai/api/v1",
                     extraHeaders = mapOf(
-                        "HTTP-Referer" to "https://github.com/OpenMinis/OpenMinis",
+                        "HTTP-Referer" to "https://github.com/${BuildConfig.RELEASE_REPO}",
                         "X-Title" to "MinisX App",
                     ),
                 )

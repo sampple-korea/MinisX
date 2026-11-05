@@ -6,7 +6,7 @@ import org.junit.Test
 import java.io.File
 
 /**
- * [OpenMinis#363] The native handler must READ the abort message, not describe
+ * [upstream#363] The native handler must READ the abort message, not describe
  * where to find it.
  *
  * Before this change `crash_handler.cpp` wrote a paragraph telling the reader

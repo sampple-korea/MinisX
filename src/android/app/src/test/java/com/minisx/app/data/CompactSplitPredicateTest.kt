@@ -79,7 +79,7 @@ class CompactSplitPredicateTest {
         assertTrue(shouldSplitOnError(IllegalStateException("something odd")))
     }
 
-    // ── [OpenMinis#377] parameter rejections: refused, not too big ───────
+    // ── [upstream#377] parameter rejections: refused, not too big ───────
 
     @Test
     fun `an unsupported-parameter 400 does not split`() {

@@ -1,4 +1,4 @@
-module github.com/OpenMinis/minis-rclone
+module github.com/sampple-korea/minisx-rclone
 
 go 1.25.5
 

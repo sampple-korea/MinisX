@@ -140,7 +140,7 @@ class ScheduledTaskOffloadHandler(private val context: Context) : NativeOffloadH
         if (prefill != null && target is ScheduledTargetMode.RerunMessage) {
             throw IllegalArgumentException("--command/--tool cannot be used with the rerun target (it replays an existing message)")
         }
-        // [OpenMinis#445] Resolved and checked now, stored as the binding the
+        // [upstream#445] Resolved and checked now, stored as the binding the
         // task editor writes; the raw string used to be kept as a model id and
         // silently fell back to the default model when it matched nothing.
         val model = args.get("model", "m")?.let { raw ->

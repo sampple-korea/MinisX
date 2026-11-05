@@ -269,7 +269,7 @@ class RootfsManager private constructor(private val context: Context) {
     fun refreshDns() {
         if (!rootfsDir.exists()) return
 
-        // [T-container-network-dns] (OpenMinis#396) Custom mode: the user's
+        // [T-container-network-dns] (upstream#396) Custom mode: the user's
         // servers, verbatim, on every call — install, boot and each network
         // change all land here, so a network switch can no longer wash them
         // out. Custom with no usable server resolves to System (see
@@ -429,7 +429,7 @@ class RootfsManager private constructor(private val context: Context) {
      * Returns the number of markers removed.
      */
     /**
-     * [T-git-createobject-rename] openminis/openminis#409: older builds ran
+     * [T-git-createobject-rename] upstream#409: older builds ran
      * `git config --system core.createObject copy` from minis.sh. `copy` is
      * not a valid value, so every git command in the sandbox died with
      * "invalid mode for object creation". Removes that line from the guest's

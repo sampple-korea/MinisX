@@ -244,7 +244,7 @@ class ChatViewModel(
          * what produced the 15-20 minute apparent hang.
          */
         /**
-         * [OpenMinis#377] Does this provider error say "I refuse this PARAMETER"
+         * [upstream#377] Does this provider error say "I refuse this PARAMETER"
          * rather than "this payload is too big"?
          *
          * Only ever used to STOP a retry, so it is deliberately conservative: any
@@ -297,7 +297,7 @@ class ChatViewModel(
                     is LLMError.TransientError,
                     is LLMError.InvalidApiKey,
                     -> false
-                    // [OpenMinis#377] A 4xx that REJECTS THE REQUEST SHAPE cannot be
+                    // [upstream#377] A 4xx that REJECTS THE REQUEST SHAPE cannot be
                     // fixed by sending less of it. Reported as a compaction that halved
                     // 963 → 481 → 240 → 120 messages and failed four times on one
                     // unchanged parameter (`reasoning.effort:"none"` on a model that does
@@ -316,7 +316,7 @@ class ChatViewModel(
                     //  - it does NOT carry any of the over-length markers.
                     // The negative half matters more than the positive one: this
                     // function's history is that enumerating how each vendor words an
-                    // over-length refusal was provably incomplete (OpenMinis#133), so
+                    // over-length refusal was provably incomplete (upstream#133), so
                     // anything that looks even slightly like a size problem keeps
                     // splitting. The burden of proof stays on NOT retrying.
                     is LLMError.ProviderError -> !looksLikeParameterRejection(error)
@@ -1382,7 +1382,7 @@ class ChatViewModel(
     val attachments: StateFlow<List<InputAttachment>> = _attachments.asStateFlow()
 
     /**
-     * [OpenMinis#433] A never-sent new chat holding something worth keeping
+     * [upstream#433] A never-sent new chat holding something worth keeping
      * when the user leaves: non-blank text or an attachment, no session row
      * yet, nothing running. ChatScreen reports it on leave so the next New
      * Chat can reopen this draft instead of an empty one.
@@ -5433,7 +5433,7 @@ class ChatViewModel(
      *
      * This deliberately REPLACES [isContextTooLargeError] on the split path.
      * That substring allow-list tried to enumerate how every provider words an
-     * over-length refusal and was provably incomplete — OpenMinis#133's
+     * over-length refusal and was provably incomplete — upstream#133's
      * `[context_length_exceeded] Your input exceeds the context window of this
      * model` slipped past several variants — and every miss silently disabled
      * splitting, so compaction failed outright instead of retrying smaller.

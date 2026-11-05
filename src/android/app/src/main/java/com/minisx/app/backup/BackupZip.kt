@@ -39,7 +39,7 @@ import java.util.zip.ZipOutputStream
  * This used to be refused up front, on the grounds that iOS read only the
  * 16-bit count and would restore 65 535 members as a success. That reader was
  * replaced two days later, and the refusal stayed: a backup whose chats carried
- * 8.5 GB of media failed at packaging with no way out (OpenMinis#464). A reader
+ * 8.5 GB of media failed at packaging with no way out (upstream#464). A reader
  * older than that fix still does not lose data quietly: the manifest's
  * integrity list names every member, so a short read fails the restore.
  */

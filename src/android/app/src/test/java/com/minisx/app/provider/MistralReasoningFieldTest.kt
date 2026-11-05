@@ -15,7 +15,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * [T-android-mistral-reasoning-422] GH OpenMinis#87 / iOS 29065ca0.
+ * [T-android-mistral-reasoning-422] GH upstream#87 / iOS 29065ca0.
  *
  * Mistral's AssistantMessage is a CLOSED schema (additionalProperties:false),
  * so any prior assistant turn carrying `reasoning_content` is rejected with

@@ -437,7 +437,7 @@ class MinisApp : Application(), ImageLoaderFactory {
         // list so MainActivity.onCreate can prompt to share them.
         com.minisx.app.crash.CrashFrequencyDetector.checkAtLaunch(this)
 
-        // [OpenMinis#363] Recover the PREVIOUS process death from the system.
+        // [upstream#363] Recover the PREVIOUS process death from the system.
         // A native SIGABRT kills us outright, so the only full account of it
         // is debuggerd's tombstone — which the app cannot read from
         // /data/tombstones/ and the user cannot fetch without adb.

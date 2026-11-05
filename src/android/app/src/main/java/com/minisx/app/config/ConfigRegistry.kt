@@ -48,7 +48,7 @@ class ConfigRegistry internal constructor() {
         fields[path]?.let { return it }
         val (base, id, leaf) = splitCollectionPath(path) ?: return null
         val coll = collections[base] ?: return null
-        // [T-config-path-dotted-id] OpenMinis#390. Match by LEAF, not by the
+        // [T-config-path-dotted-id] upstream#390. Match by LEAF, not by the
         // whole path. The collection builds its canonical path from its own
         // spelling of the id (the pre-#390 `~d`-escaped model id, or an alias),
         // which the caller's spelling need not equal — whole-path comparison
@@ -58,7 +58,7 @@ class ConfigRegistry internal constructor() {
     }
 
     /**
-     * [T-config-path-dotted-id] OpenMinis#390. The `reason` for an
+     * [T-config-path-dotted-id] upstream#390. The `reason` for an
      * `unknown_path` answer, saying which part was wrong and how to find the
      * right one. The error code stays `unknown_path`; only the text changes.
      * Keep the wording in step with iOS `ConfigRegistry.explainUnknownPath`
@@ -157,7 +157,7 @@ class ConfigRegistry internal constructor() {
 
     companion object {
         /**
-         * [T-config-path-dotted-id] OpenMinis#390. Split a collection child
+         * [T-config-path-dotted-id] upstream#390. Split a collection child
          * path into (base, id, leaf): the topic runs to the FIRST dot, the
          * field starts after the LAST dot, and everything in between is the
          * entry id — dots and slashes included.

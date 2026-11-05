@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/OpenMinis/minis-rclone/tsnet"
+	"github.com/sampple-korea/minisx-rclone/tsnet"
 )
 
 func main() {

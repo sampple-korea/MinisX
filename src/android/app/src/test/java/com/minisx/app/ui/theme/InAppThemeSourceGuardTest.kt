@@ -14,7 +14,7 @@ import org.junit.Test
  * `isSystemInDarkTheme()` tracks only the OS setting, so the two DISAGREE
  * exactly when the user has overridden the theme in-app — system light + Minis
  * dark being the reported case. A component reading the system API then paints
- * light chrome inside a dark app (GH OpenMinis#187: pop-up menus followed the
+ * light chrome inside a dark app (GH upstream#187: pop-up menus followed the
  * system theme; the web-preview sheets and KaTeX formulas did the same).
  *
  * This is enforced mechanically because it has now happened twice. The April
@@ -70,7 +70,7 @@ class InAppThemeSourceGuardTest {
                 append("isSystemInDarkTheme() tracks the OS setting, not the user's ")
                 append("in-app theme (Settings → Appearance). Use ChatColors.isDark ")
                 append("so the component follows the theme the app actually resolved.\n")
-                append("See GH OpenMinis#187 and commit 8154d9b05.\n\n")
+                append("See GH upstream#187 and commit 8154d9b05.\n\n")
                 offenders.forEach { append("  ").append(it).append('\n') }
             },
             offenders.isEmpty(),

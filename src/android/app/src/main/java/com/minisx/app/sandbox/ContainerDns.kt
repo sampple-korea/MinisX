@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 
 /**
- * [T-container-network-dns] (OpenMinis#396) Which DNS servers the sandbox's
+ * [T-container-network-dns] (upstream#396) Which DNS servers the sandbox's
  * `/etc/resolv.conf` lists.
  *
  * By default the sandbox follows the system: [RootfsManager.refreshDns]

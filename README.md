@@ -2,7 +2,7 @@
 
 **내 폰 안에서 돌아가는 개인용 AI 에이전트 (Android 전용).**
 
-OpenMinis를 바탕으로 Android만 남겨 개인용으로 확장하는 저장소입니다. Claude, GPT, Gemini 같은
+[OpenMinis](https://github.com/OpenMinis/OpenMinis)(GPL-3.0)를 바탕으로 Android만 남겨 확장한 포크입니다. 원 프로젝트와 같은 GPL-3.0으로 배포되며, 저작권 표기와 라이선스는 `LICENSE`와 커밋 기록에 그대로 남아 있습니다. Claude, GPT, Gemini 같은
 모델에게 기기 안의 리눅스 셸, 브라우저 자동화, 스킬, 영구 메모리, 그리고 기기 기능(건강, 블루투스, NFC,
 카메라 이미지 분석 등)을 도구로 쥐여 주는 앱입니다.
 

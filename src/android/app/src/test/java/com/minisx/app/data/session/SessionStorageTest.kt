@@ -59,7 +59,7 @@ class SessionStorageTest {
         assertEquals(0L, s.deleteFiles("P"))
     }
 
-    // ---- [T-android-storage-delete-feedback] openminis/openminis#375 --------
+    // ---- [T-android-storage-delete-feedback] upstream#375 --------
 
     @Test
     fun `a read-only directory is made writable and still deleted`() {

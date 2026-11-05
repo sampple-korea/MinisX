@@ -1,5 +1,6 @@
 package com.minisx.app.provider.openrouter
 
+import com.minisx.app.BuildConfig
 import android.content.Context
 import com.minisx.app.data.model.LLMModel
 import com.minisx.app.data.model.VoiceRole
@@ -50,7 +51,7 @@ object OpenRouterModelsApi {
             cache.load(context, cacheKey)?.let { return@withContext it }
         }
 
-        // [T-openrouter-voice-catalog] OpenMinis#280. The default list holds
+        // [T-openrouter-voice-catalog] upstream#280. The default list holds
         // only chat models; speech and transcription models are listed solely
         // by their output_modalities filters. Fetch all three at once and tag
         // each model with the list it came from.
@@ -104,7 +105,7 @@ object OpenRouterModelsApi {
         val request = Request.Builder()
             .url(url)
             .header("Authorization", "Bearer $apiKey")
-            .header("HTTP-Referer", "https://github.com/OpenMinis/OpenMinis")
+            .header("HTTP-Referer", "https://github.com/${BuildConfig.RELEASE_REPO}")
             .header("X-Title", "MinisX App")
             // [T-android-default-ua] brand outbound /api/v1/models request.
             .applyUserAgentOverride(null)

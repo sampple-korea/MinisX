@@ -2,8 +2,8 @@ package com.minisx.app.network
 
 import android.content.Context
 import com.minisx.app.logging.AppLogger
-import com.openminis.rclone.gomobile.Gomobile
-import com.openminis.rclone.gomobile.LogSink
+import com.minisx.rclone.gomobile.Gomobile
+import com.minisx.rclone.gomobile.LogSink
 import java.io.File
 import org.json.JSONObject
 

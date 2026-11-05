@@ -101,7 +101,7 @@ class BackupZipTest {
      *
      * This used to be refused, on the grounds that iOS read only the 16-bit
      * count. iOS has read the ZIP64 EOCD since 91edbde9a, so the refusal only
-     * blocked large backups (OpenMinis#464).
+     * blocked large backups (upstream#464).
      */
     @Test
     fun `an archive with more entries than the classic EOCD can count goes ZIP64 and round-trips`() {

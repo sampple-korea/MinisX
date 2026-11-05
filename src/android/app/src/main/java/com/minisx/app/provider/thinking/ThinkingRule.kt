@@ -119,12 +119,12 @@ data class ThinkingRule(
  * PHASE 1: declared but not yet enforced through the resolver — the live behaviour still
  * lives in the provider's message flattening. Modelled here because the send-side and
  * echo-side are two halves of ONE vendor contract, and splitting them is exactly what let
- * GH OpenMinis#22 be fixed on the OpenAI path while #70 stayed broken on the Anthropic path.
+ * GH upstream#22 be fixed on the OpenAI path while #70 stayed broken on the Anthropic path.
  */
 data class ReasoningEchoPolicy(
     /**
      * `reasoning_content` / `reasoning` / `reasoning_text` — the three spellings observed
-     * in the wild, sometimes three different ones on one gateway (GH OpenMinis#171).
+     * in the wild, sometimes three different ones on one gateway (GH upstream#171).
      */
     val fieldName: String,
     val timing: Timing,

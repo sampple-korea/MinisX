@@ -179,7 +179,7 @@ static void write_backtrace(int fd) {
     }
 }
 
-// ── [OpenMinis#363] Abort message capture ───────────────────────────────
+// ── [upstream#363] Abort message capture ───────────────────────────────
 //
 // For a SIGABRT the single most useful field is the message the aborting
 // code passed to abort — "Scudo ERROR: invalid chunk state", a libc
@@ -434,9 +434,9 @@ static void crash_signal_handler(int sig, siginfo_t* info, void* ctx) {
     //
     // It mis-reported exactly the cases the comment above promises to answer —
     // a "Jit thread pool" or "RenderThread" abort was filed as
-    // "m.openminis.app". A user report of a SIGABRT on TID 19937 of PID 17499
+    // "com.minisx.app". A user report of a SIGABRT on TID 19937 of PID 17499
     // (so definitively not the main thread) still carried Thread:
-    // "m.openminis.app", which sends triage looking at the UI thread for a
+    // "com.minisx.app", which sends triage looking at the UI thread for a
     // crash that happened somewhere else entirely.
     //
     // openat on the per-thread path is just as async-signal-safe; the tid is
@@ -536,7 +536,7 @@ static void crash_signal_handler(int sig, siginfo_t* info, void* ctx) {
     // unwinder below, neither of which is async-signal-safe.
     write_resource_counts(fd);
 
-    // [OpenMinis#363] The abort message, for the signal class where it is
+    // [upstream#363] The abort message, for the signal class where it is
     // the whole answer. Written AFTER the summary for the same reason the
     // backtrace is: dlsym() is not async-signal-safe, so a fault or hang
     // inside it can cost at most this section, never the report above it.
@@ -597,7 +597,7 @@ Java_com_minisx_app_crash_NativeCrashHandler_nativeInstall(
     // mkdir is fine here — we're on the JVM thread, not in a signal.
     mkdir(g_log_dir, 0755);
 
-    // [OpenMinis#363] Hook the liblog aborter first, so a LOG_ALWAYS_FATAL
+    // [upstream#363] Hook the liblog aborter first, so a LOG_ALWAYS_FATAL
     // between here and the sigaction() calls below is still captured.
     //
     // Resolved at runtime: minSdk is 26 and the symbol is

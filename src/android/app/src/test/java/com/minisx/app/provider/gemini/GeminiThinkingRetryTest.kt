@@ -21,7 +21,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * [OpenMinis#470] A 400 about the thinking parameter is sent once more in the
+ * [upstream#470] A 400 about the thinking parameter is sent once more in the
  * other shape, and the shape that worked is remembered per (instance, model).
  */
 class GeminiThinkingRetryTest {

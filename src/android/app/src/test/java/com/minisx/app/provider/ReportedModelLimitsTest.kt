@@ -16,7 +16,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * [OpenMinis#438] A custom OpenAI-compatible endpoint that reports
+ * [upstream#438] A custom OpenAI-compatible endpoint that reports
  * `context_length` / `max_output_tokens` on /v1/models is believed: the values
  * are read, and models.dev no longer replaces them. Before, a routing-prefixed
  * id (`cn:deepseek-v4-pro`) matched no catalog key and fell to a 128K guess,

@@ -261,7 +261,7 @@
              currentWindowAdaptiveInfo(), which recomposes on configuration
              change, so nothing depends on the recreate to re-read resources.
 
-             [T-android-orientation-user] (OpenMinis#401) screenOrientation="user":
+             [T-android-orientation-user] (upstream#401) screenOrientation="user":
              follow the user's system rotation setting explicitly. Left
              unspecified, OnePlus / ColorOS on Android 16 rotated the screen
              against a portrait lock when a shell_execute run started (the

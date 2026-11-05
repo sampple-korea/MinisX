@@ -7,7 +7,7 @@ import java.nio.ByteOrder
 import java.util.Base64
 
 /**
- * [FIX-261022-06, OpenMinis#468 / #469] Wire formats of the cloud ASR vendors
+ * [FIX-261022-06, upstream#468 / #469] Wire formats of the cloud ASR vendors
  * whose protocol is not OpenAI's /audio/transcriptions, kept free of Android
  * and network types so they are unit-tested as plain JVM code. iOS
  * (CloudASRProtocols.swift) and Windows (speech/cloud_asr.rs) build the same

@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [T-container-network-dns] (OpenMinis#396) Custom sandbox DNS: what counts as
+ * [T-container-network-dns] (upstream#396) Custom sandbox DNS: what counts as
  * a server, what resolv.conf gets, and when the system DNS still wins.
  */
 class RootfsCustomDnsTest {

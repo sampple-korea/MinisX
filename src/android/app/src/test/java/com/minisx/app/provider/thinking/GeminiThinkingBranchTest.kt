@@ -179,7 +179,7 @@ class GeminiThinkingBranchTest {
 
     /**
      * A 3.x id wins over a 2.5 substring if both somehow appear — the
-     * level-family check (by major version since OpenMinis#470, formerly
+     * level-family check (by major version since upstream#470, formerly
      * `isGemini3`) is first among the family branches. Constructed rather
      * than observed: no such id ships, but the ordering is the invariant, and an
      * accidental reorder is invisible on real ids.
@@ -397,7 +397,7 @@ class GeminiThinkingBranchTest {
             src.contains("v.major == 3 && (v.minor == null || v.minor < 7)"),
         )
         assertTrue(
-            "…driven by the gemini-<major>[.-<minor>] regex (OpenMinis#470)",
+            "…driven by the gemini-<major>[.-<minor>] regex (upstream#470)",
             src.contains("Regex(\"\"\"gemini-(\\d+)(?:[.-](\\d+))?\"\"\")"),
         )
     }

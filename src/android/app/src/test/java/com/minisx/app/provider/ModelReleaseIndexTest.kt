@@ -7,7 +7,7 @@ import org.junit.Test
 
 /**
  * [T-model-release-ranking] Guards the parsing and ordering rules that keep a
- * stale (or uncallable) model off the top of a picker — see OpenMinis#83.
+ * stale (or uncallable) model off the top of a picker — see upstream#83.
  *
  * These exercise the pure logic (date parsing + the Rank comparator). The id
  * matcher itself needs the bundled catalog, which is an Android asset and so is
@@ -109,7 +109,7 @@ class ModelReleaseIndexTest {
     }
 
     /**
-     * End-to-end shape of the OpenMinis#83 scenario: ranking the Codex OAuth ids
+     * End-to-end shape of the upstream#83 scenario: ranking the Codex OAuth ids
      * by their real release dates must float every callable model above every
      * one the backend rejects.
      */

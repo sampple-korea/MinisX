@@ -21,7 +21,7 @@ class ResourceWatermarkTest {
     private fun fakeProc(threads: Int, maps: Int, fds: Int, names: List<String> = emptyList()): File {
         val proc = tmp.newFolder("proc")
         File(proc, "status").writeText(
-            "Name:\tm.openminis.app\nVmSize:\t 7340032 kB\nVmRSS:\t  412345 kB\nThreads:\t$threads\nSigQ:\t0/1\n",
+            "Name:\tcom.minisx.app\nVmSize:\t 7340032 kB\nVmRSS:\t  412345 kB\nThreads:\t$threads\nSigQ:\t0/1\n",
         )
         File(proc, "maps").writeText(buildString { repeat(maps) { append("7000000000-7000001000 r--p 00000000 00:00 0 [anon]\n") } })
         val fd = File(proc, "fd").also { it.mkdirs() }

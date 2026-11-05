@@ -11,7 +11,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * [OpenMinis#363] Recover the PREVIOUS process death from the system, after
+ * [upstream#363] Recover the PREVIOUS process death from the system, after
  * the fact.
  *
  * The problem this exists for: a native SIGABRT kills the process outright, so

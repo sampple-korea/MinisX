@@ -51,7 +51,7 @@ class LogcatEchoFilterTest {
     fun `framework and other-app lines are still captured`() {
         // The whole point of the tail is these; over-filtering would silently
         // lose the GC and ANR evidence this log gets pulled for.
-        assertFalse(isEcho("09-15 13:59:43.310 I/m.openminis.app(26955): NativeAlloc concurrent mark compact GC freed 204MB"))
+        assertFalse(isEcho("09-15 13:59:43.310 I/com.minisx.app(26955): NativeAlloc concurrent mark compact GC freed 204MB"))
         assertFalse(isEcho("09-15 14:00:07.563 I/HangDetector(26955): hang count reset after quiet period"))
         assertFalse(isEcho("09-15 14:00:01.000 I/Choreographer(26955): Davey! duration=1526ms"))
     }

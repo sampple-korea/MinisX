@@ -487,7 +487,7 @@ object ChatViewModelStore {
     private fun dropStoreKeepingChildTag(key: String) {
         stores.remove(key)?.clear()
         if (poolKinds[key] != PoolKind.CHILD) poolKinds.remove(key)
-        // [OpenMinis#433] A parked draft whose view model is gone has nothing
+        // [upstream#433] A parked draft whose view model is gone has nothing
         // left to hand back.
         forgetDraft(key)
     }
@@ -565,7 +565,7 @@ object ChatViewModelStore {
         // that happens to be a child would put it in the pool this change
         // exists to keep it out of.
         poolKinds.remove(fromSessionId)?.let { poolKinds[toSessionId] = it }
-        // [OpenMinis#433] Sent: no longer a draft that New Chat may reuse.
+        // [upstream#433] Sent: no longer a draft that New Chat may reuse.
         forgetDraft(fromSessionId)
         aliases[fromSessionId] = toSessionId
         // Invalidate anything resolving through the alias map — see
@@ -574,10 +574,10 @@ object ChatViewModelStore {
         Log.d(TAG, "rename store $fromSessionId -> $toSessionId (alias kept)")
     }
 
-    // ─── Unsent new chats [OpenMinis#433] ───────────────────────────────
+    // ─── Unsent new chats [upstream#433] ───────────────────────────────
 
     /**
-     * [OpenMinis#433] How long a new chat left with unsent text stays
+     * [upstream#433] How long a new chat left with unsent text stays
      * available to the next New Chat, counted from the moment it was left.
      * Same value as iOS `ParkedDrafts.lifetime`.
      */
@@ -590,7 +590,7 @@ object ChatViewModelStore {
     private data class ParkedDraft(val draftId: String, val parkedAtMs: Long)
 
     /**
-     * [OpenMinis#433] New chats the user left with something typed or attached
+     * [upstream#433] New chats the user left with something typed or attached
      * but never sent, one per slot, keyed by [draftSlotKey].
      *
      * Text typed in a new chat was lost on Back + New Chat: the draft's view
@@ -635,7 +635,7 @@ object ChatViewModelStore {
     )
 
     /**
-     * [OpenMinis#433] What counts as an unsent draft worth keeping: a draft
+     * [upstream#433] What counts as an unsent draft worth keeping: a draft
      * that has no session row yet and is not running, holding non-blank text
      * (a `[Pasted#N]` placeholder counts — its buffer lives on the same view
      * model) or an attachment. Same rule as iOS `hasUnsentDraft` +
@@ -650,7 +650,7 @@ object ChatViewModelStore {
     ): Boolean = isDraft && realSessionId.isEmpty() && !busy && (text.isNotBlank() || hasAttachments)
 
     /**
-     * [OpenMinis#433] The draft id a New Chat button should open: the unsent
+     * [upstream#433] The draft id a New Chat button should open: the unsent
      * draft parked for this model group and folder if there is one, otherwise
      * a fresh `__new__<uuid>[__grp__<g>][__fld__<f>]`.
      *
@@ -685,7 +685,7 @@ object ChatViewModelStore {
     }
 
     /**
-     * [OpenMinis#433] ChatScreen is leaving [sessionId]. Park it when it is a
+     * [upstream#433] ChatScreen is leaving [sessionId]. Park it when it is a
      * New Chat draft with unsent content; otherwise empty its slot if the slot
      * holds this very draft, so text the user cleared before leaving does not
      * come back — and another chat's parked draft is left alone.
@@ -705,7 +705,7 @@ object ChatViewModelStore {
         }
     }
 
-    /** [OpenMinis#433] [sessionId] is on screen again: no New Chat may take it. */
+    /** [upstream#433] [sessionId] is on screen again: no New Chat may take it. */
     @Synchronized
     fun unparkDraft(sessionId: String) {
         purgeExpiredDrafts(parkedDraftClock())
@@ -759,7 +759,7 @@ object ChatViewModelStore {
          * whichever ChatScreen composed first ate the content — if the
          * navigation to the target didn't land (or the user backed out and
          * opened something else), the moved text/attachments surfaced in an
-         * unrelated session. Mirrors iOS 6c3093c8 (GH OpenMinis#120).
+         * unrelated session. Mirrors iOS 6c3093c8 (GH upstream#120).
          */
         val targetId: String,
         /** Wall-clock stash time; drives the [STASH_TTL_MS] staleness drop. */

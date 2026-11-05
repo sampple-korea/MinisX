@@ -446,7 +446,7 @@ fun ChatSplitScaffold(
         // Hoisted out of the detailPane call below so the keyboard shortcut and
         // the "New Chat" menu item cannot drift into doing different things.
         val openNewDraft: () -> Unit = {
-            // [OpenMinis#433] Same reuse as the list's New Chat button. The
+            // [upstream#433] Same reuse as the list's New Chat button. The
             // share router below keeps minting a fresh id on purpose.
             val draft = com.minisx.app.ui.chat.ChatViewModelStore.newChatDraftId()
             selectedSessionId = draft

@@ -9,7 +9,7 @@ import org.junit.Test
  * until Minis is foreground.
  *
  * Guards dcf6085db (T-android-oauth-foreground-exchange) and 65e240734 /
- * 6b4bc40b6 (OpenMinis#360, Claude CLI mimicry on auth requests).
+ * 6b4bc40b6 (upstream#360, Claude CLI mimicry on auth requests).
  *
  * dcf6085db found that the loopback callback lands while the user is still in
  * the Custom Tab, i.e. with Minis in the background, where Android blocks the

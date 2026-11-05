@@ -798,7 +798,7 @@ fun ChatScreen(
     val tHangDiagAppContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
     androidx.compose.runtime.DisposableEffect(sessionId) {
         ChatViewModelStore.setActiveSession(sessionId)
-        // [OpenMinis#433] On screen again (back from a pushed page, or reopened
+        // [upstream#433] On screen again (back from a pushed page, or reopened
         // by New Chat): no other New Chat may take this draft now.
         ChatViewModelStore.unparkDraft(sessionId)
         // [T-android-stop-late-write] A reopened chat reuses its cached view
@@ -823,7 +823,7 @@ fun ChatScreen(
             // Nulling unconditionally left the chat on screen unprotected from
             // eviction and made `minis-config session.*` report no session.
             ChatViewModelStore.clearActiveSession(sessionId)
-            // [OpenMinis#433] A new chat left with unsent text or attachments
+            // [upstream#433] A new chat left with unsent text or attachments
             // keeps them, like an existing session does: the next New Chat for
             // the same model group and folder reopens this draft. Leaving it
             // empty clears its slot. No-op for anything but a New Chat draft.

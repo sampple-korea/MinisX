@@ -34,7 +34,7 @@ class OpenRouterVoiceRoutingTest {
 
     private fun model(id: String) = LLMModel(id = id, displayName = id, provider = "OpenRouter")
 
-    // -- [T-openrouter-voice-catalog] OpenMinis#280 fixtures -------------------
+    // -- [T-openrouter-voice-catalog] upstream#280 fixtures -------------------
     //
     // Captured from the live API on 2026-09-23: GET /api/v1/models
     // ?output_modalities=speech (18) and ?output_modalities=transcription (22).
@@ -237,7 +237,7 @@ class OpenRouterVoiceRoutingTest {
                 VoiceOutputRequest(input = "hi", model = "fish-audio/s1", voice = voice),
             )
             assertTrue(req.url.toString().endsWith("/api/v1/audio/speech"))
-            assertEquals("https://github.com/OpenMinis/OpenMinis", req.header("HTTP-Referer"))
+            assertEquals("https://github.com/${com.minisx.app.BuildConfig.RELEASE_REPO}", req.header("HTTP-Referer"))
             assertEquals("MinisX App", req.header("X-Title"))
             assertEquals("Bearer sk-test", req.header("Authorization"))
             val buf = Buffer()

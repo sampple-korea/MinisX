@@ -728,7 +728,7 @@ fun SessionStorageDetailScreen(
                     showClearDialog = false
                     isClearing = true
                     scope.launch {
-                        // [T-android-storage-delete-feedback] openminis/openminis#375:
+                        // [T-android-storage-delete-feedback] upstream#375:
                         // this used to discard the result and zero the sizes
                         // unconditionally, so a delete that removed nothing
                         // still looked like it worked. Report what survived,

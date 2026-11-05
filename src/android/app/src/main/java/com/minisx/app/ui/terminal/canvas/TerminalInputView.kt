@@ -173,7 +173,7 @@ class TerminalInputEditText @JvmOverloads constructor(
     }
 
     /**
-     * [OpenMinis#277] Key codes whose ACTION_DOWN this view consumed. Their
+     * [upstream#277] Key codes whose ACTION_DOWN this view consumed. Their
      * ACTION_UP must be consumed too (iOS 0b249c31f: pressesEnded forwards
      * only presses pressesBegan did not consume). Otherwise the up reaches
      * EditText.onKeyUp, and for a single-line field an Enter key-up is an
@@ -208,7 +208,7 @@ class TerminalInputEditText @JvmOverloads constructor(
             KeyEvent.KEYCODE_FORWARD_DEL -> "\u001B[3~".toByteArray()
             KeyEvent.KEYCODE_TAB -> byteArrayOf(0x09)
             KeyEvent.KEYCODE_ESCAPE -> byteArrayOf(0x1B)
-            // [OpenMinis#277] Modified arrows use xterm's ESC [ 1 ; <mod> X,
+            // [upstream#277] Modified arrows use xterm's ESC [ 1 ; <mod> X,
             // as iOS sendModifiedArrow does (word jumps in readline/vim/tmux).
             KeyEvent.KEYCODE_DPAD_UP -> TerminalKeyMapper.arrow('A', appCursor, shift, alt, ctrl)
             KeyEvent.KEYCODE_DPAD_DOWN -> TerminalKeyMapper.arrow('B', appCursor, shift, alt, ctrl)
@@ -221,7 +221,7 @@ class TerminalInputEditText @JvmOverloads constructor(
             in KeyEvent.KEYCODE_F1..KeyEvent.KEYCODE_F12 ->
                 TerminalKeyMapper.functionKey(event.keyCode - KeyEvent.KEYCODE_F1 + 1)
             else -> {
-                // [OpenMinis#277] Hardware Ctrl+key. With Ctrl in the meta
+                // [upstream#277] Hardware Ctrl+key. With Ctrl in the meta
                 // state, KeyCharacterMap finds no mapping for most keys and
                 // getUnicodeChar() returns 0, so the old Ctrl branch (nested
                 // under `unicode != 0`) never ran and Ctrl+C / Ctrl+D did

@@ -8,7 +8,7 @@ import com.minisx.app.logging.AppLogger
  * order. Mirrors iOS `ModelReleaseIndex` (Providers/ModelReleaseIndex.swift).
  *
  * Why this exists: a picker whose first entries are stale models is an active
- * hazard, not just untidy. OpenMinis#83 was filed as "GPT-5.3 CodeX Spark
+ * hazard, not just untidy. upstream#83 was filed as "GPT-5.3 CodeX Spark
  * cannot call tools"; the real cause was that the Codex backend refuses that
  * model on a ChatGPT account (`400 … not supported`), and the refusal renders
  * as an EMPTY assistant turn. A new user picked a dead model off the list and

@@ -14,7 +14,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * [OpenMinis#360] Claude OAuth token exchange and refresh were answered with a
+ * [upstream#360] Claude OAuth token exchange and refresh were answered with a
  * Cloudflare challenge instead of JSON: the endpoint was the retired
  * `console.anthropic.com` host, and the auth requests carried none of the
  * Claude CLI fingerprint that the chat path has always sent.
@@ -148,7 +148,7 @@ class ClaudeCliMimicryHeadersTest {
     @Test
     fun `fingerprint matches the chat path in AnthropicProvider`() {
         // The values are one registered client identity. A fingerprint that
-        // matches on chat but not on auth is the exact shape of OpenMinis#360,
+        // matches on chat but not on auth is the exact shape of upstream#360,
         // so this fails if either side is bumped alone.
         val chat = ProductionSources.read("provider/anthropic/AnthropicProvider.kt")
         for ((name, value) in ClaudeCliMimicryHeaders.ALL) {

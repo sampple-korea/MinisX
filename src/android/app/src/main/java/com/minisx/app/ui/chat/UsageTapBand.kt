@@ -15,7 +15,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.isSpecified
 
 /**
- * [T-414-usage-tap-band] openminis/openminis#414: a blank tap anywhere in a
+ * [T-414-usage-tap-band] upstream#414: a blank tap anywhere in a
  * reply revealed its usage capsule, so reading a long reply set it off by
  * accident. Product rule (same on iOS): the capsule sits right after the
  * reply's final text; only a blank tap inside the band of FIVE LINES OF TEXT

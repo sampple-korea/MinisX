@@ -979,7 +979,7 @@ class SessionListViewModel(
      */
     fun createNewSession(groupId: String? = null, folderId: String? = null): String? {
         if (providerRepository.allVisibleEntries().isEmpty()) return null
-        // [OpenMinis#433] Reopen the new chat the user left with unsent text
+        // [upstream#433] Reopen the new chat the user left with unsent text
         // for this model group and folder, if any, before minting a fresh id.
         return com.minisx.app.ui.chat.ChatViewModelStore.newChatDraftId(groupId, folderId)
     }

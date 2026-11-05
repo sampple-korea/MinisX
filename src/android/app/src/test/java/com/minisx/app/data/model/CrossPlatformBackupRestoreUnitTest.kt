@@ -41,7 +41,7 @@ class CrossPlatformBackupRestoreUnitTest {
             {"providerInstanceId": "inst-1",
              "model": {"id": "test-gpt-custom", "displayName": "Test GPT", "provider": "openAI"},
              "overrides": {"temperature": 0.7, "topP": 0.9,
-                           "customHeaders": {"X-Custom-Auth": "Token-ABC-123", "HTTP-Referer": "https://openminis.app"},
+                           "customHeaders": {"X-Custom-Auth": "Token-ABC-123", "HTTP-Referer": "https://example.com"},
                            "extraBodyParams": {"seed": "42"}},
              "isCustom": true, "isHidden": false, "uuid": "entry-1",
              "userModifiedAt": "2026-09-02T09:30:00Z"}
@@ -98,7 +98,7 @@ class CrossPlatformBackupRestoreUnitTest {
         assertEquals(0.9, overrides.topP ?: 0.0, 0.0001)
         assertNotNull("customHeaders must not be null", overrides.customHeaders)
         assertEquals("Token-ABC-123", overrides.customHeaders?.get("X-Custom-Auth"))
-        assertEquals("https://openminis.app", overrides.customHeaders?.get("HTTP-Referer"))
+        assertEquals("https://example.com", overrides.customHeaders?.get("HTTP-Referer"))
         assertNotNull("extraBodyParams must not be null", overrides.extraBodyParams)
 
         // 2. Simulate writing the local Room entity's overrides_json column
@@ -139,7 +139,7 @@ class CrossPlatformBackupRestoreUnitTest {
         assertEquals(0.7, refreshedModelEntry.overrides.temperature ?: 0.0, 0.0001)
         assertEquals(0.9, refreshedModelEntry.overrides.topP ?: 0.0, 0.0001)
         assertEquals("Token-ABC-123", refreshedModelEntry.overrides.customHeaders?.get("X-Custom-Auth"))
-        assertEquals("https://openminis.app", refreshedModelEntry.overrides.customHeaders?.get("HTTP-Referer"))
+        assertEquals("https://example.com", refreshedModelEntry.overrides.customHeaders?.get("HTTP-Referer"))
 
         println(">>> VERIFIED: All custom model parameters successfully deserialized, saved to DB Entity, and preserved across model refresh without any MissingFieldException!")
     }

@@ -11,7 +11,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 /**
- * [T-container-network-dns] (OpenMinis#396) `minis-config` binding for the
+ * [T-container-network-dns] (upstream#396) `minis-config` binding for the
  * sandbox DNS: `get` / `set network.dnsMode` and `network.dnsCustomServers`,
  * driven through a real [ConfigRegistry] and the real fields, with the prefs
  * swapped for an in-memory store.

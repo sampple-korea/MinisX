@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * [FIX-261022-07 / OpenMinis#443, #472] Keep the text a scrolled-away reader
+ * [FIX-261022-07 / upstream#443, #472] Keep the text a scrolled-away reader
  * is looking at where it is.
  *
  * The chat list is reverseLayout: the bottom-most visible row (the anchor,

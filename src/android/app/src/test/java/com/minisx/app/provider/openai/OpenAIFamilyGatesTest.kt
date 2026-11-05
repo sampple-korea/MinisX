@@ -638,7 +638,7 @@ class OpenAIFamilyGatesTest {
             "…and a hard strictly-below ceiling",
             src.contains("val ceiling = maxOf(1, minOf(ctx.maxTokens - margin, ctx.maxTokens - 1))"),
         )
-        // [OpenMinis#377] gpt-6 joined the family; the point of this assertion is
+        // [upstream#377] gpt-6 joined the family; the point of this assertion is
         // that the emitter predicate and the rule scopes move TOGETHER, so both
         // sides are checked for the same three generations rather than for one
         // frozen spelling.

@@ -5,7 +5,7 @@ import com.minisx.app.data.model.ModelGroup
 import org.json.JSONObject
 
 /**
- * [OpenMinis#445] What `minis-scheduled create --model` names, resolved at
+ * [upstream#445] What `minis-scheduled create --model` names, resolved at
  * create time into the same `modelBinding` the task editor writes.
  *
  * The flag used to be stored verbatim as `modelId`, and a fire matched it

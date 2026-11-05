@@ -389,14 +389,6 @@ fun SettingsScreen(
                     badge = updateBadge,
                 )
                 SettingsItem(
-                    icon = Icons.Outlined.FrontHand,
-                    iconColor = Color(0xFF007AFF),
-                    title = stringResource(R.string.settings_privacy_policy),
-                    subtitle = null,
-                    // iOS canonical URL — ContentView.swift / AddProviderView.swift
-                    onClick = { openExternalUrl(context, "https://openminis.github.io/privacy-policy.html") },
-                )
-                SettingsItem(
                     icon = Icons.Outlined.Feedback,
                     iconColor = Color(0xFF007AFF),
                     title = stringResource(R.string.settings_feedback),
@@ -419,22 +411,6 @@ fun SettingsScreen(
                     onClick = {
                         showFeedbackSheet = false
                         openExternalUrl(context, buildBugReportUrl())
-                    },
-                )
-                FeedbackSheetItem(
-                    icon = Icons.AutoMirrored.Outlined.Send,
-                    title = stringResource(R.string.settings_feedback_telegram),
-                    onClick = {
-                        showFeedbackSheet = false
-                        openExternalUrl(context, "https://t.me/+2NzhOJuzRyI1YmM1")
-                    },
-                )
-                FeedbackSheetItem(
-                    icon = Icons.Outlined.Email,
-                    title = stringResource(R.string.settings_feedback_email),
-                    onClick = {
-                        showFeedbackSheet = false
-                        openExternalUrl(context, buildFeedbackMailto())
                     },
                 )
             }
@@ -477,7 +453,7 @@ private fun FeedbackSheetItem(
  * triage instead of asking the user to fill in environment details.
  *
  * URL shape:
- *   https://github.com/OpenMinis/OpenMinis/issues/new
+ *   https://github.com/<RELEASE_REPO>/issues/new
  *     ?template=bug_report.md
  *     &title=[Bug]
  *     &body=<percent-encoded markdown>
@@ -540,32 +516,10 @@ private fun buildBugReportUrl(): String {
     // since URLEncoder turns spaces into '+' which GitHub also accepts but
     // the spec calls for the literal "[Bug] " form.
     val title = java.net.URLEncoder.encode("[Bug] ", "UTF-8")
-    return "https://github.com/OpenMinis/OpenMinis/issues/new" +
+    return "https://github.com/${BuildConfig.RELEASE_REPO}/issues/new" +
         "?template=bug_report.md" +
         "&title=$title" +
         "&body=$encodedBody"
-}
-
-/**
- * Compose a `mailto:` URL with a prefilled subject and body that include
- * app version, Android version, and device model. Mirrors iOS
- * `ContentView.makeFeedbackEmailURL()`.
- */
-private fun buildFeedbackMailto(): String {
-    val body = """
-        Please describe your feedback:
-
-
-        ---
-        App Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})
-        Android Version: ${android.os.Build.VERSION.RELEASE} (SDK ${android.os.Build.VERSION.SDK_INT})
-        Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}
-
-        Screenshot (optional): Please attach a screenshot if relevant.
-    """.trimIndent()
-    val subject = java.net.URLEncoder.encode("MinisX Feedback", "UTF-8")
-    val encodedBody = java.net.URLEncoder.encode(body, "UTF-8")
-    return "mailto:dev@openminis.app?subject=$subject&body=$encodedBody"
 }
 
 /**

@@ -56,7 +56,7 @@ class SessionStorage(private val filesDir: File) {
      * [T-android-storage-delete-feedback] `deleteRecursively()` returns a
      * boolean that every caller here used to drop on the floor, so a partial
      * failure looked exactly like a success — the user tapped "delete" and
-     * nothing happened, with no error. openminis/openminis#375 is the report:
+     * nothing happened, with no error. upstream#375 is the report:
      * Git leaves `.git/objects/pack/` at mode 0555, the walk cannot unlink
      * inside it, and the screen stayed silent about it.
      */

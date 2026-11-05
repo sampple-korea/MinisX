@@ -5,7 +5,7 @@ import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
 import com.minisx.app.logging.AppLogger
-import com.openminis.rclone.gomobile.Gomobile
+import com.minisx.rclone.gomobile.Gomobile
 import java.net.Inet6Address
 import java.net.NetworkInterface
 import org.json.JSONArray

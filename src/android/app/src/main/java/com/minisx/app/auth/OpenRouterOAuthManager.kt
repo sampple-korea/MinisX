@@ -1,5 +1,6 @@
 package com.minisx.app.auth
 
+import com.minisx.app.BuildConfig
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -169,7 +170,7 @@ object OpenRouterOAuthManager {
             .url(KEYS_URL)
             .post(body.toString().toRequestBody("application/json".toMediaType()))
             .header("Content-Type", "application/json")
-            .header("HTTP-Referer", "https://github.com/OpenMinis/OpenMinis")
+            .header("HTTP-Referer", "https://github.com/${BuildConfig.RELEASE_REPO}")
             .header("X-Title", "MinisX App")
             .build()
 

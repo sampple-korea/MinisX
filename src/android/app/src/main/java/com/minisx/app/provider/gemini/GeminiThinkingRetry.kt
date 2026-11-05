@@ -5,7 +5,7 @@ import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * [OpenMinis#470] The safety net behind the version rule in
+ * [upstream#470] The safety net behind the version rule in
  * `ThinkingRuleResolver.geminiThinkingConfig`: when Google answers 400 because of
  * the thinking parameter itself, the request is sent ONCE more in the other
  * shape, and the shape that worked is remembered for this (provider instance,

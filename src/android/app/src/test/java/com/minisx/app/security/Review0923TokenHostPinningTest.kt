@@ -9,7 +9,7 @@ import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
- * Review 2026-09-23 — guards 76e46907f (OpenMinis#258).
+ * Review 2026-09-23 — guards 76e46907f (upstream#258).
  *
  * That change opened the base config to user-installed CAs and pinned "official
  * model provider and auth domains" to system CAs so a user CA cannot intercept

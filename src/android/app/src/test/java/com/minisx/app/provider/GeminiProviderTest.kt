@@ -407,7 +407,7 @@ class GeminiProviderTest {
     //
     // Pins e7cf8331a (all-or-nothing per message, GH#179 / #155), the
     // functionCall→ToolCallComplete signature capture, and 4b6121833 (no
-    // thinkingConfig / systemInstruction for audio-output models, OpenMinis#226).
+    // thinkingConfig / systemInstruction for audio-output models, upstream#226).
 
     private fun gemini(id: String, outputModalities: List<String>? = null) = GeminiProvider(
         apiKey = "test-key",
@@ -525,7 +525,7 @@ class GeminiProviderTest {
     }
 
     /**
-     * OpenMinis#226 — an audio-output (TTS) model rejects both `thinkingConfig`
+     * upstream#226 — an audio-output (TTS) model rejects both `thinkingConfig`
      * and `systemInstruction` with 400, even at a non-OFF level and even though
      * its id also matches a family pattern. It gets `responseModalities:["AUDIO"]`.
      */

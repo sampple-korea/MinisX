@@ -62,7 +62,7 @@ object MarkdownParser {
     // Block patterns are compiled once. Each Regex(...) built inside the
     // per-line loop compiled a fresh ICU pattern whose native memory waits for
     // a GC to be freed; parsing a long session that way piled up native
-    // mappings until vm.max_map_count was hit and Scudo aborted (OpenMinis#426).
+    // mappings until vm.max_map_count was hit and Scudo aborted (upstream#426).
     private val thematicBreakRegex = Regex("^\\s{0,3}([-*_])\\s*\\1\\s*\\1(\\s*\\1)*\\s*$")
     private val headingRegex = Regex("^(#{1,6})\\s+(.+)$")
     private val bulletItemRegex = Regex("^\\s{0,3}[-*+]\\s+(.*)$")

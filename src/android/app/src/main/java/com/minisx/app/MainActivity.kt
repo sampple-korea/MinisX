@@ -732,7 +732,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
      * the user's "Keep Screen Awake" toggle and whether any session has an
      * active task right now.
      *
-     * [T-android-orientation-user] (OpenMinis#401) Touch the window only when
+     * [T-android-orientation-user] (upstream#401) Touch the window only when
      * the flag actually changes. `Window.addFlags` / `clearFlags` are NOT
      * no-ops when the flag is already in that state: both go through
      * `setFlags`, which always dispatches a window-attributes change — a
@@ -859,7 +859,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 }
 
 /**
- * [T-android-orientation-user] (OpenMinis#401) Whether the window's current
+ * [T-android-orientation-user] (upstream#401) Whether the window's current
  * [flags] differ from the wanted `FLAG_KEEP_SCREEN_ON` state, i.e. whether
  * applyKeepScreenAwakeFlag has anything to do.
  */

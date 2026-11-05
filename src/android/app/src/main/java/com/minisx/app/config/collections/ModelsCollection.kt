@@ -47,7 +47,7 @@ class ModelsCollection(
 
     // -- [T-config-path-dotted-id] Entry ids in paths ---------------------------
     //
-    // OpenMinis#390. A model's config id is the composite
+    // upstream#390. A model's config id is the composite
     // `<instanceUUID>/<modelId>`, and model ids usually contain DOTS (glm-5.1,
     // gpt-4.1, mimo-v2.6-pro). Paths now carry that id VERBATIM — exactly as
     // `get models` prints it as `entry_id` — because

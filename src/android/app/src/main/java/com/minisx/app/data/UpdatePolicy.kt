@@ -6,7 +6,7 @@ package com.minisx.app.data
  * an automatic check may run, and whether a badge shows. No Android, no I/O -
  * [UpdateChecker] and [UpdateStateStore] feed it and act on the answers.
  *
- * Distribution rules (spec, final revision - one repo, OpenMinis/OpenMinis):
+ * Distribution rules (spec, final revision - one repo, the upstream repo):
  *  - stable: tag `X.Y` (patch `X.Y.Z`, never `X.Y.0`), not a prerelease;
  *  - beta: a prerelease tagged `0-beta-build<N>`, titled
  *    `Android 1.16-beta.3 (build 31)`. Clients 1.12-1.15 ignore the

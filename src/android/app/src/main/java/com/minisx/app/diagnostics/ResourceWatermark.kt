@@ -182,7 +182,7 @@ object ResourceWatermark {
 
     /**
      * [INV-261024-05] What the mappings are: `/proc/self/maps` grouped by name,
-     * the [topN] largest groups. A count alone (all GH #453 and OpenMinis#426
+     * the [topN] largest groups. A count alone (all GH #453 and upstream#426
      * had) says the process is running out of mappings, not who is taking
      * them; the name does - `[anon:scudo:secondary]` is large native
      * allocations, `[anon:stack_and_tls:#]` thread stacks, a `.so` / `.apk`

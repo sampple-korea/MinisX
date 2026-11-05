@@ -107,7 +107,7 @@ internal object ConfigBuiltins {
 
     // -- Network — the sandbox's DNS (Container Network) --
     //
-    // [T-container-network-dns] (OpenMinis#396) Same prefs + keys as the
+    // [T-container-network-dns] (upstream#396) Same prefs + keys as the
     // Settings > Rootfs > Container Network section (ContainerDns), so the
     // agent and the UI read and write one source of truth. Both writers
     // re-apply the sandbox resolv.conf at once: waiting for the next network

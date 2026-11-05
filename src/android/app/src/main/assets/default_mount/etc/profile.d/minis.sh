@@ -31,13 +31,13 @@ export BROWSER=/usr/local/bin/minis-open
 # every hardlinked file. uv's default `hardlink` mode tries to re-link these
 # sentinels when populating site-packages, which PRoot rejects with EPERM.
 # Force uv to symlink package files instead — the sentinels are then never
-# touched as link sources. Reported as openminis/openminis#7.
+# touched as link sources. Reported as upstream#7.
 export UV_LINK_MODE=symlink
 
-# openminis/openminis#375: same failure family as UV_LINK_MODE above, via Git.
+# upstream#375: same failure family as UV_LINK_MODE above, via Git.
 # `git gc` / `repack` / `clone --local` create objects with link(), which
 # link2symlink turns into .l2s.* sentinels written INTO .git/objects/pack/.
-# openminis/openminis#409: this used to run
+# upstream#409: this used to run
 # `git config --system core.createObject copy`, but `copy` is not a valid
 # value (only `link` and `rename` are), so every git command died with
 # "invalid mode for object creation". Git is now told

@@ -10,7 +10,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * [OpenMinis#470] The level/budget choice is made by the Gemini MAJOR version,
+ * [upstream#470] The level/budget choice is made by the Gemini MAJOR version,
  * not by `contains("gemini-3")`: gemini-4-argon used to get no thinking config
  * on Android (the user's level was ignored; iOS/Windows sent a budget and got a
  * 400 on every message). Table-driven over every tier, with the 2.5 rows and

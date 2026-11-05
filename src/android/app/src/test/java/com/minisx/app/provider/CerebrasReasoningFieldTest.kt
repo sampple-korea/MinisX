@@ -15,7 +15,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * [T-android-cerebras-reasoning-400] GH OpenMinis#361.
+ * [T-android-cerebras-reasoning-400] GH upstream#361.
  *
  * Cerebras' assistant message is a CLOSED schema, exactly like Mistral's
  * ([MistralReasoningFieldTest], #87). Any prior assistant turn carrying

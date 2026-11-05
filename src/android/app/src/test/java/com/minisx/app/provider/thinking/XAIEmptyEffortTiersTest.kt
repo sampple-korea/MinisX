@@ -8,7 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [OpenMinis#163] Android port of iOS 3ba3eb5c.
+ * [upstream#163] Android port of iOS 3ba3eb5c.
  *
  * Enabling thinking on xAI `grok-build-0.1` fails with "HTTP 400: Model
  * grok-build-0.1 does not support parameter reasoningEffort". models.dev

@@ -1,6 +1,6 @@
 # Third-Party Licenses
 
-OpenMinis bundles, links, or depends on the following third-party components. Versions reflect the current source tree; license types were verified against each project's repository (GitHub license metadata / LICENSE files).
+MinisX (a fork of [OpenMinis](https://github.com/OpenMinis/OpenMinis), GPL-3.0) bundles, links, or depends on the following third-party components. Versions reflect the current source tree; license types were verified against each project's repository (GitHub license metadata / LICENSE files).
 
 ## Native C/C++ dependencies (`deps/`)
 

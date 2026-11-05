@@ -135,7 +135,7 @@ val LLMModel.hasVoiceModality: Boolean
     get() = hasAudioInput || hasAudioOutput
 
 /**
- * [T-openrouter-voice-catalog] OpenMinis#280. Values of [LLMModel.voiceRole],
+ * [T-openrouter-voice-catalog] upstream#280. Values of [LLMModel.voiceRole],
  * and the OpenRouter chat-audio allowlist. Mirrors iOS `VoiceRole`; the guard
  * tests re-read both sources so the values cannot drift.
  *

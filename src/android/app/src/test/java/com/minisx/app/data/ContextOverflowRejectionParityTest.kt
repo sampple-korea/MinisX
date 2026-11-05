@@ -59,12 +59,12 @@ class ContextOverflowRejectionParityTest {
     }
 
     /**
-     * OpenMinis#133 over HTTP. OpenAIProvider.mapHttpError keeps only
+     * upstream#133 over HTTP. OpenAIProvider.mapHttpError keeps only
      * `error.message`, so the `context_length_exceeded` code never reaches the
      * detail. EXPECTED TO FAIL until fixed.
      */
     @Test
-    fun `OpenMinis 133 wording on an HTTP 400 is an overflow`() {
+    fun `upstream 133 wording on an HTTP 400 is an overflow`() {
         val openAi = ProductionSources.read("provider/openai/OpenAIProvider.kt")
         assertTrue(
             "mapHttpError format changed — update this test",

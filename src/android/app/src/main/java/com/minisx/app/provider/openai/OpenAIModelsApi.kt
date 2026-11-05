@@ -261,7 +261,7 @@ object OpenAIModelsApi {
                     idLower.startsWith("o4") ||
                     idLower.contains("codex")
 
-                // [OpenMinis#438] A gateway that reports its own limits is the
+                // [upstream#438] A gateway that reports its own limits is the
                 // authority on them; enrichModels below (and any later
                 // re-enrichment) only fills what it left out.
                 val (reportedContext, reportedOutput) = reportedLimits(obj)
@@ -290,7 +290,7 @@ object OpenAIModelsApi {
     }
 
     /**
-     * [OpenMinis#438] The context window and output limit a /models entry
+     * [upstream#438] The context window and output limit a /models entry
      * reports about itself, each null when absent. Read in order: top-level
      * `context_length` / `context_window` / `contextWindow` /
      * `max_context_length`, then `limit.context`, then OpenRouter-style

@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * [T-container-network-dns] (OpenMinis#396) Settings > Rootfs > Container
+ * [T-container-network-dns] (upstream#396) Settings > Rootfs > Container
  * Network: whether the sandbox's resolv.conf follows the system DNS (Auto,
  * the default) or lists exactly the servers the user enters (Custom).
  *

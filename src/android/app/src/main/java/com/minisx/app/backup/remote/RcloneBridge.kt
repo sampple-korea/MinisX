@@ -1,7 +1,7 @@
 package com.minisx.app.backup.remote
 
 import com.minisx.app.logging.AppLogger
-import com.openminis.rclone.gomobile.Gomobile
+import com.minisx.rclone.gomobile.Gomobile
 import org.json.JSONObject
 
 /**

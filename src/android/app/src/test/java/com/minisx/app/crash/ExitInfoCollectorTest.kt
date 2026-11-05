@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [OpenMinis#363] The recovery path for a process death nothing in-process
+ * [upstream#363] The recovery path for a process death nothing in-process
  * survived to describe.
  *
  * Two seams, because they need different tools:

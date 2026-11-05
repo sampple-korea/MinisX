@@ -10,7 +10,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Test
 
 /**
- * [OpenMinis#377] The OFF tier that goes on the wire must be one the MODEL
+ * [upstream#377] The OFF tier that goes on the wire must be one the MODEL
  * accepts, not just one the VENDOR documents.
  *
  * Reported on Android: Responses API + gpt-6-astra with reasoning effort set to

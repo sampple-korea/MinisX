@@ -50,7 +50,7 @@ object ContextOverflowGuard {
         "exceeds the maximum",
         "input is too long",
         // [T-ctx-overflow-marker-parity] iOS ContextPolicy.overflowMarkers had
-        // these two and Android did not: OpenMinis#133 arrives as "[400] Your
+        // these two and Android did not: upstream#133 arrives as "[400] Your
         // input exceeds the context window…", and missing it meant no ratio
         // raise, no GH#352 self-heal, and a pinned session silently falling
         // back to a different model. Keep this list identical to iOS.

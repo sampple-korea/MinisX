@@ -6,7 +6,7 @@ import okhttp3.Request
  * The Claude CLI client fingerprint, applied to Anthropic OAuth *auth* requests
  * (token exchange and refresh).
  *
- * [OpenMinis#360] Claude OAuth login and silent refresh were being served a
+ * [upstream#360] Claude OAuth login and silent refresh were being served a
  * Cloudflare interstitial ("Just a moment...", HTTP 403 with an HTML body)
  * instead of JSON. Two causes, both on the auth path only:
  *

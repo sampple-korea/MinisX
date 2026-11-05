@@ -11,7 +11,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [T-414-usage-tap-band] openminis/openminis#414: only a blank tap within five
+ * [T-414-usage-tap-band] upstream#414: only a blank tap within five
  * lines of text above the usage capsule reveals it; blank taps anywhere else in
  * the reply do nothing.
  */

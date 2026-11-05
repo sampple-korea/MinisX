@@ -163,7 +163,7 @@ object AnthropicModelsApi {
                 // relay that reports `context_length` / `max_output_tokens`
                 // (or any spelling OpenAIModelsApi.reportedLimits reads) is
                 // the authority on them, as on the OpenAI-compatible path
-                // ([OpenMinis#438]). This list read none: a relay serving
+                // ([upstream#438]). This list read none: a relay serving
                 // `cn:deepseek-v4-pro` with a 1M window landed with no window
                 // and the model fell to its family's 128K guess (Windows reads
                 // them here too, minis-providers models_api.rs).

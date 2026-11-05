@@ -6,7 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [T-update-channels] Betas are published on OpenMinis/OpenMinis as
+ * [T-update-channels] Betas are published on the upstream repo as
  * prereleases tagged `0-beta-build<N>`. Every client already in users' hands
  * reads that repo, ignores the prerelease flag, and must NOT be offered a
  * beta - otherwise every old user is pushed onto the beta channel.
@@ -79,7 +79,7 @@ class LegacyUpdateCompatTest {
 
     // ── The repo as it is, and as it will be ────────────────────────────────
 
-    /** OpenMinis/OpenMinis today, newest first: 1.14, 1.13, 1.12, then the previews. */
+    /** the upstream repo today, newest first: 1.14, 1.13, 1.12, then the previews. */
     private val existing: List<Rel> = listOf(Rel("1.14", false, true), Rel("1.13", false, true), Rel("1.12", false, true)) +
         listOf(22, 20, 19, 18, 17, 15, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 16, 14, 13, 12).map { Rel("0.$it-preview", true, true) }
 

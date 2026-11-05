@@ -1,5 +1,6 @@
 package com.minisx.app.provider.voice
 
+import com.minisx.app.BuildConfig
 import android.util.Base64
 import android.util.Log
 import com.minisx.app.data.model.hasAudioOutput
@@ -50,7 +51,7 @@ class AlibabaVoiceProvider(providerId: String, baseURL: String, apiKey: String?)
     override fun defaultVoiceInputModel() = CloudAsrProtocols.BAILIAN_ASR_MODEL
 
     /**
-     * [FIX-261022-06, OpenMinis#469] The compatible mode has no
+     * [FIX-261022-06, upstream#469] The compatible mode has no
      * /audio/transcriptions (404); its ASR is qwen3-asr-flash on
      * /chat/completions with the clip in an `input_audio` part. The old
      * default, paraformer-realtime-v2, is WebSocket-only.
@@ -342,7 +343,7 @@ class DoubaoVoiceProvider(providerId: String, apiKey: String?) :
     }
 
     /**
-     * [FIX-261022-06, OpenMinis#468] The service answers in the
+     * [FIX-261022-06, upstream#468] The service answers in the
      * X-Api-Status-Code / X-Api-Message headers (20000000 = OK) and may send an
      * empty body on failure, so those are read here instead of reporting every
      * failure as an unexpected response format.
@@ -403,7 +404,7 @@ class XunfeiVoiceProvider(
     override fun applyVoiceAuth(builder: Request.Builder) {}
 
     /**
-     * [FIX-261022-06, OpenMinis#469] Dictation is the v2 WebSocket API
+     * [FIX-261022-06, upstream#469] Dictation is the v2 WebSocket API
      * (wss://iat-api.xfyun.cn/v2/iat): 16 kHz mono PCM in frames paced like a
      * live microphone, then `{"data":{"status":2}}`. The clip was POSTed as one
      * HTTP JSON in another API's shape (and as WAV bytes labelled raw PCM),
@@ -890,7 +891,7 @@ class MimoVoiceProvider(providerId: String, baseURL: String, apiKey: String?) :
 
 /**
  * OpenRouter voice — Android port of iOS `OpenRouterVoiceProvider`
- * (iOS 1946b0b2 for TTS, 1f23fd02 for ASR; OpenMinis#280 for the catalog
+ * (iOS 1946b0b2 for TTS, 1f23fd02 for ASR; upstream#280 for the catalog
  * roles). Must be kept in step with iOS.
  *
  * OpenRouter serves voice on three routes, each taking a DISJOINT model set:
@@ -904,7 +905,7 @@ class MimoVoiceProvider(providerId: String, baseURL: String, apiKey: String?) :
  *     TTS (gpt-audio family only), an `input_audio` part for ASR.
  *
  * Sending a model to another set's route fails, and on OpenRouter that
- * failure can be a 401 whose body is NOT about the key (OpenMinis#280) — see
+ * failure can be a 401 whose body is NOT about the key (upstream#280) — see
  * [isAuthFailure]. So routing follows the catalog tag
  * ([com.minisx.app.data.model.LLMModel.voiceRole]), and model-name
  * guessing is only the fallback for untagged models. (An earlier version of
@@ -947,7 +948,7 @@ class OpenRouterVoiceProvider(providerId: String, baseURL: String, apiKey: Strin
 
         /**
          * FALLBACK ONLY, for models with no catalog tag (custom entries, models
-         * saved before OpenMinis#280): ids that look like transcription models.
+         * saved before upstream#280): ids that look like transcription models.
          * Tagged models route by voiceRole — 12 of the 22 live transcription
          * models (qwen3-asr, voxtral, parakeet, chirp-3, …) contain none of
          * these words.
@@ -1027,7 +1028,7 @@ class OpenRouterVoiceProvider(providerId: String, baseURL: String, apiKey: Strin
     }
 
     /**
-     * [T-openrouter-voice-catalog] OpenMinis#280. A 401 on OpenRouter is not
+     * [T-openrouter-voice-catalog] upstream#280. A 401 on OpenRouter is not
      * always about the key: sending a model to a route it is not served on
      * also came back 401, and reporting that as "check the API key" sent users
      * hunting for a credential problem that did not exist. Only a body that
@@ -1039,7 +1040,7 @@ class OpenRouterVoiceProvider(providerId: String, baseURL: String, apiKey: Strin
     /** Same attribution headers the models request already sends. */
     override fun applyVoiceAuth(builder: Request.Builder) {
         super.applyVoiceAuth(builder)
-        builder.header("HTTP-Referer", "https://github.com/OpenMinis/OpenMinis")
+        builder.header("HTTP-Referer", "https://github.com/${BuildConfig.RELEASE_REPO}")
         builder.header("X-Title", "MinisX App")
     }
 

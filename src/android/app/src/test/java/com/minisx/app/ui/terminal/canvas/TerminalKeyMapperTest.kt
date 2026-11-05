@@ -6,7 +6,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * [OpenMinis#277] Hardware-keyboard Ctrl+key, modified arrows and F-keys in
+ * [upstream#277] Hardware-keyboard Ctrl+key, modified arrows and F-keys in
  * the terminal. Same probe table as iOS PhysicalKeyboardControlKeyTests.
  */
 class TerminalKeyMapperTest {

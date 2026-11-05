@@ -10,7 +10,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * [T-config-path-dotted-id] OpenMinis#390 — config paths address an entry by
+ * [T-config-path-dotted-id] upstream#390 — config paths address an entry by
  * its RAW id, dots included. Android half of iOS cef38f13b
  * (MinisTests/Standalone/ConfigPathSplitTests.swift); the fixture table and
  * the expected message texts are the same as iOS had.

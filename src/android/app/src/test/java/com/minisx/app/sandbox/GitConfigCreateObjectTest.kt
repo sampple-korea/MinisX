@@ -10,7 +10,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 /**
- * [T-git-createobject-rename] openminis/openminis#409: minis.sh ran
+ * [T-git-createobject-rename] upstream#409: minis.sh ran
  * `git config --system core.createObject copy`. `copy` is not a valid value
  * (only `link` and `rename` are), so every git command in the sandbox died
  * with "invalid mode for object creation". Now:

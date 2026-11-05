@@ -10,7 +10,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 /**
- * [OpenMinis#445] `minis-scheduled create --model` accepts the same forms as
+ * [upstream#445] `minis-scheduled create --model` accepts the same forms as
  * `minis-config set session.primaryModel` (`entry:<id>`, `group:<id>`), a bare
  * entry id (`<instanceId>/<modelId>`), and a bare model id only when exactly
  * one visible entry serves it. Anything else fails at create time instead of

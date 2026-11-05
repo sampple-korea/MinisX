@@ -16,7 +16,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * [OpenMinis#191] OpenRouter does not enable Anthropic prompt caching on its
+ * [upstream#191] OpenRouter does not enable Anthropic prompt caching on its
  * own — Claude requests must carry an explicit `cache_control` breakpoint or
  * nothing is cached at all (reporter measured a 3-6x cost overrun with
  * cache_read/cache_write pinned at 0). Parity with iOS 2304af4a.

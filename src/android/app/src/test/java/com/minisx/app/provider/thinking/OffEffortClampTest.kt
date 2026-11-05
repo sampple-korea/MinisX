@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * [OpenMinis#377] Clamping the OFF tier onto what a model actually accepts.
+ * [upstream#377] Clamping the OFF tier onto what a model actually accepts.
  *
  * Reported on Android: Responses API + gpt-6-astra, reasoning effort set to
  * `low`, and every compaction died with

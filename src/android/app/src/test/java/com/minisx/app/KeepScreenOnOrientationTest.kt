@@ -6,7 +6,7 @@ import org.junit.Test
 import java.io.File
 
 /**
- * [T-android-orientation-user] (OpenMinis#401) A shell_execute run rotated
+ * [T-android-orientation-user] (upstream#401) A shell_execute run rotated
  * the screen against a portrait lock on OnePlus / Android 16. MainActivity now
  * declares screenOrientation="user", and the keep-screen-on flag is only
  * written when it actually changes.

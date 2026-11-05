@@ -16,7 +16,7 @@ import com.minisx.app.provider.ModelReleaseIndex
  * silently losing the release ranking the provider-detail list already had.
  *
  * Why the ranking matters at all: a picker whose first entries are stale is an
- * active hazard. OpenMinis#83 was filed as "GPT-5.3 CodeX Spark cannot call
+ * active hazard. upstream#83 was filed as "GPT-5.3 CodeX Spark cannot call
  * tools"; the real cause was that the backend refuses that model, and the
  * refusal renders as an EMPTY assistant turn. A user picked a dead model off
  * the top of the list and concluded the app was broken.

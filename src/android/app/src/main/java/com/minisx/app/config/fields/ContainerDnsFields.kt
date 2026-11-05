@@ -11,7 +11,7 @@ import com.minisx.app.sandbox.ContainerDns
 import com.minisx.app.sandbox.ContainerDns.DnsMode
 
 /**
- * [T-container-network-dns] (OpenMinis#396) minis-config fields for the
+ * [T-container-network-dns] (upstream#396) minis-config fields for the
  * sandbox DNS, bound to the same storage as Settings > Rootfs > Container
  * Network:
  *
