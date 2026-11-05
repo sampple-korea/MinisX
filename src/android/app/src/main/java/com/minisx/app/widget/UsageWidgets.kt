@@ -24,6 +24,9 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
+import androidx.glance.color.ColorProvider
+import androidx.glance.unit.ColorProvider
+import androidx.compose.ui.graphics.Color
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -96,7 +99,7 @@ abstract class UsageWidget(
         val refresh = model.instanceId?.let {
             actionRunCallback<RefreshUsageAction>(actionParametersOf(RefreshUsageAction.INSTANCE to it))
         }
-        val frame = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground).cornerRadius(20.dp)
+        val frame = GlanceModifier.fillMaxSize().background(Palette.background).cornerRadius(22.dp)
             .clickable(actionStartActivity(UsageWidgets.deepLink(context, link)))
         // Under ~160dp the full layout (title, big number, gauge, extra rows, footer) does not fit. The
         // compact layout shows every window (5h and weekly) as one gauge row each instead.
@@ -104,17 +107,17 @@ abstract class UsageWidget(
             CompactReady(context, frame, model, name, refresh, size.width, size.height)
             return
         }
-        Column(frame.padding(12.dp)) {
+        Column(frame.padding(14.dp)) {
             Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     name, maxLines = 1,
-                    style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                    style = TextStyle(color = Palette.text, fontSize = 13.sp, fontWeight = FontWeight.Bold),
                     modifier = GlanceModifier.defaultWeight(),
                 )
                 if (refresh != null) {
                     Text(
                         "↻",
-                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 16.sp),
+                        style = TextStyle(color = Palette.muted, fontSize = 16.sp),
                         modifier = GlanceModifier.padding(horizontal = 4.dp).clickable(refresh),
                     )
                 }
@@ -158,13 +161,13 @@ abstract class UsageWidget(
                     Text(
                         if (pooled != null) "$name · ${context.getString(R.string.usage_widget_accounts, pooled)}" else name,
                         maxLines = 1,
-                        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                        style = TextStyle(color = Palette.text, fontSize = 13.sp, fontWeight = FontWeight.Bold),
                         modifier = GlanceModifier.defaultWeight(),
                     )
                     if (refresh != null) {
                         Text(
                             "↻",
-                            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 16.sp),
+                            style = TextStyle(color = Palette.muted, fontSize = 16.sp),
                             modifier = GlanceModifier.padding(horizontal = 4.dp).clickable(refresh),
                         )
                     }
@@ -180,7 +183,7 @@ abstract class UsageWidget(
                     Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             limit.window, maxLines = 1,
-                            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
+                            style = TextStyle(color = Palette.muted, fontSize = 11.sp),
                             modifier = GlanceModifier.width(28.dp),
                         )
                         Gauge(limit.remainingPercent, 10, 6.dp, GlanceModifier.defaultWeight())
@@ -188,7 +191,7 @@ abstract class UsageWidget(
                         Text(
                             "${limit.remainingPercent.roundToInt()}%", maxLines = 1,
                             style = TextStyle(
-                                color = if (low) GlanceTheme.colors.error else GlanceTheme.colors.onSurface,
+                                color = if (low) Palette.warn else Palette.text,
                                 fontSize = 12.sp, fontWeight = FontWeight.Bold,
                             ),
                             modifier = GlanceModifier.width(36.dp),
@@ -196,14 +199,14 @@ abstract class UsageWidget(
                         if (wide) {
                             Text(
                                 limit.resetsAt?.let { QuotaText.relative(context, it) }.orEmpty(), maxLines = 1,
-                                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
+                                style = TextStyle(color = Palette.muted, fontSize = 10.sp),
                                 modifier = GlanceModifier.width(60.dp),
                             )
                         }
                         if (!titled && index == 0 && refresh != null) {
                             Text(
                                 "↻",
-                                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 14.sp),
+                                style = TextStyle(color = Palette.muted, fontSize = 14.sp),
                                 modifier = GlanceModifier.padding(start = 6.dp).clickable(refresh),
                             )
                         }
@@ -218,7 +221,7 @@ abstract class UsageWidget(
 
     @Composable
     private fun Message(text: String) {
-        Text(text, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp), maxLines = 4)
+        Text(text, style = TextStyle(color = Palette.muted, fontSize = 13.sp), maxLines = 4)
     }
 
     @Composable
@@ -232,14 +235,14 @@ abstract class UsageWidget(
             Text(
                 "${top.remainingPercent.roundToInt()}%",
                 style = TextStyle(
-                    color = if (low) GlanceTheme.colors.error else GlanceTheme.colors.onSurface,
+                    color = if (low) Palette.warn else Palette.text,
                     fontSize = if (roomy) 36.sp else 28.sp, fontWeight = FontWeight.Bold,
                 ),
             )
             Spacer(GlanceModifier.width(6.dp))
             Text(
                 windowText(context, top), maxLines = 1,
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp),
+                style = TextStyle(color = Palette.muted, fontSize = 12.sp),
                 modifier = GlanceModifier.padding(bottom = 4.dp),
             )
         }
@@ -250,14 +253,14 @@ abstract class UsageWidget(
             Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     limit.window, maxLines = 1,
-                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
+                    style = TextStyle(color = Palette.muted, fontSize = 11.sp),
                     modifier = GlanceModifier.width(40.dp),
                 )
                 Gauge(limit.remainingPercent, 10, 6.dp, GlanceModifier.defaultWeight())
                 Spacer(GlanceModifier.width(6.dp))
                 Text(
                     "${limit.remainingPercent.roundToInt()}%", maxLines = 1,
-                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
+                    style = TextStyle(color = Palette.muted, fontSize = 11.sp),
                 )
             }
         }
@@ -266,24 +269,46 @@ abstract class UsageWidget(
         val updated = model.updatedAt.takeIf { it > 0 }?.let { context.getString(R.string.usage_widget_updated, QuotaText.relative(context, it)) }
         Text(
             listOfNotNull(resets, updated).joinToString(" · "), maxLines = 1,
-            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
+            style = TextStyle(color = Palette.muted, fontSize = 10.sp),
         )
     }
 
-    /** Segmented gauge; the segments that are left fill from the start. */
+    /**
+     * A bar made of thin segments, so it reads as one continuous rounded bar in Glance (which
+     * cannot weight two boxes unevenly). The part that is left fills from the start; it turns
+     * amber when low and red when nearly gone.
+     */
     @Composable
     private fun Gauge(remaining: Double, segments: Int, height: Dp, modifier: GlanceModifier) {
-        val filled = if (remaining <= 0.0) 0 else ceil(remaining / 100.0 * segments).toInt().coerceIn(1, segments)
-        val on = if (UsageWidgetModel.isLow(remaining)) GlanceTheme.colors.error else GlanceTheme.colors.primary
+        val count = segments * 2
+        val filled = if (remaining <= 0.0) 0 else ceil(remaining / 100.0 * count).toInt().coerceIn(1, count)
+        val on = Palette.fill(remaining)
         Row(modifier) {
-            for (i in 0 until segments) {
+            for (i in 0 until count) {
                 Box(
-                    GlanceModifier.defaultWeight().height(height).cornerRadius(3.dp)
-                        .background(if (i < filled) on else GlanceTheme.colors.surfaceVariant),
+                    GlanceModifier.defaultWeight().height(height).cornerRadius(2.dp)
+                        .background(if (i < filled) on else Palette.track),
                 ) {}
-                if (i < segments - 1) Spacer(GlanceModifier.width(2.dp))
+                if (i < count - 1) Spacer(GlanceModifier.width(1.dp))
             }
         }
+    }
+}
+
+/** The widgets' own palette: the app's violet on near-black, with a light twin for light mode. */
+private object Palette {
+    val background = ColorProvider(day = Color(0xFFF6F4FB), night = Color(0xFF141319))
+    val text = ColorProvider(day = Color(0xFF1B1A22), night = Color(0xFFF2F0F8))
+    val muted = ColorProvider(day = Color(0xFF6E6A7C), night = Color(0xFF9C98AD))
+    val track = ColorProvider(day = Color(0xFFE2DEEE), night = Color(0xFF2B2A35))
+    val accent = ColorProvider(day = Color(0xFF7A4DFF), night = Color(0xFF9B7BFF))
+    val warn = ColorProvider(day = Color(0xFFB26A00), night = Color(0xFFFFB020))
+    val danger = ColorProvider(day = Color(0xFFC62828), night = Color(0xFFFF6B6B))
+
+    fun fill(remainingPercent: Double): ColorProvider = when {
+        remainingPercent <= 8.0 -> danger
+        UsageWidgetModel.isLow(remainingPercent) -> warn
+        else -> accent
     }
 }
 
