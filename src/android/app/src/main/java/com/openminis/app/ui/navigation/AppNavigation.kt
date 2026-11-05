@@ -634,18 +634,16 @@ fun AppNavigation(
             arguments = listOf(navArgument("sessionId") { type = NavType.StringType }),
         ) { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
-            // [T-android-biolock] A locked chat shows the lock cover instead of the chat.
-            com.openminis.app.lock.SessionLockGate(sessionId) {
-                ChatSplitScaffoldRoute(
-                    initialSessionId = sessionId,
-                    navController = navController,
-                    chatRepository = chatRepository,
-                    providerRepository = providerRepository,
-                    memoryRepository = memoryRepository,
-                    skillRepository = skillRepository,
-                    mcpRepository = mcpRepository,
-                )
-            }
+            // (The biometric lock gate is inside ChatSplitScaffold's detail pane.)
+            ChatSplitScaffoldRoute(
+                initialSessionId = sessionId,
+                navController = navController,
+                chatRepository = chatRepository,
+                providerRepository = providerRepository,
+                memoryRepository = memoryRepository,
+                skillRepository = skillRepository,
+                mcpRepository = mcpRepository,
+            )
         }
 
         composable(Routes.SETTINGS) {

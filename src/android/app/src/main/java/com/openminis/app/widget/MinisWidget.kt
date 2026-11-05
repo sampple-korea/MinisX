@@ -49,6 +49,8 @@ import com.openminis.app.service.SessionActivityTracker
 class MinisWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        // A widget update can run in a process that never created an activity.
+        SessionLockStore.init(context)
         val latest = runCatching {
             (context.applicationContext as MinisApp).chatRepository.dao.listSessions()
                 .firstOrNull { !it.isChild }

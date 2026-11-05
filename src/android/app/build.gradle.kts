@@ -512,6 +512,9 @@ dependencies {
     // Face ID Protection). 1.1.0 is the stable line: 1.2.x is alpha and asks for
     // a newer compileSdk. Pulls androidx.fragment, which FragmentActivity needs.
     implementation("androidx.biometric:biometric:1.1.0")
+    // MainActivity is a FragmentActivity now. biometric 1.1.0 only asks for fragment 1.2.5 and
+    // the rest of the graph resolves 1.3.6, a generation behind activity 1.9.x; pin the matching one.
+    implementation("androidx.fragment:fragment:1.8.5")
 
     // [T-android-widget] Home-screen quick-entry widget (the Android stand-in for the iOS
     // Live Activity widget). 1.1.1 is the stable line that builds with this

@@ -855,6 +855,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         // permission) stays the fallback.
         com.openminis.app.scheduled.ScheduledInAppTimer.start(this)
         // [T-android-widget] Latest chats as launcher shortcuts (iOS ListSessions / OpenSession intents).
+        // The lock state must be loaded before anything filters by it.
+        com.openminis.app.lock.SessionLockStore.init(this)
         com.openminis.app.shortcuts.RecentSessionShortcuts.start(this, chatRepository)
         // [T-port-sched-wait-notification] The next run the ongoing
         // notification counts down to between fires, with the waiting chat's

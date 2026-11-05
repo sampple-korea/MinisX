@@ -946,67 +946,71 @@ fun ChatSplitScaffoldRoute(
         },
         detailPane = { sessionId, onBackInPane, onNewChatInPane, onMoveToInPane,
             onToggleSidebar, sidebarCollapsed ->
-            com.openminis.app.ui.chat.ChatScreen(
-                // The pane navigator's contentKey IS the session id, so a
-                // draft ("__new__…") flows through unchanged and ChatScreen's
-                // existing draft handling applies untouched.
-                sessionId = sessionId,
-                chatRepository = chatRepository,
-                providerRepository = providerRepository,
-                memoryRepository = memoryRepository,
-                skillRepository = skillRepository,
-                mcpRepository = mcpRepository,
-                // Back inside the pair is the pane navigator's job (it knows
-                // whether that means "hide the detail" or "pop to the list").
-                onBack = onBackInPane,
-                // [T-android-tablet-split] Suppress the detail pane's back
-                // arrow while the list is beside it. shouldUseTwoPane() is the
-                // same window-size predicate the scaffold itself uses, so the
-                // two cannot disagree.
-                isTwoPane = shouldUseTwoPane(),
-                // [T-android-tablet-sidebar-collapse] Reuses the slot the back
-                // arrow vacates in two-pane, which is where the user already
-                // looks for "get me back to the list".
-                onToggleSidebar = onToggleSidebar,
-                sidebarCollapsed = sidebarCollapsed,
-                // Draft handling: the pane navigator gets a fresh `__new__…`
-                // key, so the list keeps its scroll position and simply stops
-                // highlighting a row (no persisted id matches a draft) — the
-                // two-pane equivalent of the old popUpTo(SESSION_LIST) push.
-                onNewChat = onNewChatInPane,
-                // Everything below leaves the list/detail pair entirely and so
-                // stays on the OUTER NavHost as a full-screen push.
-                onOpenTerminal = {
-                    navController.safeNavigate(Routes.terminal(sessionId = sessionId))
-                },
-                onOpenTerminalWithCommand = { command ->
-                    navController.safeNavigate(
-                        Routes.terminal(initCommand = command, sessionId = sessionId),
-                    )
-                },
-                // [T-agent-transcript-page] Full-screen push on the OUTER host,
-                // like the terminal — it must not swap the detail pane.
-                onOpenAgentTranscript = { childId ->
-                    navController.safeNavigate(Routes.agentTranscript(childId))
-                },
-                // Move-to targets another chat, which is still inside the
-                // list/detail pair — so it swaps the detail pane rather than
-                // pushing. (The old popUpTo(SESSION_LIST) existed to avoid
-                // stacking chats on the back stack; the pane navigator has no
-                // such stack to pollute.) The target may be a `__new__…` draft
-                // from the Move-to sheet's New Chat row, which works here for
-                // the same reason onNewChat does.
-                onMoveToSession = { targetId -> onMoveToInPane(targetId) },
-                onBrowseChatFiles = { navController.safeNavigate(Routes.chatFiles(sessionId)) },
-                onBrowseChatFolder = { path -> navController.safeNavigate(Routes.chatFiles(sessionId, path)) },
-                onPreviewAttachment = { item ->
-                    FilePreviewHolder.currentItem = item
-                    FilePreviewHolder.currentSessionId = sessionId
-                    navController.safeNavigate(Routes.FILE_PREVIEW)
-                },
-                onModelGroupsClick = { navController.safeNavigate(Routes.MODEL_GROUPS) },
-                onEditProviderClick = { id -> navController.safeNavigate(Routes.providerDetail(id)) },
-            )
+            // [T-android-biolock] The gate sits on the pane that shows the chat, so every way of
+            // reaching a chat (phone route, tablet list selection) goes through it.
+            com.openminis.app.lock.SessionLockGate(sessionId) {
+                com.openminis.app.ui.chat.ChatScreen(
+                    // The pane navigator's contentKey IS the session id, so a
+                    // draft ("__new__…") flows through unchanged and ChatScreen's
+                    // existing draft handling applies untouched.
+                    sessionId = sessionId,
+                    chatRepository = chatRepository,
+                    providerRepository = providerRepository,
+                    memoryRepository = memoryRepository,
+                    skillRepository = skillRepository,
+                    mcpRepository = mcpRepository,
+                    // Back inside the pair is the pane navigator's job (it knows
+                    // whether that means "hide the detail" or "pop to the list").
+                    onBack = onBackInPane,
+                    // [T-android-tablet-split] Suppress the detail pane's back
+                    // arrow while the list is beside it. shouldUseTwoPane() is the
+                    // same window-size predicate the scaffold itself uses, so the
+                    // two cannot disagree.
+                    isTwoPane = shouldUseTwoPane(),
+                    // [T-android-tablet-sidebar-collapse] Reuses the slot the back
+                    // arrow vacates in two-pane, which is where the user already
+                    // looks for "get me back to the list".
+                    onToggleSidebar = onToggleSidebar,
+                    sidebarCollapsed = sidebarCollapsed,
+                    // Draft handling: the pane navigator gets a fresh `__new__…`
+                    // key, so the list keeps its scroll position and simply stops
+                    // highlighting a row (no persisted id matches a draft) — the
+                    // two-pane equivalent of the old popUpTo(SESSION_LIST) push.
+                    onNewChat = onNewChatInPane,
+                    // Everything below leaves the list/detail pair entirely and so
+                    // stays on the OUTER NavHost as a full-screen push.
+                    onOpenTerminal = {
+                        navController.safeNavigate(Routes.terminal(sessionId = sessionId))
+                    },
+                    onOpenTerminalWithCommand = { command ->
+                        navController.safeNavigate(
+                            Routes.terminal(initCommand = command, sessionId = sessionId),
+                        )
+                    },
+                    // [T-agent-transcript-page] Full-screen push on the OUTER host,
+                    // like the terminal — it must not swap the detail pane.
+                    onOpenAgentTranscript = { childId ->
+                        navController.safeNavigate(Routes.agentTranscript(childId))
+                    },
+                    // Move-to targets another chat, which is still inside the
+                    // list/detail pair — so it swaps the detail pane rather than
+                    // pushing. (The old popUpTo(SESSION_LIST) existed to avoid
+                    // stacking chats on the back stack; the pane navigator has no
+                    // such stack to pollute.) The target may be a `__new__…` draft
+                    // from the Move-to sheet's New Chat row, which works here for
+                    // the same reason onNewChat does.
+                    onMoveToSession = { targetId -> onMoveToInPane(targetId) },
+                    onBrowseChatFiles = { navController.safeNavigate(Routes.chatFiles(sessionId)) },
+                    onBrowseChatFolder = { path -> navController.safeNavigate(Routes.chatFiles(sessionId, path)) },
+                    onPreviewAttachment = { item ->
+                        FilePreviewHolder.currentItem = item
+                        FilePreviewHolder.currentSessionId = sessionId
+                        navController.safeNavigate(Routes.FILE_PREVIEW)
+                    },
+                    onModelGroupsClick = { navController.safeNavigate(Routes.MODEL_GROUPS) },
+                    onEditProviderClick = { id -> navController.safeNavigate(Routes.providerDetail(id)) },
+                )
+            }
         },
     )
 }

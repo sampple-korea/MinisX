@@ -67,6 +67,8 @@ object SessionLockStore {
         locked.value = loadLocked()
         // A cold start with the app lock on begins locked.
         _appIsLocked.value = appLockEnabled && BiometricAuth.isAvailable(appContext)
+        // Anything that already filtered by lock state (shortcuts, widget) re-reads now.
+        bump()
     }
 
     private fun bump() { _version.value = _version.value + 1 }
