@@ -199,8 +199,10 @@ private fun ColumnScope.SectionContent(st: QuotaState, display: QuotaInstanceDis
                         tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp),
                     )
                     Spacer(Modifier.width(5.dp))
+                    // [T-codex-account-pool] The figures below add up every ChatGPT account of the provider.
+                    val pooled = st.pooledAccounts[display.subjectId]
                     Text(
-                        stringResource(R.string.quota_shared_by_all),
+                        if (pooled != null) stringResource(R.string.quota_pooled_accounts, pooled) else stringResource(R.string.quota_shared_by_all),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

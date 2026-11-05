@@ -92,6 +92,12 @@ data class QuotaState(
     val instanceNotes: Map<String, QuotaSubject.NotConfiguredReason> = emptyMap(),
     /** Instances whose subject is being fetched right now. */
     val refreshingInstanceIds: Set<String> = emptySet(),
+    /**
+     * [T-codex-account-pool] Providers whose [pools] are pooled across several ChatGPT accounts:
+     * the provider's subject to the number of accounts behind it. Only in the published view,
+     * never persisted.
+     */
+    val pooledAccounts: Map<QuotaSubjectID, Int> = emptyMap(),
 ) {
     /** Each canonical pool of a subject exactly once, stable order. */
     fun poolsOf(subject: QuotaSubjectID): List<QuotaPool> =
@@ -196,11 +202,20 @@ object QuotaStore {
     private const val FOREGROUND_TICK_MS = 60_000L
     private const val POST_FOREGROUND_SETTLE_MS = 3_000L
 
+    private const val EXTRA_ACCOUNT_REFRESH_MS = 5 * 60_000L
+
     /** Credential change: re-resolve instances seen within this window. */
     private const val RECENT_USE_WINDOW_MS = 30 * 60_000L
 
+    /** The raw store: one subject per account, persisted. Internal logic reads and writes this. */
     private val _state = MutableStateFlow(QuotaState())
-    val state: StateFlow<QuotaState> = _state.asStateFlow()
+
+    /**
+     * What the UI reads: [_state] with the pools of multi-account ChatGPT providers pooled
+     * ([QuotaPoolOverlay]). Identical to the raw store when no provider has extra accounts.
+     */
+    private val _view = MutableStateFlow(QuotaState())
+    val state: StateFlow<QuotaState> = _view.asStateFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val singleFlight = QuotaSingleFlight<QuotaSubjectID, QuotaRefreshResult>(scope)
@@ -227,6 +242,19 @@ object QuotaStore {
             started = true
             appContext = context.applicationContext
             this.repository = repository
+        }
+        // [T-codex-account-pool] Publish the pooled view whenever the quota data or the provider config
+        // (accounts added / removed) changes.
+        scope.launch(Dispatchers.Unconfined) {
+            kotlinx.coroutines.flow.combine(_state, repository.config) { st, cfg ->
+                val groups = cfg.instances
+                    .filter { it.poolAccountIds.isNotEmpty() }
+                    .mapNotNull { inst ->
+                        val primary = st.instanceSubjects[inst.id] ?: return@mapNotNull null
+                        QuotaPoolOverlay.Group(primary, inst.poolAccountIds.map { subscriptionSubject(QuotaVendor.codexSubscription, it) })
+                    }
+                QuotaPoolOverlay.apply(st, groups)
+            }.collect { _view.value = it }
         }
         scope.launch(Dispatchers.Main) {
             ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -343,6 +371,56 @@ object QuotaStore {
         // buttons); the credential read (EncryptedSharedPreferences), the
         // cache load and response parsing must not run there.
         withContext(Dispatchers.Default) { refreshOffMain(instanceId, forced, reason, attended) }
+            .also {
+                // [T-codex-account-pool] The provider's extra ChatGPT accounts are asked along with it.
+                instance(instanceId)?.takeIf { inst -> inst.isEnabled && inst.poolAccountIds.isNotEmpty() }
+                    ?.let { inst -> withContext(Dispatchers.Default) { refreshExtraAccounts(inst, forced) } }
+            }
+
+    private val extraAccountFetchedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
+
+    /**
+     * [T-codex-account-pool] The usage of each extra ChatGPT account of [parent], with the same
+     * query and parser as the provider's own account, merged under that account's own subject.
+     * An account asked within the last few minutes is left alone unless [forced].
+     */
+    private suspend fun refreshExtraAccounts(parent: ProviderInstance, forced: Boolean) {
+        val ctx = appContext ?: return
+        val now = System.currentTimeMillis()
+        for (extraId in parent.poolAccountIds) {
+            if (!com.minisx.app.auth.OAuthManager.hasStoredCredential(ctx, extraId)) continue
+            if (!forced && now - (extraAccountFetchedAt[extraId] ?: 0L) < EXTRA_ACCOUNT_REFRESH_MS) continue
+            extraAccountFetchedAt[extraId] = now
+            val subjectId = subscriptionSubject(QuotaVendor.codexSubscription, extraId)
+            try {
+                val manager = com.minisx.app.auth.OpenAIOAuthManager(ctx, extraId)
+                val token = manager.validAccessToken() ?: throw IllegalStateException("no token")
+                val headers = buildMap {
+                    val version = com.minisx.app.provider.openai.OpenAIProvider.CODEX_CLIENT_VERSION
+                    put("User-Agent", "codex_cli_rs/$version (Android; arm64)")
+                    put("Originator", "codex_cli_rs")
+                    manager.accountId?.let { put("ChatGPT-Account-Id", it) }
+                }
+                val transport = QuotaOkHttpTransport(com.minisx.app.network.NetworkRuntime.providerTag(parent.id))
+                val r = transport.get("https://${CodexSubscriptionQuotaAdapter.ENDPOINT}", token, headers)
+                QuotaHttp.error(r, CodexSubscriptionQuotaAdapter.ENDPOINT, now)?.let { throw it }
+                val snapshot = CodexSubscriptionQuotaAdapter.parseUsage(r.body, subjectId, now = now)
+                _state.update { st ->
+                    val pools = st.pools.toMutableMap()
+                    val bindings = st.bindings.toMutableList()
+                    QuotaMerge.ingest(snapshot, authoritative = true, pools = pools, bindings = bindings)
+                    val s = st.subjects[subjectId] ?: newSubject(subjectId)
+                    st.copy(
+                        pools = pools, bindings = bindings,
+                        subjects = st.subjects + (subjectId to s.copy(state = QuotaSubject.State.Available)),
+                    )
+                }
+                schedulePersist()
+            } catch (e: Exception) {
+                AppLogger.warning(TAG, "[Quota] extra ChatGPT account ${extraId.take(8)} not read: ${e.javaClass.simpleName} ${e.message}")
+            }
+        }
+    }
 
     private suspend fun refreshOffMain(instanceId: String, forced: Boolean, reason: String, attended: Boolean): QuotaRefreshResult {
         ensureLoaded()
@@ -723,8 +801,14 @@ object QuotaStore {
     fun observeSubscriptionHeaders(instanceId: String, vendor: QuotaVendor, headers: Map<String, String>) {
         if (!started) return
         ensureLoaded()
-        val instance = instance(instanceId) ?: return
-        if (!instance.isEnabled || QuotaVendorDetector.vendor(descriptor(instance)) != vendor) return
+        val instance = instance(instanceId)
+        // [T-codex-account-pool] An extra account of a provider has no instance of its own; its
+        // replies are recorded under its own subject so the pooled view can add them up.
+        val extraOf = if (instance == null) {
+            repository?.config?.value?.instances?.firstOrNull { instanceId in it.poolAccountIds }
+        } else null
+        if (instance == null && (extraOf == null || !extraOf.isEnabled || vendor != QuotaVendor.codexSubscription)) return
+        if (instance != null && (!instance.isEnabled || QuotaVendorDetector.vendor(descriptor(instance)) != vendor)) return
         val firstTime = synchronized(lock) { loggedObservationInstances.add(instanceId) }
         if (firstTime) {
             // Header names and values only (usage fractions, reset times,
@@ -739,7 +823,7 @@ object QuotaStore {
             QuotaVendor.codexSubscription -> CodexSubscriptionQuotaAdapter.parseHeaders(headers, subjectId, now = now)
             else -> null
         } ?: return
-        attach(instanceId, subjectId, "OAuth")
+        if (instance != null) attach(instanceId, subjectId, "OAuth")
         val policy = policy(vendor)
         _state.update { st ->
             val pools = st.pools.toMutableMap()

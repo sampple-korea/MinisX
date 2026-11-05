@@ -16,4 +16,5 @@
     <string name="provider_detail_accounts_cancel">취소</string>
     <string name="provider_detail_accounts_waiting">브라우저에서 로그인하는 중…</string>
     <string name="provider_detail_accounts_added">추가됨: %1$s</string>
+    <string name="quota_pooled_accounts">ChatGPT 계정 %1$d개 합산</string>
 </resources>

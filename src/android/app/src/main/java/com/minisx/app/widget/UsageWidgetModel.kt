@@ -51,7 +51,7 @@ data class UsageWidgetModel(
          * period that is over) or when it is too old to trust, exactly as the in-app
          * quota section does. Balances and rate limits have no percentage and never show.
          */
-        fun limitsOf(pools: List<QuotaPool>, now: Long, freshness: QuotaFreshnessPolicy): List<UsageLimit> {
+        fun limitsOf(pools: List<QuotaPool>, now: Long, freshness: QuotaFreshnessPolicy, accounts: Int = 1): List<UsageLimit> {
             val rows = ArrayList<UsageLimit>()
             for (pool in pools) {
                 if (pool.kind != QuotaPool.Kind.usageWindow && pool.kind != QuotaPool.Kind.allowance) continue
@@ -61,12 +61,23 @@ data class UsageWidgetModel(
                     val remaining = BigDecimal(100).subtract(used).toDouble().coerceIn(0.0, 100.0)
                     val name = w.calendarPeriod?.name ?: w.id
                     val label = pool.vendorLabel?.takeIf { it.isNotBlank() }?.let { "$it · $name" } ?: name
-                    rows += UsageLimit(label.take(100), remaining, w.resetsAt, name.take(24))
+                    rows += UsageLimit(label.take(100), remaining, w.resetsAt, name.take(24), accounts)
                 }
             }
             return rows.sortedBy { it.remainingPercent }.take(MAX_LIMITS)
         }
 
         fun isLow(remainingPercent: Double) = remainingPercent <= LOW_PERCENT
+
+        /** "5h" is 300, "7d" is 10080, "30m" is 30; anything else sorts last. Orders windows shortest first. */
+        fun windowMinutes(window: String): Int {
+            val n = window.dropLast(1).toIntOrNull() ?: return Int.MAX_VALUE
+            return when (window.last()) {
+                'm' -> n
+                'h' -> n * 60
+                'd' -> n * 1440
+                else -> Int.MAX_VALUE
+            }
+        }
     }
 }

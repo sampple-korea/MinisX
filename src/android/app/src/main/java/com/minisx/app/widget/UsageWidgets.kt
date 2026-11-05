@@ -88,9 +88,6 @@ abstract class UsageWidget(
     @Composable
     private fun Content(context: Context, name: String, model: UsageWidgetModel) {
         val size = LocalSize.current
-        // Under ~118dp the full layout (title row, number, gauge, extra rows, footer) does not fit and
-        // the footer was cut off; the one-line layout below is built for that.
-        val tiny = size.height < 118.dp && model.state == UsageWidgetModel.State.READY
         val wide = size.width >= 200.dp
         val link = when {
             model.instanceId != null -> "minis://settings/providers/${model.instanceId}"
@@ -101,10 +98,10 @@ abstract class UsageWidget(
         }
         val frame = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground).cornerRadius(20.dp)
             .clickable(actionStartActivity(UsageWidgets.deepLink(context, link)))
-        if (tiny) {
-            Row(frame.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                TinyReady(context, model, name, refresh, showReset = size.height >= 60.dp)
-            }
+        // Under ~160dp the full layout (title, big number, gauge, extra rows, footer) does not fit. The
+        // compact layout shows every window (5h and weekly) as one gauge row each instead.
+        if (size.height < 160.dp && model.state == UsageWidgetModel.State.READY) {
+            CompactReady(context, frame, model, name, refresh, size.width, size.height)
             return
         }
         Column(frame.padding(12.dp)) {
@@ -137,43 +134,82 @@ abstract class UsageWidget(
         }
     }
 
-    /** One line for a 2x1 widget: the number, the gauge, and the refresh glyph. */
+    /**
+     * The small layouts: one gauge row per window (the 5-hour and the weekly one, shortest first), a
+     * title row when there is room, and a reset line when there is more room.
+     */
     @Composable
-    private fun RowScope.TinyReady(
-        context: Context, model: UsageWidgetModel, name: String, refresh: androidx.glance.action.Action?, showReset: Boolean,
+    private fun CompactReady(
+        context: Context,
+        frame: GlanceModifier,
+        model: UsageWidgetModel,
+        name: String,
+        refresh: androidx.glance.action.Action?,
+        width: Dp,
+        height: Dp,
     ) {
-        val top = model.tightest ?: return
-        val low = UsageWidgetModel.isLow(top.remainingPercent)
-        Text(
-            "${top.remainingPercent.roundToInt()}%",
-            style = TextStyle(
-                color = if (low) GlanceTheme.colors.error else GlanceTheme.colors.onSurface,
-                fontSize = 22.sp, fontWeight = FontWeight.Bold,
-            ),
-        )
-        Spacer(GlanceModifier.width(8.dp))
-        Column(GlanceModifier.defaultWeight(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                "$name · ${windowText(context, top)}", maxLines = 1,
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
-            )
-            Spacer(GlanceModifier.height(3.dp))
-            Gauge(top.remainingPercent, 8, 6.dp, GlanceModifier.fillMaxWidth())
-            val resets = top.resetsAt?.takeIf { showReset }?.let { context.getString(R.string.usage_widget_resets, QuotaText.relative(context, it)) }
-            if (resets != null) {
-                Spacer(GlanceModifier.height(3.dp))
-                Text(
-                    resets, maxLines = 1,
-                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
-                )
+        val rows = model.limits.sortedBy { UsageWidgetModel.windowMinutes(it.window) }.take(if (height < 90.dp) 2 else 3)
+        val titled = height >= 90.dp
+        val wide = width >= 200.dp
+        Column(frame.padding(horizontal = 12.dp, vertical = if (height < 70.dp) 5.dp else 10.dp)) {
+            if (titled) {
+                Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    val pooled = rows.firstOrNull { it.accounts > 1 }?.accounts
+                    Text(
+                        if (pooled != null) "$name · ${context.getString(R.string.usage_widget_accounts, pooled)}" else name,
+                        maxLines = 1,
+                        style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                        modifier = GlanceModifier.defaultWeight(),
+                    )
+                    if (refresh != null) {
+                        Text(
+                            "↻",
+                            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 16.sp),
+                            modifier = GlanceModifier.padding(horizontal = 4.dp).clickable(refresh),
+                        )
+                    }
+                }
             }
-        }
-        if (refresh != null) {
-            Text(
-                "↻",
-                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 16.sp),
-                modifier = GlanceModifier.padding(start = 8.dp).clickable(refresh),
-            )
+            Column(
+                GlanceModifier.fillMaxWidth().defaultWeight(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                rows.forEachIndexed { index, limit ->
+                    if (index > 0) Spacer(GlanceModifier.height(if (height < 70.dp) 3.dp else 6.dp))
+                    val low = UsageWidgetModel.isLow(limit.remainingPercent)
+                    Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            limit.window, maxLines = 1,
+                            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
+                            modifier = GlanceModifier.width(28.dp),
+                        )
+                        Gauge(limit.remainingPercent, 10, 6.dp, GlanceModifier.defaultWeight())
+                        Spacer(GlanceModifier.width(6.dp))
+                        Text(
+                            "${limit.remainingPercent.roundToInt()}%", maxLines = 1,
+                            style = TextStyle(
+                                color = if (low) GlanceTheme.colors.error else GlanceTheme.colors.onSurface,
+                                fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                            ),
+                            modifier = GlanceModifier.width(36.dp),
+                        )
+                        if (wide) {
+                            Text(
+                                limit.resetsAt?.let { QuotaText.relative(context, it) }.orEmpty(), maxLines = 1,
+                                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp),
+                                modifier = GlanceModifier.width(60.dp),
+                            )
+                        }
+                        if (!titled && index == 0 && refresh != null) {
+                            Text(
+                                "↻",
+                                style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 14.sp),
+                                modifier = GlanceModifier.padding(start = 6.dp).clickable(refresh),
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -271,14 +307,8 @@ class KimiUsageWidgetReceiver : GlanceAppWidgetReceiver() {
 class RefreshUsageAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val instanceId = parameters[INSTANCE]
-        if (instanceId != null) {
-            QuotaStore.refresh(instanceId, forced = true, reason = "widget-refresh")
-            // [T-codex-account-pool] ...and the extra accounts of that provider, so the pooled figure moves too.
-            val app = context.applicationContext as MinisApp
-            app.providerRepository.instance(instanceId)?.takeIf { it.poolAccountIds.isNotEmpty() }?.let {
-                PooledCodexUsage.extraAccountLimits(context, it.id, it.poolAccountIds, force = true)
-            }
-        }
+        // The store also asks the provider's extra ChatGPT accounts, so the pooled figure moves too.
+        if (instanceId != null) QuotaStore.refresh(instanceId, forced = true, reason = "widget-refresh")
         UsageWidgets.updateAll(context)
     }
 
@@ -312,7 +342,7 @@ object UsageWidgets {
     }
 
     /** The model for [vendor]: the enabled provider of that kind with the most usable windows. */
-    suspend fun load(context: Context, vendor: QuotaVendor, forceExtras: Boolean = false): UsageWidgetModel {
+    suspend fun load(context: Context, vendor: QuotaVendor): UsageWidgetModel {
         val app = context.applicationContext as MinisApp
         QuotaStore.awaitLoaded()
         app.providerRepository.awaitConfigLoaded()
@@ -325,19 +355,14 @@ object UsageWidgets {
         val st = QuotaStore.state.value
         val best = instances
             .map { inst ->
-                val pools = st.instanceSubjects[inst.id]?.let { st.poolsOf(it) }.orEmpty()
-                Triple(inst, UsageWidgetModel.limitsOf(pools, now, QuotaStore.freshnessPolicy), pools)
+                val sid = st.instanceSubjects[inst.id]
+                val pools = sid?.let { st.poolsOf(it) }.orEmpty()
+                // [T-codex-account-pool] The store's pools are already pooled across the provider's
+                // ChatGPT accounts; say how many.
+                Triple(inst, UsageWidgetModel.limitsOf(pools, now, QuotaStore.freshnessPolicy, st.pooledAccounts[sid] ?: 1), pools)
             }
             .maxByOrNull { it.second.size } ?: return UsageWidgetModel(UsageWidgetModel.State.NO_PROVIDER)
-        val (inst, ownLimits, pools) = best
-        // [T-codex-account-pool] A ChatGPT provider with several accounts shows what is left across all
-        // of them, not just the first one.
-        val limits = if (vendor == QuotaVendor.codexSubscription && inst.poolAccountIds.isNotEmpty()) {
-            val extras = PooledCodexUsage.extraAccountLimits(context, inst.id, inst.poolAccountIds, force = forceExtras)
-            PooledCodexUsage.combine(listOf(ownLimits) + extras.values)
-        } else {
-            ownLimits
-        }
+        val (inst, limits, pools) = best
         if (limits.isEmpty()) return UsageWidgetModel(UsageWidgetModel.State.NO_DATA, instanceId = inst.id)
         val updated = pools.flatMap { it.windows }.maxOfOrNull { it.observedAt } ?: 0L
         return UsageWidgetModel(UsageWidgetModel.State.READY, limits, updated, inst.id)

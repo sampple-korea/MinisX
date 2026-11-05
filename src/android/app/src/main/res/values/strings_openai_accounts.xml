@@ -16,4 +16,5 @@
     <string name="provider_detail_accounts_cancel">Cancel</string>
     <string name="provider_detail_accounts_waiting">Waiting for the sign-in in the browser…</string>
     <string name="provider_detail_accounts_added">Added: %1$s</string>
+    <string name="quota_pooled_accounts">Pooled across %1$d ChatGPT accounts</string>
 </resources>
