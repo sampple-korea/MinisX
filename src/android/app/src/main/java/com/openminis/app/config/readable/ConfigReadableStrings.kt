@@ -102,6 +102,7 @@ object ConfigReadableStrings {
         "Input font size" to R.string.cfgr_input_font_size,
         "It is also in: %@" to R.string.cfgr_it_is_also_in_x,
         "Keep screen awake during tasks" to R.string.cfgr_keep_screen_awake_during_tasks,
+        "Screen Saver delay" to R.string.cfgr_screen_saver_delay,
         "LLM models" to R.string.cfgr_llm_models,
         "LLM provider instances" to R.string.cfgr_llm_provider_instances,
         "Label" to R.string.cfgr_label,

@@ -87,6 +87,7 @@
     <string name="cfgr_input_font_size">Input font size</string>
     <string name="cfgr_it_is_also_in_x">It is also in: %1$s</string>
     <string name="cfgr_keep_screen_awake_during_tasks">Keep screen awake during tasks</string>
+    <string name="cfgr_screen_saver_delay">Screen Saver delay</string>
     <string name="cfgr_llm_models">LLM models</string>
     <string name="cfgr_llm_provider_instances">LLM provider instances</string>
     <string name="cfgr_label">Label</string>

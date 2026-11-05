@@ -87,6 +87,7 @@
     <string name="cfgr_input_font_size">輸入框字號</string>
     <string name="cfgr_it_is_also_in_x">它也在這些分組中：%1$s</string>
     <string name="cfgr_keep_screen_awake_during_tasks">任務期間保持螢幕常亮</string>
+    <string name="cfgr_screen_saver_delay">螢幕保護程式延遲</string>
     <string name="cfgr_llm_models">模型</string>
     <string name="cfgr_llm_provider_instances">服務商</string>
     <string name="cfgr_label">標籤</string>

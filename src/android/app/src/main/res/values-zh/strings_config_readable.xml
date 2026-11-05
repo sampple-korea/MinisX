@@ -87,6 +87,7 @@
     <string name="cfgr_input_font_size">输入框字号</string>
     <string name="cfgr_it_is_also_in_x">它也在这些分组中：%1$s</string>
     <string name="cfgr_keep_screen_awake_during_tasks">任务期间保持屏幕常亮</string>
+    <string name="cfgr_screen_saver_delay">屏幕保护延迟</string>
     <string name="cfgr_llm_models">模型</string>
     <string name="cfgr_llm_provider_instances">服务商</string>
     <string name="cfgr_label">标签</string>
