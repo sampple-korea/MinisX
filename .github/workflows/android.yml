@@ -9,6 +9,11 @@ on:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Publish a release with this tag (e.g. v1.16); created on the built commit. Leave empty for a plain build."
+        required: false
+        default: ""
 
 concurrency:
   group: android-${{ github.ref }}
@@ -83,9 +88,14 @@ jobs:
 
       - name: Version
         id: version
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           code=$((1000 + GITHUB_RUN_NUMBER))
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then name="${GITHUB_REF_NAME#v}"; else name="1.15-build.${GITHUB_RUN_NUMBER}"; fi
+          tag="${RELEASE_TAG:-}"
+          if [[ -z "$tag" && "$GITHUB_REF" == refs/tags/v* ]]; then tag="$GITHUB_REF_NAME"; fi
+          if [[ -n "$tag" ]]; then name="${tag#v}"; else name="1.15-build.${GITHUB_RUN_NUMBER}"; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "versionCode=$code versionName=$name"
@@ -125,9 +135,11 @@ jobs:
           retention-days: 30
 
       - name: GitHub release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.version.outputs.tag != ''
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           files: minis-${{ steps.version.outputs.name }}.apk
           generate_release_notes: true
 
