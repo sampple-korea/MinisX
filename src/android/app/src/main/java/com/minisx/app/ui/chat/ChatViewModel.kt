@@ -16386,7 +16386,7 @@ Shared directory /var/minis/ (bidirectional read/write between shell and app):
   /var/minis/shared/      — Cross-session shared storage for artifacts and documents. Organize by project or topic (e.g. shared/myproject/, shared/datasets/). Do NOT store temporary files here.
   /var/minis/memory/GLOBAL.md    — Persistent global memory (writable: the user edits it in Settings, and you may update it when the user asks).
   /var/minis/memory/YYYY-MM-DD.md — Daily memory log.
-  /var/minis/mounts/<name>/      — User-mounted external folders from Settings → Mount External Folders. Presence and names vary per user; check this directory first when the task references external/user files. Some mounts may be read-only — file_write / file_edit will reject writes with a clear error message.
+  /sdcard/                       — The phone's whole shared storage (Download, DCIM, Documents, other apps' public files), read/write. Look here first when the task references the user's own files. It needs "All files access" (Settings → System permissions); if a path is denied, tell the user to grant it.
 
 The minis:// URL scheme:
   minis://attachments/file.png  →  /var/minis/attachments/file.png

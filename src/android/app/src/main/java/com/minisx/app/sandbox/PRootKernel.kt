@@ -246,6 +246,9 @@ object PRootKernel {
         // were known at app launch.
         applyMountedFoldersSnapshot(context)
 
+        // PRoot binds only onto a real directory inside the rootfs: make /sdcard one.
+        runCatching { File(rootfsManager.rootfsDir, SHARED_STORAGE_LINUX_PATH.removePrefix("/")).mkdirs() }
+
         isBooted = true
         Log.i(TAG, "PRoot kernel booted " +
             "rootfs=${rootfsManager.rootfsDir.absolutePath} " +
@@ -286,6 +289,10 @@ object PRootKernel {
             val hostDir = File(globalBase, subdir).also { it.mkdirs() }
             bindMounts["/var/minis/$subdir"] = hostDir.absolutePath
         }
+        // The whole shared storage, as /sdcard. External folders no longer need mounting one by one:
+        // MinisX asks for "All files access" and the shell sees everything the app can.
+        val shared = android.os.Environment.getExternalStorageDirectory()
+        if (shared != null && shared.exists()) bindMounts[SHARED_STORAGE_LINUX_PATH] = shared.absolutePath
     }
 
     fun removeBindMount(linuxPath: String) {
@@ -302,6 +309,8 @@ object PRootKernel {
     // PRoot's `-b host:linux` flag is per-invocation, so the diff-sync
     // applied via [applyMountedFoldersSnapshot] only affects subsequent
     // shell_execute calls — live processes won't observe a CRUD mid-flight.
+    /** Where the phone's shared storage shows up inside the sandbox. */
+    private const val SHARED_STORAGE_LINUX_PATH = "/sdcard"
     private const val MOUNTS_LINUX_PREFIX = "/var/minis/mounts/"
 
     // Sentinel in the read-only write-guard wrapper scripts so we can recognize
