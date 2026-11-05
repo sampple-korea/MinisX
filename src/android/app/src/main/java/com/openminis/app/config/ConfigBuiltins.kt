@@ -639,6 +639,20 @@ internal object ConfigBuiltins {
                 defaultValue = false,
             )
         )
+        r.register(
+            PrefsIntField(
+                path = "chat.alwaysOnIdleSeconds",
+                displayName = "Screen Saver delay",
+                description = "Seconds without a touch before the screen goes black during a task (0 = off). Needs Keep Screen Awake.",
+                prefs = appearancePrefs,
+                key = com.openminis.app.ui.screensaver.ScreenSaverController.KEY_IDLE_SECONDS,
+                defaultValue = 0,
+                minValue = 0,
+                maxValue = 3600,
+                unit = com.openminis.app.config.readable.NumberUnit.SECONDS,
+                zeroLabel = "Off",
+            )
+        )
         // (No autoFocusAfterReply entry here — it lives in
         // PREF_APPEARANCE alongside the visible AppearanceScreen toggle.
         // Registered further down in this method where the

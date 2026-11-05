@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_saver_section">화면 보호기</string>
+    <string name="screen_saver_footer">작업이 실행되고 \'화면 켜짐 유지\'가 켜져 있으면, 이 시간 동안 터치가 없을 때 화면이 검게 바뀌고 현재 단계만 표시됩니다. 터치하면 돌아옵니다. OLED 화면에서 전력을 아낄 수 있습니다.</string>
+    <string name="screen_saver_off">끔</string>
+    <string name="screen_saver_30s">30초 후</string>
+    <string name="screen_saver_1m">1분 후</string>
+    <string name="screen_saver_2m">2분 후</string>
+    <string name="screen_saver_5m">5분 후</string>
+</resources>

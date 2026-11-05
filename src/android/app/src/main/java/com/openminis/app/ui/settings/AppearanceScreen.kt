@@ -447,6 +447,36 @@ fun AppearanceScreen(
             )
         }
 
+        // [T-android-screen-saver] -- Screen Saver -- (iOS Always On idle delay)
+        SettingsSection(
+            header = stringResource(R.string.screen_saver_section),
+            footer = stringResource(R.string.screen_saver_footer),
+        ) {
+            val choices = com.openminis.app.ui.screensaver.ScreenSaverController.CHOICES
+            var idleSeconds by remember {
+                mutableIntStateOf(prefs.getInt(com.openminis.app.ui.screensaver.ScreenSaverController.KEY_IDLE_SECONDS, 0))
+            }
+            choices.forEachIndexed { i, seconds ->
+                SettingsChoiceRow(
+                    title = stringResource(
+                        when (seconds) {
+                            30 -> R.string.screen_saver_30s
+                            60 -> R.string.screen_saver_1m
+                            120 -> R.string.screen_saver_2m
+                            300 -> R.string.screen_saver_5m
+                            else -> R.string.screen_saver_off
+                        },
+                    ),
+                    selected = idleSeconds == seconds,
+                    onSelect = {
+                        idleSeconds = seconds
+                        prefs.edit().putInt(com.openminis.app.ui.screensaver.ScreenSaverController.KEY_IDLE_SECONDS, seconds).apply()
+                    },
+                    showDivider = i < choices.size - 1,
+                )
+            }
+        }
+
         // -- Tool Status Bar --
         SettingsSection(
             header = stringResource(R.string.appearance_section_tool_preview),

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- [T-android-screen-saver] Port of iOS Always On / Screen Saver. -->
+    <string name="screen_saver_section">Screen Saver</string>
+    <string name="screen_saver_footer">While a task runs and Keep Screen Awake is on, the screen goes black after this long without a touch and shows only the current step. Tap to return. Saves power on OLED screens.</string>
+    <string name="screen_saver_off">Off</string>
+    <string name="screen_saver_30s">After 30 seconds</string>
+    <string name="screen_saver_1m">After 1 minute</string>
+    <string name="screen_saver_2m">After 2 minutes</string>
+    <string name="screen_saver_5m">After 5 minutes</string>
+</resources>

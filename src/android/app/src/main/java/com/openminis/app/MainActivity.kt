@@ -520,6 +520,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         // [T-android-biolock] Load the lock state before the first frame, so a locked
         // app never flashes its content.
         com.openminis.app.lock.SessionLockStore.init(this)
+        com.openminis.app.ui.screensaver.ScreenSaverController.init(this)
 
         setContent {
             val prefs = remember { getAppearancePrefs(this) }
@@ -626,6 +627,9 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
                 // a floating banner over every screen (iOS ContentView).
                 com.openminis.app.ui.settings.NetworkAlertBannerHost(navController)
 
+                // [T-android-screen-saver] Black cover while a task runs and the user is idle.
+                com.openminis.app.ui.screensaver.ScreenSaverOverlay()
+
                 // [T-android-biolock] Topmost: covers everything while the app lock is engaged.
                 com.openminis.app.lock.AppLockOverlay()
             }
@@ -665,6 +669,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
      */
     override fun onResume() {
         super.onResume()
+        com.openminis.app.ui.screensaver.ScreenSaverController.onResume()
         com.openminis.app.lock.SessionLockStore.onForeground()
         // Hide the app from the recents screen while an app lock is set (Android 13+;
         // before that the lock cover paints over the snapshot instead).
@@ -677,7 +682,16 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     override fun onPause() {
         com.openminis.app.lock.SessionLockStore.notePaused()
+        com.openminis.app.ui.screensaver.ScreenSaverController.onPause()
         super.onPause()
+    }
+
+    /** [T-android-screen-saver] Any touch restarts the Screen Saver's idle clock; the event is not consumed. */
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        if (ev.actionMasked == android.view.MotionEvent.ACTION_DOWN) {
+            com.openminis.app.ui.screensaver.ScreenSaverController.userActivity()
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onStop() {
