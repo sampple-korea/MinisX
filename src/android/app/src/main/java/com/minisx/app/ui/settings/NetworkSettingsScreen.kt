@@ -235,7 +235,7 @@ fun NetworkSettingsScreen(
                             is com.minisx.app.network.TailscaleLoginFlow.State.Failed -> stringResource(
                                 if (l.reason == com.minisx.app.network.TailscaleLoginFlow.Reason.NO_BROWSER) R.string.network_login_no_browser
                                 else R.string.network_login_no_page,
-                            )
+                            ) + (NetworkHub.browserLogin.lastFailure?.let { "\n($it)" } ?: "")
                             else -> null
                         },
                         icon = Icons.Outlined.OpenInBrowser,
@@ -247,7 +247,7 @@ fun NetworkSettingsScreen(
                     val url = NetworkHub.browserLogin.lastUrl
                     val noBrowser = (login as? com.minisx.app.network.TailscaleLoginFlow.State.Failed)?.reason ==
                         com.minisx.app.network.TailscaleLoginFlow.Reason.NO_BROWSER
-                    if (noBrowser && url != null) {
+                    if ((noBrowser || login == com.minisx.app.network.TailscaleLoginFlow.State.InBrowser) && url != null) {
                         val clipboard = LocalClipboardManager.current
                         SettingsRow(
                             title = stringResource(R.string.network_copy_login_link),

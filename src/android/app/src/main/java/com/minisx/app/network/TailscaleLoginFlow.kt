@@ -87,6 +87,13 @@ class TailscaleLoginFlow(
     @Volatile var lastUrl: String? = null
         private set
 
+    /**
+     * Why the last attempt produced no sign-in page (tsnet's error or health
+     * line, sign-in links redacted), for the row's subtitle. Null otherwise.
+     */
+    @Volatile var lastFailure: String? = null
+        private set
+
     private var job: Job? = null
     private var leftApp = false
 
@@ -99,6 +106,7 @@ class TailscaleLoginFlow(
         if (_state.value == State.OpeningPage) return // a double tap: already on its way
         job?.cancel()
         leftApp = false
+        lastFailure = null
         _state.value = State.OpeningPage
         AppLogger.info(TAG, "[Net][TS] login: requested, waiting for the sign-in page")
         job = scope.launch {
@@ -137,6 +145,8 @@ class TailscaleLoginFlow(
                 }
                 if (now() - started >= urlTimeoutMs) {
                     AppLogger.warning(TAG, "[Net][TS] login: no sign-in page after ${urlTimeoutMs}ms (state=${st.backendState.ifEmpty { "none" }}${st.error?.let { ", error" } ?: ""})")
+                    lastFailure = (st.error ?: st.health.firstOrNull() ?: st.backendState.takeIf { it.isNotEmpty() })
+                        ?.replace(LOGIN_LINK, "$1<redacted>")?.take(160)
                     _state.value = State.Failed(Reason.NO_SIGN_IN_PAGE)
                     return@launch
                 }
