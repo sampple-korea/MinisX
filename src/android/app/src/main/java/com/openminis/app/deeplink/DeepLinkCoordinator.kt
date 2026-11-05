@@ -84,4 +84,27 @@ object DeepLinkCoordinator {
         _pendingChatAction.value = null
         return current
     }
+
+    /**
+     * [T-android-ask-deeplink] Text for a new chat's input box, from
+     * `minis://action/ask?prompt=…` (Tasker, a home-screen link, another app).
+     *
+     * Deliberately PREFILL ONLY. A deep link can be fired by any app or web
+     * page, and a sent prompt is an agent turn that can use the shell and the
+     * device tools; the user reviews the text and taps Send themselves. (iOS
+     * AskMinisIntent sends because Siri / Shortcuts are the user's own
+     * invocation, a different trust model.)
+     */
+    const val MAX_PREFILL_CHARS = 8_000
+    private val _pendingPrompt = MutableStateFlow<String?>(null)
+
+    fun setPendingPrompt(prompt: String?) {
+        _pendingPrompt.value = prompt?.trim()?.take(MAX_PREFILL_CHARS)?.takeIf { it.isNotEmpty() }
+    }
+
+    fun consumePendingPrompt(): String? {
+        val current = _pendingPrompt.value
+        _pendingPrompt.value = null
+        return current
+    }
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">텍스트, 음성, 카메라로 대화를 시작하고 최근 대화로 바로 돌아갑니다.</string>
+    <string name="widget_new_chat">새 대화</string>
+    <string name="widget_voice">음성</string>
+    <string name="widget_camera">카메라</string>
+    <string name="widget_no_chats">아직 대화가 없습니다</string>
+    <string name="shortcut_recent_untitled">새 대화</string>
+</resources>

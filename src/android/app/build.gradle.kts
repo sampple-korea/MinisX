@@ -513,6 +513,13 @@ dependencies {
     // a newer compileSdk. Pulls androidx.fragment, which FragmentActivity needs.
     implementation("androidx.biometric:biometric:1.1.0")
 
+    // [T-android-widget] Home-screen quick-entry widget (the Android stand-in for the iOS
+    // Live Activity widget). 1.1.1 is the stable line that builds with this
+    // module's AGP 8.7.3; glance-appwidget 1.2.0 asks for AGP 8.6+ and compileSdk
+    // 35 but is a larger jump than a widget needs.
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.glance:glance-material3:1.1.1")
+
     // Testing — JVM unit tests
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")

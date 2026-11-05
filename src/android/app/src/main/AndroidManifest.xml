@@ -305,6 +305,19 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- [T-android-widget] Home-screen quick-entry widget. -->
+        <receiver
+            android:name=".widget.MinisWidgetReceiver"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/minis_widget_info" />
+        </receiver>
+
         <!-- T-android-dynamic-app-icon: launcher-icon aliases. Exactly
              ONE of these three is enabled at any time; AppIconRepository
              flips the enabled state in response to a Settings → App Icon

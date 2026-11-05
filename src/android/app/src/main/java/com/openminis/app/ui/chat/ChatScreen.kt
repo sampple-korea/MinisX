@@ -1186,6 +1186,14 @@ fun ChatScreen(
     // Consumed exactly once so re-entering the chat later does NOT re-trigger.
     // Voice variant lives next to the MicButton because it needs sttAvailable
     // — camera is always available so it can fire from the top-level scope.
+    // [T-android-ask-deeplink] minis://action/ask?prompt=… fills the input box of the
+    // new chat it opened. Consumed once, so re-entering a chat never refills it.
+    LaunchedEffect(sessionId) {
+        if (sessionId.startsWith("__new__")) {
+            com.openminis.app.deeplink.DeepLinkCoordinator.consumePendingPrompt()?.let { viewModel.setInputText(it) }
+        }
+    }
+
     LaunchedEffect(sessionId) {
         val pending = com.openminis.app.deeplink.DeepLinkCoordinator
             .pendingChatAction.value

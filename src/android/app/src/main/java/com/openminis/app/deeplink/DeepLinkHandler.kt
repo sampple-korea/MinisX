@@ -118,6 +118,11 @@ object DeepLinkHandler {
                 "new_chat" -> DeepLinkAction.NewChat
                 "voice_chat" -> DeepLinkAction.NewVoiceChat
                 "camera_chat" -> DeepLinkAction.NewCameraChat
+                // minis://action/ask?prompt=… → new chat with the text in the input box (not sent).
+                "ask" -> {
+                    DeepLinkCoordinator.setPendingPrompt(uri.getQueryParameter("prompt"))
+                    DeepLinkAction.NewChat
+                }
                 else -> DeepLinkAction.Unknown
             }
             "settings" -> parseSettingsPath(uri)

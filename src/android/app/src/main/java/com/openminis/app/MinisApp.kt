@@ -854,6 +854,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         // while it is alive; their alarm (inexact without the exact-alarm
         // permission) stays the fallback.
         com.openminis.app.scheduled.ScheduledInAppTimer.start(this)
+        // [T-android-widget] Latest chats as launcher shortcuts (iOS ListSessions / OpenSession intents).
+        com.openminis.app.shortcuts.RecentSessionShortcuts.start(this, chatRepository)
         // [T-port-sched-wait-notification] The next run the ongoing
         // notification counts down to between fires, with the waiting chat's
         // title (iOS's waiting card shows the conversation title).

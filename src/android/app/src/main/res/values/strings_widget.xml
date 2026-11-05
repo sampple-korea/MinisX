@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- [T-android-widget] Home-screen widget and recent-chat shortcuts. -->
+    <string name="widget_description">Start a chat by text, voice or camera, and jump back into your latest one.</string>
+    <string name="widget_new_chat">New chat</string>
+    <string name="widget_voice">Voice</string>
+    <string name="widget_camera">Camera</string>
+    <string name="widget_no_chats">No chats yet</string>
+    <string name="shortcut_recent_untitled">New Chat</string>
+</resources>
