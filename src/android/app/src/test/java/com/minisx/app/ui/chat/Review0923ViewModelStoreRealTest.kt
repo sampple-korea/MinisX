@@ -164,7 +164,7 @@ class Review0923ViewModelStoreRealTest {
     @Test
     fun `sub agent creation sites still claim the CHILD pool`() {
         val vm = read("src/main/java/com/minisx/app/ui/chat/ChatViewModel.kt")
-        val claims = Regex("""viewModelFor\(\s*context,\s*[\w.]+,\s*com\.openminis\.app\.ui\.chat\.ChatViewModelStore\.PoolKind\.CHILD""")
+        val claims = Regex("""viewModelFor\(\s*context,\s*[\w.]+,\s*com\.minisx\.app\.ui\.chat\.ChatViewModelStore\.PoolKind\.CHILD""")
             .findAll(vm).count()
         assertTrue("createChildViewModel + delegate_task tag CHILD (found $claims)", claims >= 2)
     }

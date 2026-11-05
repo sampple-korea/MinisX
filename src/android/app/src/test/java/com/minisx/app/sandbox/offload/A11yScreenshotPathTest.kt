@@ -99,7 +99,7 @@ class A11yScreenshotPathTest {
         // request id still flows in but through ExecutionCoordinator.
         assertTrue(
             "handle must pass the request's session id into ui",
-            Regex("""uiSub\(\s*args,\s*request\.sessionId\?\.let \{\s*com\.openminis\.app\.sandbox\.ExecutionCoordinator\.mountedSessionIdFor\(it\)""")
+            Regex("""uiSub\(\s*args,\s*request\.sessionId\?\.let \{\s*com\.minisx\.app\.sandbox\.ExecutionCoordinator\.mountedSessionIdFor\(it\)""")
                 .containsMatchIn(handlerCode),
         )
         assertTrue(
