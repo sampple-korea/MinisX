@@ -277,3 +277,80 @@ fun ModelQuotaStatusDot(
             .then(if (lowLabel != null) Modifier.semantics { contentDescription = lowLabel } else Modifier),
     )
 }
+
+
+/**
+ * The windows of the chat's current model to show in the nav bar, shortest first
+ * ("5h 32%", "7d 66%"): what is LEFT of each allowance. At most [max] rows, one per
+ * window length, so several pools of one account do not repeat a window.
+ */
+internal fun headerQuotaRows(
+    pools: List<com.minisx.app.quota.QuotaPool>,
+    now: Long,
+    freshness: com.minisx.app.quota.QuotaFreshnessPolicy,
+    accounts: Int = 1,
+    max: Int = 2,
+): List<com.minisx.app.widget.UsageLimit> =
+    com.minisx.app.widget.UsageWidgetModel.limitsOf(pools, now, freshness, accounts)
+        .groupBy { it.window }
+        .map { (_, rows) -> rows.minBy { it.remainingPercent } }
+        .sortedBy { com.minisx.app.widget.UsageWidgetModel.windowMinutes(it.window) }
+        .take(max)
+
+/**
+ * Quota windows of the entry the chat uses now, or empty when there is no percentage
+ * to show (no credential, a balance-only provider, nothing fetched yet). Keyed by
+ * instance, so switching the chat's model re-targets the watch like the dot does.
+ */
+@Composable
+fun rememberHeaderQuota(
+    isAuthed: Boolean,
+    activeEntryId: kotlinx.coroutines.flow.StateFlow<String?>,
+    providerRepository: com.minisx.app.data.repository.ProviderRepository,
+): List<com.minisx.app.widget.UsageLimit> {
+    val entryId by activeEntryId.collectAsState()
+    val config by providerRepository.config.collectAsState()
+    val entry = entryId?.let { id -> config.modelEntries.find { it.id == id } }
+    val instanceId = entry?.providerInstanceId
+    val modelId = entry?.model?.id
+    QuotaWatch(instanceId, "chatNavBar")
+    val st by QuotaStore.state.collectAsState()
+    if (!isAuthed || instanceId == null || modelId == null) return emptyList()
+    val now = System.currentTimeMillis()
+    val bound = st.modelView(instanceId, modelId, now).bound.mapNotNull { st.pools[it.poolKey] }
+    val pools = bound.ifEmpty { st.instanceSubjects[instanceId]?.let { st.poolsOf(it) }.orEmpty() }
+    val accounts = st.instanceSubjects[instanceId]?.let { st.pooledAccounts[it] } ?: 1
+    return headerQuotaRows(pools, now, QuotaStore.freshnessPolicy, accounts)
+}
+
+/** "5h 32% · 7d 66%", each figure turning amber when it is nearly used up. */
+@Composable
+fun HeaderQuotaText(rows: List<com.minisx.app.widget.UsageLimit>, modifier: Modifier = Modifier) {
+    if (rows.isEmpty()) return
+    val spoken = rows.joinToString(", ") { "${it.window} ${it.remainingPercent.toInt()}%" }
+    val description = LocalContext.current.getString(R.string.quota_header_left, spoken)
+    val text = androidx.compose.ui.text.buildAnnotatedString {
+        rows.forEachIndexed { i, row ->
+            if (i > 0) append("  ")
+            append(row.window)
+            append(" ")
+            pushStyle(
+                androidx.compose.ui.text.SpanStyle(
+                    color = if (com.minisx.app.widget.UsageWidgetModel.isLow(row.remainingPercent)) Color(0xFFFFB020) else Color(0xFF34C759),
+                    fontWeight = FontWeight.SemiBold,
+                ),
+            )
+            append("${row.remainingPercent.toInt()}%")
+            pop()
+        }
+    }
+    Text(
+        text = text,
+        fontSize = 11.sp,
+        lineHeight = 13.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Clip,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.semantics { contentDescription = description },
+    )
+}

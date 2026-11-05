@@ -3121,11 +3121,20 @@ fun ChatScreen(
                                     // [T-quota-low-dot] green / yellow (the current
                                     // model's quota or balance is low) / orange
                                     // (signed out).
-                                    com.minisx.app.ui.quota.ModelQuotaStatusDot(
+                                    // The dot says "signed in / low"; once there are real
+                                    // percentages they say it better, so the dot gives way.
+                                    val headerQuota = com.minisx.app.ui.quota.rememberHeaderQuota(
                                         isAuthed = modelName.isNotEmpty(),
                                         activeEntryId = viewModel.activeEntryId,
                                         providerRepository = providerRepository,
                                     )
+                                    if (headerQuota.isEmpty()) {
+                                        com.minisx.app.ui.quota.ModelQuotaStatusDot(
+                                            isAuthed = modelName.isNotEmpty(),
+                                            activeEntryId = viewModel.activeEntryId,
+                                            providerRepository = providerRepository,
+                                        )
+                                    }
                                     // T-android-topbar-group-name-fallback:
                                     // _selectedGroupName is empty during the
                                     // brief window before loadSession's group
@@ -3231,6 +3240,10 @@ fun ChatScreen(
                                             modifier = Modifier.size(14.dp),
                                         )
                                     }
+                                    com.minisx.app.ui.quota.HeaderQuotaText(
+                                        headerQuota,
+                                        modifier = Modifier.padding(start = 6.dp),
+                                    )
                                 }
                                 // Line 2: "provider · model" (iOS: "MiniMax ·
                                 // MiniMax-M2.7") + the thinking-level badge laid

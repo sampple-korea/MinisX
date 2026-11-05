@@ -1997,6 +1997,7 @@
     <string name="restore_eta_almost_done">거의 끝났어요…</string>
     <string name="restore_eta_seconds">약 %1$d초 남음</string>
     <string name="restore_eta_minutes">약 %1$d분 %2$d초 남음</string>
+    <string name="quota_header_left">남은 쿼타: %1$s</string>
     <string name="overlay_thinking">생각 중…</string>
     <string name="bg_live_thinking">추론 중 · %1$s</string>
     <plurals name="bg_live_agents_running">

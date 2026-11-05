@@ -135,6 +135,7 @@
     <string name="restore_eta_seconds">about %1$d seconds left</string>
     <string name="restore_eta_minutes">about %1$d min %2$d s left</string>
     <string name="overlay_streaming">Generating…</string>
+    <string name="quota_header_left">Quota left: %1$s</string>
     <string name="overlay_thinking">Thinking…</string>
     <string name="bg_live_thinking">Thinking · %1$s</string>
     <plurals name="bg_live_agents_running">
