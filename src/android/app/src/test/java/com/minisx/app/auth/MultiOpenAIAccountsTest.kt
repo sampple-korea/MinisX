@@ -62,4 +62,16 @@ class MultiOpenAIAccountsTest {
         assertTrue(forced.contains("client_id=app_EMoamEEZ73f0CkXaXp7hrann"))
         assertTrue(forced.contains("codex_cli_simplified_flow=true"))
     }
+
+    @Test
+    fun `two people in the same workspace are different accounts, the same e-mail is the same account`() {
+        fun key(account: String?, email: String?) = OpenAIOAuthManager.AccountKey(account, email)
+        val others = mapOf("first" to key("workspace-1", "a@example.com"))
+        assertNull("same workspace, other person", OpenAIOAuthManager.duplicateAccount(key("workspace-1", "b@example.com"), others))
+        assertEquals("first", OpenAIOAuthManager.duplicateAccount(key("workspace-9", "A@Example.com"), others))
+        assertEquals("no e-mail: the account id decides", "first",
+            OpenAIOAuthManager.duplicateAccount(key("workspace-1", null), others))
+        assertNull(OpenAIOAuthManager.duplicateAccount(key(null, null), others))
+    }
 }
+

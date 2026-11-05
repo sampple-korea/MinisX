@@ -13,4 +13,7 @@
     <string name="provider_detail_accounts_add">Add account</string>
     <string name="provider_detail_accounts_remove">Remove</string>
     <string name="provider_detail_accounts_duplicate">That ChatGPT account is already added here. Sign in with a different account.</string>
+    <string name="provider_detail_accounts_cancel">Cancel</string>
+    <string name="provider_detail_accounts_waiting">Waiting for the sign-in in the browser…</string>
+    <string name="provider_detail_accounts_added">Added: %1$s</string>
 </resources>

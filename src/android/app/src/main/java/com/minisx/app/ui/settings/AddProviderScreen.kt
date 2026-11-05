@@ -927,9 +927,11 @@ private fun ColumnScope.OAuthConfigSection(
                                             forceAccountPrompt = others.isNotEmpty(),
                                         )
                                         val signedIn = OpenAIOAuthManager(context, pendingInstanceId)
-                                        val duplicate = OpenAIOAuthManager.duplicateOf(
-                                            signedIn.accountId,
-                                            others.associate { it.id to OpenAIOAuthManager(context, it.id).accountId },
+                                        val duplicate = OpenAIOAuthManager.duplicateAccount(
+                                            OpenAIOAuthManager.AccountKey(signedIn.accountId, signedIn.email),
+                                            others.associate {
+                                                OpenAIOAuthManager(context, it.id).let { m -> it.id to OpenAIOAuthManager.AccountKey(m.accountId, m.email) }
+                                            },
                                         )
                                         if (duplicate != null) {
                                             signedIn.logout()

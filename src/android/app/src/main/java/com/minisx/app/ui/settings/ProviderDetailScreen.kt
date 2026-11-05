@@ -1582,11 +1582,8 @@ private fun ChatGptAccountsSection(
     providerRepository: ProviderRepository,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val scope = rememberCoroutineScope()
-    var adding by remember(instance.id) { mutableStateOf(false) }
-    var addError by remember(instance.id) { mutableStateOf<String?>(null) }
     val accountIds = listOf(instance.id) + instance.poolAccountIds
-    val pool = remember(instance.poolAccountIds, adding) {
+    val pool = remember(instance.poolAccountIds) {
         com.minisx.app.provider.ProviderFactory.codexAccountPool(instance, context)
     }
     val activeId = pool?.active()?.instanceId
@@ -1632,46 +1629,36 @@ private fun ChatGptAccountsSection(
                 }
             }
             Spacer(Modifier.height(8.dp))
+            val signIn by com.minisx.app.auth.ChatGptAccountSignIn.state.collectAsState()
             MinisSmallButton(
-                enabled = !adding && com.minisx.app.auth.OAuthManager.hasStoredCredential(context, instance.id),
+                enabled = signIn.adding || com.minisx.app.auth.OAuthManager.hasStoredCredential(context, instance.id),
                 onClick = {
-                    adding = true
-                    addError = null
-                    scope.launch {
-                        val newId = java.util.UUID.randomUUID().toString()
-                        com.minisx.app.auth.OAuthForegroundGate.begin()
-                        try {
-                            com.minisx.app.auth.OpenAIOAuthManager.login(context, newId, providerRepository, forceAccountPrompt = true)
-                            val signedIn = com.minisx.app.auth.OpenAIOAuthManager(context, newId)
-                            val existing = accountIds.associateWith { com.minisx.app.auth.OpenAIOAuthManager(context, it).accountId }
-                            if (com.minisx.app.auth.OpenAIOAuthManager.duplicateOf(signedIn.accountId, existing) != null) {
-                                signedIn.logout()
-                                providerRepository.deleteApiKey(newId)
-                                addError = context.getString(R.string.provider_detail_accounts_duplicate)
-                            } else {
-                                providerRepository.instance(instance.id)?.let { cur ->
-                                    providerRepository.updateInstance(cur.copy(poolAccountIds = cur.poolAccountIds + newId))
-                                }
-                            }
-                        } catch (e: Exception) {
-                            runCatching { com.minisx.app.auth.OpenAIOAuthManager(context, newId).logout() }
-                            providerRepository.deleteApiKey(newId)
-                            if (e is kotlinx.coroutines.CancellationException) throw e
-                            addError = if (e is com.minisx.app.auth.OAuthNetworkUnreachableException) {
-                                context.getString(R.string.add_provider_oauth_network_unreachable)
-                            } else {
-                                context.getString(R.string.oauth_sign_in_failed, e.message ?: e.javaClass.simpleName)
-                            }
-                        } finally {
-                            adding = false
-                            com.minisx.app.auth.OAuthForegroundGate.end()
-                        }
+                    if (signIn.adding) {
+                        com.minisx.app.auth.ChatGptAccountSignIn.cancel()
+                    } else {
+                        com.minisx.app.auth.ChatGptAccountSignIn.start(context, providerRepository, instance.id)
                     }
                 },
             ) {
-                Text(stringResource(if (adding) R.string.oauth_status_signing_in else R.string.provider_detail_accounts_add))
+                Text(stringResource(if (signIn.adding) R.string.provider_detail_accounts_cancel else R.string.provider_detail_accounts_add))
             }
-            addError?.let {
+            if (signIn.adding) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.provider_detail_accounts_waiting),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            signIn.added?.let {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.provider_detail_accounts_added, it.ifEmpty { stringResource(R.string.provider_detail_accounts_unnamed, accountIds.size) }),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF34C759),
+                )
+            }
+            signIn.error?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             }

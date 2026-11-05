@@ -83,6 +83,22 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
             if (accountId.isNullOrEmpty()) null else others.entries.firstOrNull { it.value == accountId }?.key
 
         /**
+         * The key in [others] that [candidate] is the same sign-in as, or null. The e-mail decides when
+         * both have one: the account id names the workspace, so two people in the same Team workspace
+         * share it and must not be taken for one account. Without e-mails the account id decides.
+         */
+        fun duplicateAccount(candidate: AccountKey, others: Map<String, AccountKey>): String? =
+            others.entries.firstOrNull { (_, other) ->
+                when {
+                    !candidate.email.isNullOrBlank() && !other.email.isNullOrBlank() ->
+                        candidate.email.equals(other.email, ignoreCase = true)
+                    !candidate.accountId.isNullOrEmpty() && !other.accountId.isNullOrEmpty() ->
+                        candidate.accountId == other.accountId
+                    else -> false
+                }
+            }?.key
+
+        /**
          * The authorize URL's extra parameters when other accounts exist: `prompt=login` makes the
          * sign-in page ask for credentials instead of silently reusing the browser's ChatGPT session
          * (which would just add the same account again).
@@ -413,6 +429,9 @@ class OpenAIOAuthManager(context: Context, instanceId: String) : OAuthManager(co
             }
             .build()
     }
+
+    /** What identifies a ChatGPT sign-in: the workspace id from the token and the user's e-mail. */
+    data class AccountKey(val accountId: String?, val email: String?)
 
     internal data class IdTokenClaims(val accountId: String?, val planType: String?, val source: String? = null, val email: String? = null)
 }

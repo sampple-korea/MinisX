@@ -13,4 +13,7 @@
     <string name="provider_detail_accounts_add">계정 추가</string>
     <string name="provider_detail_accounts_remove">삭제</string>
     <string name="provider_detail_accounts_duplicate">이미 추가된 ChatGPT 계정입니다. 다른 계정으로 로그인하세요.</string>
+    <string name="provider_detail_accounts_cancel">취소</string>
+    <string name="provider_detail_accounts_waiting">브라우저에서 로그인하는 중…</string>
+    <string name="provider_detail_accounts_added">추가됨: %1$s</string>
 </resources>
