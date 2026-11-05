@@ -143,6 +143,51 @@ There are two distribution flavors, `github` (the default; self-update on) and
 Release builds are configured with the debug signing config, so no keystore is
 required to produce one locally.
 
+### One command
+
+`scripts/build_android.sh` runs the whole chain — builds proot, downloads the Alpine
+rootfs, builds rclone (each only when missing), then Gradle — and prints the signing
+certificate at the end:
+
+```sh
+./scripts/build_android.sh              # signed release APK
+./scripts/build_android.sh debug        # signed debug APK
+./scripts/build_android.sh release --clean-native   # rebuild proot / rclone too
+```
+
+proot's build needs **gawk** (`sudo apt install gawk`); Ubuntu's default `mawk` has no
+`strtonum` and the build stops in `loader-info.awk`.
+
+### Signing
+
+Every APK — debug, release, perf, local or CI — is signed with the same key,
+`src/android/keystore/minis.jks` (alias `minis`, password `minis-android`). This repository
+is private, so the key is committed on purpose. A new build therefore always installs over
+the previous one. **Never regenerate or replace the key**: an app signed with a different
+key cannot be updated, only uninstalled and reinstalled (which wipes its data).
+
+Certificate SHA-256: `D0:F1:26:E7:52:4D:BA:FE:B6:36:E7:DC:B9:E1:6A:69:7B:0F:F9:10:81:33:D7:9F:01:58:0E:98:C9:19:A7:47`
+
+Version numbers come from `build.gradle.kts` unless you pass `-Pminis.versionCode=N
+-Pminis.versionName=X`; CI does that so each build is newer than the one before.
+
+### GitHub Actions
+
+`.github/workflows/android.yml`:
+
+| Trigger | What happens |
+|---|---|
+| push to `main` | builds the signed release APK, uploads it as the `minis-apk` artifact (90 days), runs the unit tests (non-blocking) |
+| tag `v*` (e.g. `git tag v1.16 && git push --tags`) | the same, and attaches the APK to a GitHub release; `versionName` is the tag |
+| manual run | the same as a push |
+
+The job checks the APK's certificate against the fingerprint above and fails if it differs.
+`versionCode` is `1000 + run number`.
+
+The in-app updater looks for new releases of `sampple-korea/MinisX`. The repository is
+private, so the unauthenticated GitHub API cannot see them: the app simply finds no update
+(and never offers the upstream project's APK). Install new builds from the artifact or release.
+
 ### Tests
 
 Some unit tests use Robolectric, which downloads Android jars from Maven the

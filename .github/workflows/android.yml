@@ -1,0 +1,177 @@
+name: Android
+
+# Builds the signed APK on every push to main, and publishes it as a GitHub release
+# when a tag like v1.16 is pushed. Every build is signed with the same key
+# (src/android/keystore/minis.jks), and the job fails if that ever stops being true.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write # attach the APK to a release
+
+env:
+  # SHA-256 of the signing certificate in src/android/keystore/minis.jks.
+  # If an APK is ever signed with anything else, the build stops here instead of
+  # producing an APK that cannot be installed over the previous one.
+  EXPECTED_CERT_SHA256: d0f126e7524dbafeb636e7dcb9e16a697b0ff9108133d79f01580e98c919a747
+  BUILD_TOOLS: 36.0.0
+  NDK_VERSION: 28.0.12433566
+  CMAKE_VERSION: 3.22.1
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive # deps/proot
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Android SDK, NDK and CMake
+        run: |
+          sdkmanager --install \
+            "platforms;android-36" \
+            "build-tools;${BUILD_TOOLS}" \
+            "ndk;${NDK_VERSION}" \
+            "cmake;${CMAKE_VERSION}"
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: deps/rclone-mobile/go.sum
+
+      # proot's build runs loader-info.awk, which needs gawk's strtonum (the default mawk lacks it).
+      - name: Build tools
+        run: sudo apt-get update && sudo apt-get install -y gawk
+
+      - name: gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          "$(go env GOPATH)/bin/gomobile" init
+
+      - name: Native dependencies (proot, Alpine rootfs, rclone)
+        run: |
+          ./deps/build_proot.sh
+          ./scripts/prepare_android_sandbox.sh
+          ./deps/build_rclone_android.sh
+          mkdir -p src/android/app/libs
+          cp deps/build/rclone/rclone.aar src/android/app/libs/
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Version
+        id: version
+        run: |
+          code=$((1000 + GITHUB_RUN_NUMBER))
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then name="${GITHUB_REF_NAME#v}"; else name="1.15-build.${GITHUB_RUN_NUMBER}"; fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "versionCode=$code versionName=$name"
+
+      - name: Build the release APK
+        working-directory: src/android
+        run: |
+          ./gradlew --no-daemon :app:assembleGithubRelease \
+            -Pminis.versionCode=${{ steps.version.outputs.code }} \
+            -Pminis.versionName=${{ steps.version.outputs.name }}
+
+      - name: Check the signature
+        run: |
+          apk=$(ls src/android/app/build/outputs/apk/github/release/*.apk | head -1)
+          out="$ANDROID_HOME/build-tools/${BUILD_TOOLS}/apksigner"
+          "$out" verify --print-certs "$apk" | tee /tmp/certs.txt
+          actual=$(grep -m1 'certificate SHA-256 digest' /tmp/certs.txt | awk '{print $NF}')
+          if [ "$actual" != "$EXPECTED_CERT_SHA256" ]; then
+            echo "::error::APK is signed with $actual, expected $EXPECTED_CERT_SHA256"
+            exit 1
+          fi
+          cp "$apk" "minis-${{ steps.version.outputs.name }}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: minis-apk
+          path: minis-${{ steps.version.outputs.name }}.apk
+          retention-days: 90
+
+      - name: Native debug symbols
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-debug-symbols
+          path: src/android/app/build/outputs/native-debug-symbols/**
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: minis-${{ steps.version.outputs.name }}.apk
+          generate_release_notes: true
+
+  # Unit tests of the packages that pass without a device or a configured Claude sign-in.
+  # Not blocking: the suite also holds tests that need network access or local settings files.
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager --install "platforms;android-36" "build-tools;${BUILD_TOOLS}" "cmake;${CMAKE_VERSION}"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: deps/rclone-mobile/go.sum
+      - run: |
+          sudo apt-get update && sudo apt-get install -y gawk
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: rclone.aar (the app compiles against it)
+        run: |
+          sdkmanager --install "ndk;${NDK_VERSION}"
+          export ANDROID_NDK_HOME="${ANDROID_HOME}/ndk/${NDK_VERSION}"
+          "$(go env GOPATH)/bin/gomobile" init
+          ./deps/build_rclone_android.sh
+          mkdir -p src/android/app/libs && cp deps/build/rclone/rclone.aar src/android/app/libs/
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit tests
+        working-directory: src/android
+        run: |
+          ./gradlew --no-daemon :app:testGithubDebugUnitTest \
+            --tests "com.openminis.app.config.*" --tests "com.openminis.app.backup.*" \
+            --tests "com.openminis.app.agent.*" --tests "com.openminis.app.network.*" \
+            --tests "com.openminis.app.offload.*" --tests "com.openminis.app.sandbox.offload.*" \
+            --tests "com.openminis.app.ui.settings.*" --tests "com.openminis.app.ui.chat.*" \
+            --tests "com.openminis.app.quota.*" --tests "com.openminis.app.widget.*" \
+            --tests "com.openminis.app.live.*"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: src/android/app/build/reports/tests/**
+          if-no-files-found: ignore
+          retention-days: 14

@@ -36,8 +36,10 @@ android {
         applicationId = "com.openminis.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 37
-        versionName = "1.15"
+        // CI passes -Pminis.versionCode / -Pminis.versionName so every build is newer
+        // than the last one and can be installed over it; local builds keep these.
+        versionCode = (project.findProperty("minis.versionCode") as String?)?.toIntOrNull() ?: 37
+        versionName = (project.findProperty("minis.versionName") as String?) ?: "1.15"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -63,7 +65,7 @@ android {
         // prerelease flag and cut a tag at its first '-') see them as version
         // 0 and never offer them. UPDATE_CHANNEL is the channel a fresh
         // install starts on; the user can switch to beta in About.
-        buildConfigField("String", "RELEASE_REPO", "\"OpenMinis/OpenMinis\"")
+        buildConfigField("String", "RELEASE_REPO", "\"sampple-korea/MinisX\"")
         buildConfigField("String", "UPDATE_CHANNEL", "\"stable\"")
 
         ndk {
@@ -85,9 +87,24 @@ android {
         }
     }
 
+    // One fixed signing key for every build of every type, on every machine and in CI,
+    // so a new build always installs over the previous one. This is a private repository,
+    // so the key is committed (src/android/keystore/minis.jks) with fixed passwords; the
+    // MINIS_* environment variables replace them if the key is ever moved out of the repo.
+    // Never regenerate the key: a different key cannot update an installed app.
+    signingConfigs {
+        create("minis") {
+            storeFile = file(System.getenv("MINIS_KEYSTORE") ?: "${rootProject.projectDir}/keystore/minis.jks")
+            storePassword = System.getenv("MINIS_KEYSTORE_PASSWORD") ?: "minis-android"
+            keyAlias = System.getenv("MINIS_KEY_ALIAS") ?: "minis"
+            keyPassword = System.getenv("MINIS_KEY_PASSWORD") ?: "minis-android"
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             buildConfigField("boolean", "DEV_TOOLS", "true")
+            signingConfig = signingConfigs.getByName("minis")
         }
         // `perf`: the debug variant minus android:debuggable. ART refuses to
         // AOT-compile a debuggable app (`cmd package compile -m speed`
@@ -104,7 +121,7 @@ android {
             isProfileable = true
             matchingFallbacks += listOf("debug")
             buildConfigField("boolean", "DEV_TOOLS", "true")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("minis")
         }
         release {
             // [OpenMinis#363] Produce native-debug-symbols.zip alongside the
@@ -126,7 +143,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("minis")
         }
     }
 
