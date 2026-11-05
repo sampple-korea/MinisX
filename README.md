@@ -1,179 +1,129 @@
-# OpenMinis
+# MinisX
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84.svg)](#building-from-source)
+**내 폰 안에서 돌아가는 개인용 AI 에이전트 (Android 전용).**
 
-**Your private, on-device AI agent.**
+OpenMinis를 바탕으로 Android만 남겨 개인용으로 확장하는 저장소입니다. Claude, GPT, Gemini 같은
+모델에게 기기 안의 리눅스 셸, 브라우저 자동화, 스킬, 영구 메모리, 그리고 기기 기능(건강, 블루투스, NFC,
+카메라 이미지 분석 등)을 도구로 쥐여 주는 앱입니다.
 
-OpenMinis brings leading models — Claude, GPT, Gemini and more — into a native
-mobile experience, and gives them a real computer to work with: a full Linux
-shell running on your device, browser automation, extensible skills, persistent
-memory, and deep system integration.
-
-It is free, and fully open source.
-
-**We believe that in the age of AI, technical design and code are no longer
-where a product's advantage lies. The best agent emerges from a tight feedback
-loop with the people who use it — their expectations and their reports are
-what converge on the product.**
-
-Official website: **[openminis.app](https://openminis.app)**
-
-<a href="https://github.com/OpenMinis/OpenMinis/releases">
-  <img alt="Get the APK on GitHub" height="48" src="assets/badge-android.svg" />
-</a>
-
-> **This repository is the Android-only line of OpenMinis.** The iOS app and its
-> native dependencies (iSH, FFmpeg, LAME) were removed; the last commit that
-> contains them is `1a71df0`.
+> iOS 앱과 iOS 전용 네이티브 의존성(iSH, FFmpeg, LAME)은 제거했습니다. iOS 코드가 마지막으로 들어 있는
+> 커밋은 `1a71df0`이고, `git show 1a71df0:src/ios/...` 로 볼 수 있습니다.
 
 ---
 
-## What it does
+## 주요 기능
 
 | | |
 |---|---|
-| **Bring your own model** | Claude, GPT, Gemini and other providers, via your own API keys or account sign-in. |
-| **A real Linux shell** | A sandboxed Alpine Linux environment runs on-device — the agent can install packages, run scripts, and work with real files. |
-| **Device integration** | Calendar, Contacts, Health Connect, Bluetooth LE, NFC, Location, Clipboard, Photos, Media sessions, Alarms, Notifications, on-device Vision/NLP and more, exposed to the agent as `android-*` shell tools. |
-| **Browser automation** | The agent can browse and interact with the web on your behalf. |
-| **Skills & memory** | Extensible skills plus persistent memory across sessions. |
-| **Workspaces** | Organise work into separate contexts, addressable via `minis://workspace/`. |
-| **Native offloads** | Heavy or platform-specific work is handed to native code instead of the sandbox. |
-| **Privacy** | Biometric app lock and per-chat locks; a Screen Saver for long agent runs. |
+| **원하는 모델 사용** | Claude, GPT, Gemini 등을 내 API 키 또는 계정 로그인으로 사용합니다. |
+| **진짜 리눅스 셸** | 기기 안의 샌드박스 Alpine Linux(PRoot)에서 패키지 설치, 스크립트 실행, 파일 작업을 합니다. |
+| **기기 연동 도구** | 에이전트가 셸에서 `android-*` 명령으로 기기 기능을 씁니다. (아래 표) |
+| **브라우저 자동화** | 에이전트가 웹을 직접 탐색하고 조작합니다. |
+| **스킬 · 메모리** | `SKILL.md` 기반 스킬과 세션을 넘나드는 메모리를 지원합니다. Claude/Codex용 스킬도 대부분 그대로 동작합니다. |
+| **작업 공간** | 작업을 컨텍스트별로 나누고 `minis://workspace/` 로 접근합니다. |
+| **백업** | rclone 기반으로 SMB / WebDAV / SFTP / S3 / FTP 에 백업하고 복원합니다. |
+| **네트워크** | 프록시와 Tailscale 설정을 앱 전체 통신에 적용합니다. |
+| **개인정보 보호** | 생체 인증으로 앱과 개별 대화를 잠그고, 긴 작업 중에는 화면 보호기를 씁니다. |
 
 ---
 
-## What you can do with Minis
+## 에이전트 기기 도구 (`android-*`)
 
-A few things people actually use it for:
+셸의 `/usr/local/bin/android-*` 명령입니다. 출력은 JSON이고 `--compact`, `-q` 옵션을 지원하며, 설정 →
+권한에서 도구별로 허용 수준을 정합니다. 옵션은 `<도구> --help` 로 확인합니다.
 
-- **Photograph a meal, log the nutrition** — Minis identifies the dishes, estimates
-  calories and macros, and writes them to Health Connect.
-- **Turn group chatter into tasks** — pull messages from a Telegram group, extract
-  bugs and action items, deduplicate them, and put them on your calendar.
-- **Mount your Obsidian vault** — research, clean up and write Markdown notes back
-  into the vault as a normal workspace.
-- **Read a document from a photo** — `android-vision ocr` pulls the text out on
-  the device, then the model summarises it.
-- **Share anything into a calendar event** — send a page or message to Minis via the
-  Android share sheet and it creates the event, time and place included.
+| 도구 | 기능 |
+|---|---|
+| `android-alarm` · `android-calendar` · `android-contacts` | 알람/타이머, 캘린더 일정, 연락처 |
+| `android-clipboard` · `android-notification` · `android-open` | 클립보드, 알림 보내기/읽기, URL·인텐트 열기 |
+| `android-device` · `android-location` · `android-weather` | 기기·배터리·저장공간, 위치와 지오코딩, 날씨 예보 |
+| `android-photos` · `android-player` · `android-speak` · `android-speech` | 사진 라이브러리, 오디오 재생, TTS, 음성 인식 |
+| `android-health` | **Health Connect.** 걸음 수, 심박, 수면, 운동, 체중, SpO₂, 혈당, HRV(RMSSD), 영양, 기초대사, 케이던스, 고도, 일일 요약을 읽고, 이 앱이 쓴 기록은 `log` / `delete` 합니다. |
+| `android-bluetooth` | **BLE.** 스캔, 연결, 서비스 조회, 읽기/쓰기, 알림 구독. 연결은 명령 사이에 유지되고 5분 유휴 시 끊습니다. |
+| `android-nfc` | **NFC.** NDEF 읽기/쓰기, 원시 태그 읽기/쓰기, ISO 7816 APDU, FeliCa. 앱이 화면에 떠 있어야 합니다. |
+| `android-vision` | **온디바이스 이미지 분석.** OCR(라틴·중국어·일본어·한국어), 바코드, 라벨, 객체, 얼굴, 유사도, 스크롤 캡처 겹침 계산 |
+| `android-nlp` | **온디바이스 텍스트.** 언어 감지, 토큰 분리, 개체 추출(날짜·주소·이메일·전화·URL·금액·항공편·운송장 번호) |
+| `android-maps` | OpenStreetMap / OSRM 기반 장소 검색, 경로, 소요 시간 (자동차·도보·자전거) |
+| `android-media` | 재생 중인 미디어 세션 제어, 볼륨, 기본 음악 앱으로 검색 전달 |
+| `android-a11y-cli` · `android-shizuku-cli` | 접근성 서비스로 화면 조작, Shizuku로 시스템 권한 호출 (기본은 꺼짐) |
 
-**→ [OpenMinis/AwesomeMinis](https://github.com/OpenMinis/AwesomeMinis)** — a curated,
-community-contributed collection of use cases and workflows across health,
-productivity, research, finance and developer tooling.
+참고할 점은 다음과 같습니다.
 
----
-
-## Skills
-
-A **skill** is a folder with a `SKILL.md` file — instructions, and optionally scripts,
-references and assets — that the agent loads on demand when a request matches it.
-Metadata stays in context for triggering; the body and bundled resources load only
-when the skill is actually used.
-
-Minis has its own tool system, but it does not require skills written specifically
-for it: **skills built for Claude, Codex, OpenClaw or Hermes Agent generally run in
-Minis as-is.** Skills that have been adapted to Minis' tools simply run better —
-they can reach the Linux shell, device integrations and native offloads directly.
-
-**→ [OpenMinis/MinisSkills](https://github.com/OpenMinis/MinisSkills)** — skills
-adapted for Minis alongside ones built for it from scratch, covering TTS, search,
-media downloads, health analysis, cloud APIs and more.
+- Health Connect는 Android 14 이상에 내장돼 있고, 그 미만에서는 Health Connect 앱을 설치해야 합니다.
+- `android-maps` 는 질의와 좌표를 OpenStreetMap 서비스로 보냅니다. OCR·비전 모델은 앱에 들어 있어 오프라인으로
+  동작하고, `android-nlp ner` 만 처음 한 번 작은 언어 모델을 내려받습니다.
+- iOS에는 있지만 Android에서는 대응이 없어 "지원 안 함"으로 답하는 기능: 감성 분석, 품사 태깅, 임베딩
+  (`android-nlp`), 대중교통 경로(`android-maps`), HomeKit, Apple 미리 알림, Health Connect에 없는 기록
+  (ECG, 청력 검사, 시력 처방, 정신건강 설문, 감정 기록).
+- NFC `read-emv`(결제 카드 정보 읽기)는 옮기지 않았습니다. 범용 `apdu` 명령으로 같은 일을 할 수 있습니다.
 
 ---
 
-## Releases
+## 보안과 일상 사용
 
-The [releases page](https://github.com/OpenMinis/OpenMinis/releases) carries the
-upstream APKs. To run this fork, build it yourself (below).
+- **생체 인증 잠금** (설정 → 생체 인증 잠금): 앱 전체를 잠그거나, 세션 목록에서 대화를 길게 눌러 개별 대화를
+  잠글 수 있습니다. 잠긴 대화는 풀기 전까지 제목과 미리보기가 가려지고, 앱 잠금이 켜져 있으면 최근 앱 화면에도
+  내용이 보이지 않습니다. 다시 잠그는 시점은 30초 ~ 1시간, 안 함, 나갈 때 중에서 고릅니다.
+- **화면 보호기** (설정 → 화면): "화면 켜짐 유지"가 켜져 있고 작업이 도는 동안, 30초 ~ 5분 터치가 없으면 화면이
+  검게 바뀌고 현재 단계만 표시됩니다. 터치하면 돌아옵니다.
+- **홈 화면 위젯 · 바로가기**: 새 대화 / 음성 / 카메라 버튼과 최근 대화를 보여 주는 위젯이 있고, 최근 대화 3개는
+  런처 바로가기로도 나옵니다. (잠긴 대화는 제외)
+- **`minis://action/ask?prompt=…`**: 새 대화를 열고 입력창에 문장만 채웁니다. 링크는 어떤 앱이나 웹페이지도 열 수
+  있으므로 자동으로 전송하지 않고, 직접 확인한 뒤 보내기를 누르게 했습니다.
 
 ---
 
-## Building from source
+## 활용 예시
 
-Minis ships a Linux sandbox inside the app, so the native dependencies (PRoot,
-rclone) and the Alpine rootfs are **built from source** rather than committed as
-binaries.
+- **식사 사진 → 영양 기록**: 사진 속 음식을 인식해 칼로리와 영양소를 추정하고 Health Connect에 기록합니다.
+- **단톡방 → 할 일**: 텔레그램 대화에서 버그와 할 일을 뽑아 중복을 정리하고 캘린더에 넣습니다.
+- **옵시디언 볼트**: 볼트를 작업 공간으로 마운트해 조사하고 정리한 마크다운을 다시 써 넣습니다.
+- **사진 속 문서 읽기**: `android-vision ocr` 로 기기 안에서 글자를 뽑고 모델이 요약합니다.
+- **공유 → 일정**: 공유 시트로 페이지나 메시지를 보내면 시간과 장소까지 넣은 일정을 만듭니다.
 
-**→ See [BUILDING.md](BUILDING.md) for the full first-build guide.**
+---
 
-The short version:
+## 스킬
+
+**스킬**은 `SKILL.md` 가 있는 폴더입니다. 지침과 선택적으로 스크립트, 참고 자료, 에셋을 담고, 요청이 맞을 때만
+에이전트가 불러옵니다. 메타데이터만 컨텍스트에 상주하고 본문은 쓸 때 로드됩니다. Claude, Codex, OpenClaw,
+Hermes Agent용 스킬은 대체로 그대로 동작하고, Minis 도구에 맞춘 스킬은 리눅스 셸과 기기 도구를 직접 쓸 수 있어
+더 잘 동작합니다.
+
+---
+
+## 소스에서 빌드하기
+
+앱 안에 리눅스 샌드박스가 들어 있어서, 네이티브 의존성(PRoot, rclone)과 Alpine 루트 파일시스템은 바이너리를
+커밋하지 않고 **소스에서 빌드**합니다. 전체 절차와 문제 해결은 **[BUILDING.md](BUILDING.md)** 에 있습니다.
 
 ```sh
 git clone --recurse-submodules https://github.com/sampple-korea/MinisX.git
 cd MinisX
 
-# needs NDK r28+, Go 1.25+ and gomobile
+# NDK r28+, Go 1.25+, gomobile 필요
 ./deps/build_proot.sh && ./scripts/prepare_android_sandbox.sh
 ./deps/build_rclone_android.sh
 mkdir -p src/android/app/libs && cp deps/build/rclone/rclone.aar src/android/app/libs/
-cd src/android && ./gradlew :app:assembleGithubDebug
+
+cd src/android
+./gradlew :app:assembleGithubDebug     # → app/build/outputs/apk/github/debug/
 ```
 
-`BUILDING.md` covers the toolchain requirements, the build-time
-customization templates, and a troubleshooting section for the failure modes
-you are most likely to hit.
+- 빌드 변형(flavor)은 `github`(기본)과 `store` 두 가지입니다.
+- 빠른 컴파일 확인은 `./gradlew :app:compileGithubDebugKotlin` 입니다.
+- 단위 테스트는 `./gradlew :app:testGithubDebugUnitTest --tests "com.openminis.app.config.*"` 처럼 패키지 단위로
+  돌리는 것을 권장합니다. 일부 테스트는 Robolectric이 인터넷에서 Android jar를 받아야 하거나 별도 설정 파일
+  (`provider-customization.properties`)이 필요해서, 그런 환경이 없으면 원래부터 실패합니다.
 
 ---
 
-## Repository layout
+## 저장소 구조
 
 ```
-src/android/      Android app (Kotlin / Compose) + JNI native code
-src/shared/       Test vectors and rule tables shared with the Android build
-deps/             Native dependency build scripts and vendored sources
-docs/specs/       Architecture and interface specifications
-scripts/          Rootfs preparation and developer tooling
+src/android/      Android 앱 (Kotlin / Compose) + JNI 네이티브 코드
+src/shared/       Android 빌드와 단위 테스트가 쓰는 규칙 표·테스트 벡터
+deps/             네이티브 의존성 빌드 스크립트와 소스 (PRoot, rclone-mobile 등)
+docs/specs/       아키텍처·인터페이스 명세
+scripts/          루트 파일시스템 준비, 개발 도구
 ```
-
----
-
-## Acknowledgements
-
-OpenMinis stands on a great deal of open-source work. Our thanks to the
-maintainers of these projects — the full inventory, with versions and license
-terms, is in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
-
-**The sandbox** — the heart of the product:
-
-- **[PRoot](https://github.com/termux/proot)** (GPLv2) — user-space chroot for the
-  Android sandbox, via [our fork](https://github.com/OpenMinis/proot);
-  **[talloc](https://talloc.samba.org)** (LGPLv3+) underpins it.
-- **[Alpine Linux](https://alpinelinux.org)** — the minirootfs the sandbox boots.
-
-**Text** — [cppjieba](https://github.com/yanyiwu/cppjieba) (MIT),
-[KaTeX](https://katex.org) (MIT).
-
-**Android** — [AndroidX & Jetpack Compose](https://developer.android.com/jetpack),
-[OkHttp](https://square.github.io/okhttp/), [Coil](https://coil-kt.github.io/coil/),
-[kotlinx](https://github.com/Kotlin) serialization & coroutines,
-[multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer),
-[Reorderable](https://github.com/Calvin-LL/Reorderable), [ACRA](https://github.com/ACRA/acra)
-(all Apache-2.0), [Shizuku](https://github.com/RikkaApps/Shizuku-API) (MIT),
-and Google's [Health Connect](https://developer.android.com/health-and-fitness/guides/health-connect),
-Biometric, Glance and [ML Kit](https://developers.google.com/ml-kit) libraries.
-
----
-
-## License
-
-OpenMinis is licensed under the **[GNU General Public License v3.0](LICENSE)**.
-
-The app bundles a GPL-licensed component — [PRoot](https://github.com/OpenMinis/proot)
-(GPLv2) — so the combined work is distributed under GPLv3. Bundled third-party licenses are listed in
-[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
-
----
-
-## Community
-
-- **Telegram**: [Join the group](https://t.me/+2NzhOJuzRyI1YmM1)
-- **Issues**: Bug reports, feature requests and discussion via
-  [GitHub Issues](https://github.com/OpenMinis/OpenMinis/issues)
-
-This repository is a mirror of a private development tree, so it **does not
-accept pull requests** — there is nowhere for them to land. Issues are the way
-to shape the product, and [AwesomeMinis](https://github.com/OpenMinis/AwesomeMinis)
-and [MinisSkills](https://github.com/OpenMinis/MinisSkills) both do take
-contributions. See [CONTRIBUTING.md](CONTRIBUTING.md).
