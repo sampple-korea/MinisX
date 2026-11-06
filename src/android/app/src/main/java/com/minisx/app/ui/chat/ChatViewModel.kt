@@ -9594,9 +9594,48 @@ class ChatViewModel(
         }
     }
 
+    /**
+     * A plain phone command ("손전등 켜줘") runs at once and is answered without the model. Only for a
+     * message sent by the user while nothing is running and nothing is attached; anything the
+     * parser does not fully understand, and any failure, goes to the model as it always did.
+     * The exchange is stored like any other, so the model knows later what was done.
+     */
+    private fun tryFastPath(text: String): Boolean {
+        if (!com.minisx.app.assistant.AssistantSettings.fastPath) return false
+        if (_isStreaming.value || _attachments.value.isNotEmpty() || _isCompacting.value) return false
+        val cmd = com.minisx.app.assistant.FastCommands.parse(text) ?: return false
+        _inputText.value = ""
+        viewModelScope.launch {
+            val outcome = withContext(Dispatchers.IO) {
+                runCatching { com.minisx.app.assistant.FastPathRunner.run(context, cmd, activeSessionId) }
+                    .getOrDefault(com.minisx.app.assistant.FastCommands.Outcome.Fallback)
+            }
+            val reply = when (outcome) {
+                is com.minisx.app.assistant.FastCommands.Outcome.Done -> outcome.text
+                is com.minisx.app.assistant.FastCommands.Outcome.NeedsUser -> outcome.text
+                com.minisx.app.assistant.FastCommands.Outcome.Fallback -> null
+            }
+            if (reply == null) {
+                // Not done here: the model takes the message, as if the fast path did not exist.
+                attachAssistantContext()
+                sendMessage(text, skipContextCheck = false, headless = false)
+                return@launch
+            }
+            val sid = ensureSession()
+            val now = System.currentTimeMillis()
+            chatRepository.appendMessage(sid, "user", """[{"type":"text","value":${escapeJson(text.trim())}}]""")
+            chatRepository.appendMessage(sid, "assistant", """[{"type":"text","value":${escapeJson(reply)}}]""")
+            _messages.value = _messages.value +
+                ChatMessage(id = "fast_u_$now", role = "user", content = text.trim()) +
+                ChatMessage(id = "fast_a_$now", role = "assistant", content = reply)
+        }
+        return true
+    }
+
     fun sendMessage(text: String) {
         // [T-android-stop-sibling-subagent] New work in this session lifts the
         // stop: delegations from here on may drive the turn again.
+        if (tryFastPath(text)) return
         attachAssistantContext()
         com.minisx.app.agent.jobs.AgentJobRegistry.clearDelegationMute(activeSessionId)
         sendMessage(text, skipContextCheck = false, headless = false)
