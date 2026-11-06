@@ -31,7 +31,12 @@ class RootOffloadHandler : NativeOffloadHandler {
         val parsed = parseExec(argv.drop(1)) ?: return NativeOffloadResult(2, "android-root-cli exec: a command is required\n$HELP")
         val sessionId = request.sessionId ?: OffloadPermissionManager.OFFLOAD_GLOBAL_SESSION_ID
         val allowed = runBlocking {
-            OffloadPermissionManager.checkPermission("root_cli", "android-root-cli", sessionId, detail = parsed.command)
+            OffloadPermissionManager.checkPermission(
+                "root_cli", "android-root-cli", sessionId,
+                detail = parsed.command,
+                explanation = parsed.reason,
+                risks = com.minisx.app.offload.RootCommandRisk.assess(parsed.command),
+            )
         }
         if (!allowed) {
             AppLogger.info(TAG, "root command refused: ${parsed.command.take(200)}")
@@ -62,18 +67,28 @@ class RootOffloadHandler : NativeOffloadHandler {
 
     private fun ok(text: String) = NativeOffloadResult(0, text)
 
-    class Exec(val command: String, val timeoutSec: Int)
+    class Exec(val command: String, val timeoutSec: Int, val reason: String? = null)
 
     companion object {
         private const val TAG = "RootOffloadHandler"
 
-        /** `[--timeout SECONDS] <command...>`; a command given as several words is joined with spaces. */
+        /**
+         * `[--reason TEXT] [--timeout SECONDS] <command...>`; a command given as several words is joined with spaces.
+         * `--reason` is the agent's explanation for the person approving the command.
+         */
         fun parseExec(args: List<String>): Exec? {
             var timeout = RootShell.DEFAULT_TIMEOUT_SEC
+            var reason: String? = null
             var i = 0
             while (i < args.size) {
                 val a = args[i]
-                if (a == "--timeout" || a == "-t") {
+                if (a == "--reason" || a == "-r") {
+                    reason = args.getOrNull(i + 1)?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+                    i += 2
+                } else if (a.startsWith("--reason=")) {
+                    reason = a.removePrefix("--reason=").trim().takeIf { it.isNotEmpty() } ?: return null
+                    i += 1
+                } else if (a == "--timeout" || a == "-t") {
                     timeout = args.getOrNull(i + 1)?.toIntOrNull()?.coerceIn(1, RootShell.MAX_TIMEOUT_SEC) ?: return null
                     i += 2
                 } else if (a.startsWith("--timeout=")) {
@@ -87,15 +102,17 @@ class RootOffloadHandler : NativeOffloadHandler {
                 }
             }
             val command = args.drop(i).joinToString(" ").trim()
-            return if (command.isEmpty()) null else Exec(command, timeout)
+            return if (command.isEmpty()) null else Exec(command, timeout, reason)
         }
 
         const val HELP = """android-root-cli - run commands as root through su (KernelSU, Magisk)
 
-  android-root-cli exec [--timeout SECONDS] <command...>   run a command as root (default timeout 60 s, at most 3600)
+  android-root-cli exec --reason "<explanation for the approver>" [--timeout SECONDS] <command...>
+                                                            run a command as root (default timeout 60 s, at most 3600)
   android-root-cli status                                   is su there, and what is the agent policy
 
-Every exec asks the user first and shows the command. Output is stdout and stderr together; the exit
+Every exec asks the user first, command by command, and shows the command, your --reason and any risks the app found.
+Always give --reason: one or two sentences, in the user's language (Korean for a Korean user), saying what the command does and what it changes. Output is stdout and stderr together; the exit
 code is the command's.
 """
     }

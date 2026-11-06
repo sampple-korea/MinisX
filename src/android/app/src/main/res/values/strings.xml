@@ -878,6 +878,27 @@
          the system-layer authorization status with an inline action
          row when system Settings need attention. -->
     <string name="perm_tool_a11y_cli">android-a11y-cli</string>
+    <string name="root_approval_title">Root command approval</string>
+    <string name="root_approval_command_label">Command</string>
+    <string name="root_approval_explanation_label">What the agent says it does</string>
+    <string name="root_approval_no_explanation">The agent gave no explanation. Read the command before you allow it.</string>
+    <string name="root_approval_risk_label">Heads up (found by the app)</string>
+    <string name="root_approval_footer">This runs as root and can change or delete anything on the phone. The explanation comes from the agent and may be wrong: check the command itself. Each command is asked about separately.</string>
+    <string name="root_approval_allow_once">Allow this command once</string>
+    <string name="root_approval_allow_same">Allow this same command in this chat</string>
+    <string name="root_approval_deny">Deny</string>
+    <string name="root_risk_wipes_data">May wipe data or a whole partition and cannot be undone.</string>
+    <string name="root_risk_deletes_files">Deletes files.</string>
+    <string name="root_risk_reboot">Restarts or shuts down the phone.</string>
+    <string name="root_risk_downloads_and_runs">Downloads something from the internet and runs it straight away.</string>
+    <string name="root_risk_remounts_system">Remounts a system partition (can make it writable).</string>
+    <string name="root_risk_edits_security">Changes security policy (SELinux, system properties).</string>
+    <string name="root_risk_recursive_permissions">Changes permissions or owners of a whole folder tree.</string>
+    <string name="root_risk_removes_apps">Removes, disables or clears an app.</string>
+    <string name="root_risk_changes_settings">Changes system settings.</string>
+    <string name="root_risk_stops_processes">Stops running apps or processes.</string>
+    <string name="root_risk_writes_system_files">Writes to system or configuration files.</string>
+    <string name="root_risk_changes_network">Changes network rules or interfaces.</string>
     <string name="perm_tool_root_cli">android-root-cli</string>
     <string name="perm_section_root">Root (su)</string>
     <string name="perm_root_description">Runs commands as root straight through su. KernelSU or Magisk only has to have granted MinisX root.</string>

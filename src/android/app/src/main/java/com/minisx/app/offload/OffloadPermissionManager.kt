@@ -32,6 +32,10 @@ object OffloadPermissionManager {
         val sessionId: String,
         /** The exact thing being approved (a root command). Set: the prompt leads with "Allow once". */
         val detail: String? = null,
+        /** The agent's own explanation of [detail], for the approver (it may be wrong: the app labels it as the agent's). */
+        val explanation: String? = null,
+        /** What the app itself found risky in [detail]. */
+        val risks: List<RootCommandRisk.Risk> = emptyList(),
     )
 
     enum class PermissionCategory(val displayName: String) {
@@ -452,8 +456,18 @@ object OffloadPermissionManager {
      * For ASK_ONCE, suspends until user responds via the dialog.
      * Returns true if allowed.
      */
-    suspend fun checkPermission(toolName: String, toolTitle: String, sessionId: String, detail: String? = null): Boolean {
+    suspend fun checkPermission(
+        toolName: String,
+        toolTitle: String,
+        sessionId: String,
+        detail: String? = null,
+        explanation: String? = null,
+        risks: List<RootCommandRisk.Risk> = emptyList(),
+    ): Boolean {
         val level = getLevel(toolName)
+        // A request with a [detail] (a root command) is approved command by command: a grant or a denial
+        // is for that exact command only, never for the whole tool.
+        val key = if (detail == null) toolName else "$toolName#${detail.trim().hashCode()}:${detail.trim().length}"
         return when (level) {
             PermissionLevel.BYPASS -> true
             PermissionLevel.NOT_ALLOWED -> false
@@ -462,10 +476,10 @@ object OffloadPermissionManager {
                 // before any grants check or dialog so the agent can't
                 // spam the user.
                 val denials = sessionDenials.getOrPut(sessionId) { mutableSetOf() }
-                if (toolName in denials) return false
+                if (key in denials) return false
 
                 val grants = sessionGrants.getOrPut(sessionId) { mutableSetOf() }
-                if (toolName in grants) return true
+                if (key in grants) return true
 
                 // Show dialog and wait for response.
                 val info = toolRegistry.find { it.toolName == toolName }
@@ -477,8 +491,8 @@ object OffloadPermissionManager {
                 // call for the same tool sees it instead of showing a second dialog.
                 try {
                     // A dialog answered while this call queued may already have decided for it.
-                    if (toolName in denials) return false
-                    if (toolName in grants) return true
+                    if (key in denials) return false
+                    if (key in grants) return true
                     val response = withTimeoutOrNull(DECISION_TIMEOUT_MS) {
                         suspendCancellableCoroutine<Response> { cont ->
                             pendingContinuation = cont
@@ -488,6 +502,8 @@ object OffloadPermissionManager {
                                 description = detail ?: "Allow ${info?.displayName ?: toolName} access?",
                                 sessionId = sessionId,
                                 detail = detail,
+                                explanation = explanation,
+                                risks = risks,
                             )
                             cont.invokeOnCancellation {
                                 _pendingRequest.value = null
@@ -501,12 +517,12 @@ object OffloadPermissionManager {
                             false
                         }
                         Response.ALLOW_SESSION -> {
-                            grants.add(toolName)
+                            grants.add(key)
                             true
                         }
                         Response.ALLOW_ONCE -> true  // no caching; next call re-prompts
                         Response.DENY_SESSION -> {
-                            denials.add(toolName)
+                            denials.add(key)
                             false
                         }
                     }
