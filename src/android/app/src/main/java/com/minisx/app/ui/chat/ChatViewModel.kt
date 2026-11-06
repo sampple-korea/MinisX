@@ -2401,7 +2401,9 @@ class ChatViewModel(
     val autoRetryCountdown: StateFlow<Int> = _autoRetryCountdown.asStateFlow()
 
     /** [T-android-retry-badge] Retries per ladder, for the badge's "1/3". */
-    val autoRetryMax: Int get() = AUTO_RETRY_DELAYS_SEC.size
+    /** The retry badge's limit: the policy's, or 0 while reconnecting (no limit). */
+    @Volatile private var autoRetryLimit: Int = com.minisx.app.agent.RetryPolicy.MAX_RETRIES
+    val autoRetryMax: Int get() = autoRetryLimit
 
     /**
      * [T-android-retry-badge] This generation's automatic retries so far, for
@@ -11857,6 +11859,8 @@ class ChatViewModel(
             // so we catch at collect level and unwrap.
             var collectDone = false
             var retryAttempt = 0  // per-turn auto-retry counter (resets on each new turn)
+            // [T-codex-retry-policy] What the retry policy has used up for this request.
+            var retryState = com.minisx.app.agent.RetryPolicy.State()
             // [T-callback-queued-reminder] The reminder this turn's request
             // carries, kept across its retries so every attempt sends the same
             // text. See QueuedCallbackReminder.
@@ -12545,17 +12549,35 @@ class ChatViewModel(
                     // same-model retries that its own body says are pointless.
                     val isTransient = actual is com.minisx.app.data.model.LLMError.NetworkError ||
                         actual is com.minisx.app.data.model.LLMError.TransientError
-                    if (isTransient && retryAttempt < AUTO_RETRY_DELAYS_SEC.size) {
+                    // [T-codex-retry-policy] Codex's schedule: 5 retries with exponential backoff or
+                    // the server's Retry-After; a dead connection keeps reconnecting (5 s doubling to
+                    // 60 s) until it works or the user stops. Not for sub agents, and not when the
+                    // group is set to fall back on every failure (a fallback may reach a live host).
+                    val retryDecision = if (isTransient) {
+                        com.minisx.app.agent.RetryPolicy.decide(
+                            retryState, actual as com.minisx.app.data.model.LLMError,
+                            unboundedConnection = helperConfig == null &&
+                                loopFallbackStrategy != com.minisx.app.data.model.FallbackStrategy.always,
+                        )
+                    } else {
+                        com.minisx.app.agent.RetryPolicy.Decision.GiveUp
+                    }
+                    if (retryDecision is com.minisx.app.agent.RetryPolicy.Decision.Wait) {
                         // [T-android-stop-retry-countdown] A stopped turn must
                         // not start a countdown: the failure it would show is
                         // most likely the Stop itself (OkHttp reports a
                         // cancelled call as an IOException, i.e. NetworkError).
                         // Mirrors iOS streamWithAutoRetry's checkCancellation.
                         if (!kotlin.coroutines.coroutineContext.isActive) throw CancellationException("stopped before retry countdown")
-                        val delaySec = AUTO_RETRY_DELAYS_SEC[retryAttempt]
-                        retryAttempt += 1
-                        val errDesc = actual.message ?: actual.javaClass.simpleName
-                        Log.w(TAG, "🔁 Transient error on ${currentProvider.model.displayName}, retry $retryAttempt/${AUTO_RETRY_DELAYS_SEC.size} in ${delaySec}s: $errDesc")
+                        val reconnecting = retryDecision.kind == com.minisx.app.agent.RetryPolicy.Kind.CONNECTION
+                        val delaySec = ((retryDecision.delayMs + 999) / 1000).toInt()
+                        retryAttempt = retryDecision.attempt
+                        // The badge reads "n/5", or just "n" while reconnecting (no limit).
+                        autoRetryLimit = if (reconnecting) 0 else com.minisx.app.agent.RetryPolicy.MAX_RETRIES
+                        val errDesc = (actual.message ?: actual.javaClass.simpleName).let {
+                            if (reconnecting) context.getString(R.string.retry_reconnecting, it) else it
+                        }
+                        Log.w(TAG, "🔁 ${retryDecision.kind} retry on ${currentProvider.model.displayName}, attempt $retryAttempt in ${retryDecision.delayMs}ms: $errDesc")
                         withContext(Dispatchers.Main) {
                             _autoRetryAttempt.value = retryAttempt
                             // [T-android-retry-badge] No red "<error> — retrying (n/3)…"
@@ -12568,7 +12590,7 @@ class ChatViewModel(
                             _retryLog.value = RetryLog.append(
                                 _retryLog.value,
                                 attempt = retryAttempt,
-                                maxAttempts = AUTO_RETRY_DELAYS_SEC.size,
+                                maxAttempts = autoRetryLimit,
                                 atMs = System.currentTimeMillis(),
                                 error = errDesc,
                                 model = currentProvider.model.displayName,
@@ -12583,9 +12605,12 @@ class ChatViewModel(
                             )
                         }
                         try {
-                            for (remaining in delaySec downTo 1) {
-                                _autoRetryCountdown.value = remaining
-                                kotlinx.coroutines.delay(1000)
+                            var remainingMs = retryDecision.delayMs
+                            while (remainingMs > 0) {
+                                _autoRetryCountdown.value = ((remainingMs + 999) / 1000).toInt()
+                                val step = minOf(1000L, remainingMs)
+                                kotlinx.coroutines.delay(step)
+                                remainingMs -= step
                             }
                         } catch (ce: CancellationException) {
                             // [T-android-stop-retry-countdown] Stopped
@@ -12828,6 +12853,7 @@ class ChatViewModel(
                         // on B that one 1s retry would have survived burned B
                         // instead. iOS gives each entry its own ladder.
                         retryAttempt = 0
+                        retryState = com.minisx.app.agent.RetryPolicy.State()
                         // [T-fallback-respects-user-switch] The fallback is this
                         // turn's business; the session binding is the user's. If
                         // selectEntry swapped the class-level provider while this

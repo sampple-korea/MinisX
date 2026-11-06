@@ -2,6 +2,9 @@
 <!-- [T-android-retry-badge] The retry badge before "… is thinking" and its retry log sheet. -->
 <resources>
     <string name="retry_badge_a11y">Retrying, attempt %1$d of %2$d. Tap to see the retries.</string>
+    <string name="retry_badge_a11y_open">Reconnecting, attempt %1$d. Tap to see the retries.</string>
+    <string name="retry_reconnecting">Reconnecting… waiting for the network (%1$s)</string>
+    <string name="retry_record_title_open">Retry %1$d</string>
     <string name="retry_sheet_title">Automatic retries</string>
     <string name="retry_sheet_subtitle">Requests retried during this task. The list is cleared when the reply ends.</string>
     <string name="retry_sheet_empty">No retries in this task.</string>

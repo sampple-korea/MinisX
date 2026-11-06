@@ -81,7 +81,7 @@ internal object RetryLog {
 
     /** "1/3": the badge's text, or null when no retry is in progress. */
     fun badgeText(attempt: Int, maxAttempts: Int): String? =
-        if (attempt <= 0) null else "$attempt/$maxAttempts"
+        if (attempt <= 0) null else if (maxAttempts <= 0) "$attempt" else "$attempt/$maxAttempts"
 }
 
 /** Yellow, as iOS's retry badge; dark text keeps it readable on both themes. */
@@ -95,7 +95,8 @@ private val RetryBadgeText = Color(0xFF5C4400)
 @Composable
 internal fun RetryBadge(attempt: Int, maxAttempts: Int, onClick: () -> Unit) {
     val text = RetryLog.badgeText(attempt, maxAttempts) ?: return
-    val spoken = stringResource(R.string.retry_badge_a11y, attempt, maxAttempts)
+    val spoken = if (maxAttempts <= 0) stringResource(R.string.retry_badge_a11y_open, attempt)
+    else stringResource(R.string.retry_badge_a11y, attempt, maxAttempts)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -145,7 +146,8 @@ internal fun RetryLogSheet(records: List<RetryRecord>, onDismiss: () -> Unit) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                stringResource(R.string.retry_record_title, r.attempt, r.maxAttempts),
+                                if (r.maxAttempts <= 0) stringResource(R.string.retry_record_title_open, r.attempt)
+                                else stringResource(R.string.retry_record_title, r.attempt, r.maxAttempts),
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp,
                             )

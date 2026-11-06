@@ -1,5 +1,6 @@
 package com.minisx.app.provider.gemini
 
+import com.minisx.app.provider.RetryAfterHeader
 import android.util.Base64
 import com.minisx.app.data.model.AgentContentPart
 import com.minisx.app.data.model.AgentToolDefinition
@@ -75,7 +76,7 @@ class GeminiProvider(
         val responseBody = response.body?.string() ?: ""
 
         if (!response.isSuccessful) {
-            throw mapHttpError(response.code, responseBody)
+            throw RetryAfterHeader.attach(mapHttpError(response.code, responseBody), response.header("retry-after"), response.header("retry-after-ms"))
         }
 
         val json = JSONObject(responseBody)
@@ -180,7 +181,7 @@ class GeminiProvider(
         if (!response.isSuccessful) {
             val errorBody = response.body?.string() ?: ""
             response.close()
-            throw mapHttpError(response.code, errorBody)
+            throw RetryAfterHeader.attach(mapHttpError(response.code, errorBody), response.header("retry-after"), response.header("retry-after-ms"))
         }
 
         val reader = BufferedReader(InputStreamReader(response.body!!.byteStream()))

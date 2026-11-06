@@ -40,7 +40,7 @@ class RetryBadgeTest {
 
     @Test
     fun `a retry records itself and shows thinking, not a red bar`() {
-        val retry = vm.substringAfter("if (isTransient && retryAttempt < AUTO_RETRY_DELAYS_SEC.size) {")
+        val retry = vm.substringAfter("if (retryDecision is com.minisx.app.agent.RetryPolicy.Decision.Wait) {")
             .substringBefore("continue  // retry on same provider")
         assertFalse("no transient red bar", retry.contains("setTransientInlineError("))
         assertFalse(vm.contains("private fun setTransientInlineError("))

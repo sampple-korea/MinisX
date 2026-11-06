@@ -30,7 +30,7 @@ sealed class LLMError(message: String, cause: Throwable? = null) : Exception(mes
      * try the next one" without also treating the user's own dead network as
      * a reason to switch models (a switch that could not possibly help).
      */
-    class TransientError(val detail: String, val httpStatus: Int? = null) :
+    class TransientError(val detail: String, val httpStatus: Int? = null, val retryAfterMs: Long? = null) :
         LLMError("Transient error: $detail")
     /**
      * [T-android-tls-trust-error] The server's certificate was rejected

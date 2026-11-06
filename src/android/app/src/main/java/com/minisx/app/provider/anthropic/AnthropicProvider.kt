@@ -1,5 +1,6 @@
 package com.minisx.app.provider.anthropic
 
+import com.minisx.app.provider.RetryAfterHeader
 import android.util.Base64
 import com.minisx.app.data.model.AgentContentPart
 import com.minisx.app.data.model.AgentToolDefinition
@@ -117,7 +118,7 @@ class AnthropicProvider(
         val responseBody = response.body?.string() ?: ""
 
         if (!response.isSuccessful) {
-            throw mapHttpError(response.code, responseBody)
+            throw RetryAfterHeader.attach(mapHttpError(response.code, responseBody), response.header("retry-after"), response.header("retry-after-ms"))
         }
 
         val json = JSONObject(responseBody)
@@ -187,7 +188,7 @@ class AnthropicProvider(
                 )
             }
             android.util.Log.e("AnthropicProvider", "Stream failed: ${response.code} isOAuth=$isOAuth body=${errorBody.take(300)}")
-            throw mapHttpError(response.code, errorBody)
+            throw RetryAfterHeader.attach(mapHttpError(response.code, errorBody), response.header("retry-after"), response.header("retry-after-ms"))
         }
 
         // Log successful request (debug builds only — see above)

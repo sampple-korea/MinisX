@@ -1,5 +1,6 @@
 package com.minisx.app.provider.openai
 
+import com.minisx.app.provider.RetryAfterHeader
 import android.util.Base64
 import com.minisx.app.data.model.AgentContentPart
 import com.minisx.app.data.model.AgentToolDefinition
@@ -1179,7 +1180,7 @@ class OpenAIProvider private constructor(
                     )
                 )
             }
-            val mapped = mapHttpError(response.code, errorBody)
+            val mapped = RetryAfterHeader.attach(mapHttpError(response.code, errorBody), response.header("retry-after"), response.header("retry-after-ms"))
             // [T-codex-account-pool] Put the account that was just refused on hold, so the retry
             // (and later requests) use the next one.
             request.tag(CodexAccountPool.Lease::class.java)?.let { lease ->
