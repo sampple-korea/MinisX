@@ -75,7 +75,7 @@ class FileToolSizeGuardTest {
     }
 
     private fun read(file: File, offset: Int = 1, lines: Int? = null, maxLength: Int = 15000, direction: String = "head") =
-        FileReadTool.read(file, "/p", offset, lines, maxLength, direction, "t")
+        FileReadTool.read(file, "/p", offset, lines, maxLength, direction, "t", lineNumbers = false)
 
     // Bytes that exercise every line-splitting and decoding path: \n, \r\n,
     // lone \r, 2/3/4-byte UTF-8, and malformed sequences (a lone continuation
@@ -218,12 +218,12 @@ class FileToolSizeGuardTest {
     fun `file_edit keeps its matching behaviour`() {
         val f = File(tmp, "s.txt")
         f.writeText("a b a")
-        assertEquals("Error: old_string not found in /p", FileEditTool.edit(f, "/p", "zzz", "y", false, "t").output)
+        assertTrue(FileEditTool.edit(f, "/p", "zzz", "y", false, "t").output.startsWith("Error: old_string not found in /p."))
         val twice = FileEditTool.edit(f, "/p", "a", "y", false, "t")
         assertFalse(twice.success)
-        assertTrue(twice.output.startsWith("Error: old_string found 2 times in /p."))
+        assertTrue(twice.output.startsWith("Error: old_string found 2 times in /p"))
         val all = FileEditTool.edit(f, "/p", "a", "y", true, "t")
-        assertEquals("Edited /p (2 replacement(s), 5 bytes)", all.output)
+        assertTrue(all.output, all.output.startsWith("Edited /p: 2 replacement(s), 5 bytes."))
         assertEquals("y b y", f.readText())
     }
 

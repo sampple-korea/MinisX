@@ -18,6 +18,10 @@ data class ToolCallRecord(
     val unknownToolName: String? = null,
     val toolCallId: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
+    /** The call ended in an error (an error message was recorded, no result). */
+    val failed: Boolean = false,
+    /** This record is the loop detector's own block of a call, not a result: it keeps a failure streak going. */
+    val blocked: Boolean = false,
 )
 
 enum class Level { NONE, WARNING, CRITICAL }
@@ -49,10 +53,19 @@ data class ToolLoopConfig(
      * (N+1)th, (2N+1)th… missing-title call. Mirrors iOS.
      */
     val toolTitleReminderEvery: Int = 10,
+    /**
+     * [T-repeated-failure] The same tool failing with the SAME error this many times in a row gets a
+     * warning appended to its result, and at [repeatedFailureBlock] the next call is not run. The
+     * arguments need not match: a model that rewords a rejected call is still looping (one session sent
+     * 47 user_ask calls that all failed with one validation error).
+     */
+    val repeatedFailureWarn: Int = 3,
+    val repeatedFailureBlock: Int = 6,
 ) {
     init {
         require(warningThreshold > 0) { "warningThreshold must be positive" }
         require(toolTitleReminderEvery > 0) { "toolTitleReminderEvery must be positive" }
+        require(repeatedFailureWarn in 1 until repeatedFailureBlock) { "repeatedFailureWarn must be positive and below repeatedFailureBlock" }
         require(warningThreshold < criticalThreshold) {
             "warningThreshold ($warningThreshold) must be < criticalThreshold ($criticalThreshold)"
         }
@@ -190,6 +203,15 @@ class ToolLoopDetector(private val config: ToolLoopConfig = ToolLoopConfig()) {
             return LoopCheckResult(Level.CRITICAL, msg)
         }
 
+        // 1b. repeated_failure - the same tool, the same error, again and again, whatever the arguments.
+        val failStreak = sameFailureStreak(toolName)
+        if (failStreak >= config.repeatedFailureBlock) {
+            val msg = "[LOOP BLOCKED] CRITICAL: $toolName failed with the same error $failStreak times in a row, so this call was not run. " +
+                "Do not send it again. Tell the user what you could not do, or use a different approach."
+            AppLogger.warning("ToolLoopDetector", "CRITICAL repeated_failure tool=$toolName streak=$failStreak")
+            return LoopCheckResult(Level.CRITICAL, msg)
+        }
+
         val noProgressStreak = getNoProgressStreak(toolName, argsHash)
 
         // 2. global_circuit_breaker — universal backstop, before poll-specific
@@ -273,8 +295,19 @@ class ToolLoopDetector(private val config: ToolLoopConfig = ToolLoopConfig()) {
             resultHash = resultHash,
             unknownToolName = unknownToolName,
             toolCallId = toolCallId,
+            failed = errorMessage != null && result == null && errorMessage?.startsWith("[LOOP BLOCKED]") != true,
+            blocked = errorMessage?.startsWith("[LOOP BLOCKED]") == true,
         ))
         while (history.size > config.historySize) history.removeFirst()
+
+        // [T-repeated-failure] Same error again: say so on the result the model is about to read.
+        val failStreak = sameFailureStreak(toolName)
+        if (failStreak >= config.repeatedFailureWarn && failStreak < config.repeatedFailureBlock) {
+            val msg = "[REPEATED FAILURE] $toolName has now failed with the same error $failStreak times in a row. " +
+                "Do not resend it unchanged: change the arguments the way the error says, use another tool, or tell the user " +
+                "what you cannot do. After ${config.repeatedFailureBlock} failures in a row it will be blocked."
+            return LoopCheckResult(Level.WARNING, msg, "fail:$toolName:$failStreak")
+        }
 
         // Re-evaluate poll/generic warnings on the post-record window so the
         // warning text reflects the current count (including the call we just
@@ -343,6 +376,23 @@ class ToolLoopDetector(private val config: ToolLoopConfig = ToolLoopConfig()) {
             } else {
                 break
             }
+        }
+        return streak
+    }
+
+    /**
+     * How many of the newest calls of [toolName] failed with one and the same error, with no success or
+     * different error between them (calls of other tools are skipped). Zero when the newest call did not fail.
+     */
+    private fun sameFailureStreak(toolName: String): Int {
+        var streak = 0
+        var pinned: String? = null
+        for (rec in history.reversed()) {
+            if (rec.toolName != toolName || rec.blocked) continue
+            // Unknown-tool errors have their own, higher bar (unknown_tool_repeat).
+            if (!rec.failed || rec.unknownToolName != null) break
+            val rh = rec.resultHash ?: break
+            if (pinned == null) { pinned = rh; streak++ } else if (rh == pinned) streak++ else break
         }
         return streak
     }

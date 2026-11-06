@@ -13,7 +13,10 @@ object FileEditTool {
 
     fun definition(): AgentToolDefinition = AgentToolDefinition(
         name = NAME,
-        description = "Make targeted edits to an existing file using exact string replacement. ALWAYS use file_read first to see the current file contents before editing. Prefer file_edit over file_write when modifying existing files — only the changed part needs to be specified. The old_string must match exactly one location in the file (including whitespace/indentation), unless replace_all is true.",
+        description = "Edit an existing file by exact string replacement: old_string is replaced by new_string. Read the file with file_read first, and copy old_string exactly from it " +
+            "(indentation, tabs and all) but WITHOUT file_read's line-number prefix. old_string must match exactly one place, so include enough surrounding lines to make it unique; " +
+            "set replace_all=true to change every occurrence (renaming a variable, say). To delete text use an empty new_string. Prefer this over file_write for changes, since only the changed part is sent. " +
+            "On success the result shows the changed lines with their numbers, so there is no need to read the file again. If old_string is not found, the error says where the closest match is; fix old_string from that, do not repeat the same call."
         parameters = mapOf(
             "tool_title" to AgentToolParam("string", "A concise 5-10 word summary of what this tool call does, shown to the user (e.g. 'Fix typo in Python script', 'Update config value'). Use the same language as the user."),
             "path" to AgentToolParam("string", "Absolute Linux path to the file to edit (e.g. /root/script.py)"),
@@ -119,39 +122,77 @@ object FileEditTool {
         }
 
         val content = file.readText()
-
-        // Count occurrences
-        var count = 0
-        var searchFrom = 0
-        while (true) {
-            val idx = content.indexOf(oldString, searchFrom)
-            if (idx < 0) break
-            count++
-            searchFrom = idx + oldString.length
-        }
-
-        if (count == 0) {
-            return ToolExecutionResult("Error: old_string not found in $path", false, toolTitle = toolTitle)
-        }
-
-        if (count > 1 && !replaceAll) {
+        if (oldString == newString) {
             return ToolExecutionResult(
-                "Error: old_string found $count times in $path. Use replace_all=true to replace all occurrences, " +
-                    "or provide a more specific old_string that matches exactly once.",
+                "Error: old_string and new_string are identical, so nothing would change in $path.",
+                false, toolTitle = toolTitle,
+            )
+        }
+
+        fun count(text: String, needle: String): Int {
+            var n = 0
+            var from = 0
+            while (true) {
+                val i = text.indexOf(needle, from)
+                if (i < 0) return n
+                n++
+                from = i + needle.length
+            }
+        }
+
+        // What was asked, then what the file can match: the text as it came, the text without file_read's
+        // line numbers, and either of them with the file's CRLF line endings.
+        var oldText = oldString
+        var newText = newString
+        val notes = ArrayList<String>()
+        var found = count(content, oldText)
+        if (found == 0) {
+            EditHints.stripLineNumbers(oldText)?.let { strippedOld ->
+                val strippedNew = EditHints.stripLineNumbers(newText) ?: newText
+                if (count(content, strippedOld) > 0) {
+                    oldText = strippedOld; newText = strippedNew; found = count(content, oldText)
+                    notes += "the line-number prefixes copied from file_read were removed"
+                }
+            }
+        }
+        if (found == 0 && content.contains("\r\n") && !oldText.contains('\r')) {
+            val crOld = oldText.replace("\n", "\r\n")
+            if (count(content, crOld) > 0) {
+                oldText = crOld; newText = newText.replace("\n", "\r\n"); found = count(content, oldText)
+                notes += "the file uses CRLF line endings, which were kept"
+            }
+        }
+
+        if (found == 0) {
+            return ToolExecutionResult(
+                "Error: old_string not found in $path. ${EditHints.notFoundHint(content, oldString)}",
+                false, toolTitle = toolTitle,
+            )
+        }
+
+        if (found > 1 && !replaceAll) {
+            val at = EditHints.matchLines(content, oldText).joinToString(", ")
+            return ToolExecutionResult(
+                "Error: old_string found $found times in $path (starting at lines $at). Add surrounding lines to old_string so it matches exactly once, " +
+                    "or set replace_all=true to replace every occurrence.",
                 false, toolTitle = toolTitle
             )
         }
 
+        val firstLine = EditHints.lineOf(content, content.indexOf(oldText))
         val newContent = if (replaceAll) {
-            content.replace(oldString, newString)
+            content.replace(oldText, newText)
         } else {
-            content.replaceFirst(oldString, newString)
+            content.replaceFirst(oldText, newText)
         }
 
         file.writeText(newContent)
-        val replacements = if (replaceAll) count else 1
+        val replacements = if (replaceAll) found else 1
+        val changedLines = newText.count { it == '\n' } + 1
+        val shown = if (replaceAll && found > 1) "" else "\n" + EditHints.snippet(newContent, firstLine, changedLines)
+        val note = if (notes.isEmpty()) "" else " (" + notes.joinToString("; ") + ")"
         return ToolExecutionResult(
-            "Edited $path ($replacements replacement(s), ${newContent.length} bytes)",
+            "Edited $path: $replacements replacement(s), ${newContent.length} bytes$note." + shown,
             true, toolTitle = toolTitle
         )
     }

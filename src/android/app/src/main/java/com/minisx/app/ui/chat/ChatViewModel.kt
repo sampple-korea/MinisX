@@ -535,8 +535,13 @@ class ChatViewModel(
             // `enforced` so a tool whose only required field is non-blocking isn't
             // rejected for empty args, and the message lists only real blockers.
             if (args.length() == 0 && enforced.isNotEmpty()) {
-                return "Tool '$name' was called with empty arguments {} but requires: ${enforced.joinToString(", ")}."
+                return "Tool '$name' was called with empty arguments {} but requires: ${enforced.joinToString(", ")}." +
+                    " Send them as the call's JSON arguments. Parameters of $name: " +
+                    toolDef.parameters.keys.joinToString(", ") { if (it in enforced) "$it (required)" else it } + "."
             }
+            // What to send instead: the tool's own parameter list, required ones marked.
+            val usage = " Send them as the call's JSON arguments. Parameters of $name: " +
+                toolDef.parameters.keys.joinToString(", ") { if (it in enforced) "$it (required)" else it } + "."
             val missing = mutableListOf<String>()
             for (field in enforced) {
                 // Absent — or present as an explicit JSON null. org.json reports
@@ -565,7 +570,7 @@ class ChatViewModel(
                 }
             }
             if (missing.isNotEmpty()) {
-                return "Tool '$name' is missing required parameter(s): ${missing.joinToString(", ")}."
+                return "Tool '$name' is missing required parameter(s): ${missing.joinToString(", ")}.$usage"
             }
             return null
         }
@@ -13635,6 +13640,11 @@ class ChatViewModel(
                                     "argsKeys=[${args.keys().asSequence().toList().sorted().joinToString(",")}] " +
                                     "rawTail=<<<${toolInputChunkRings[id]?.lastOrNull()?.take(500) ?: ""}>>>"
                             )
+                        }
+                        // [T-tool-arg-aliases] Other harnesses' spellings (file_path, old_str, cmd ...)
+                        // are renamed to ours before anything checks the call.
+                        com.minisx.app.agent.ToolArgAliases.apply(name, args).takeIf { it.isNotEmpty() }?.let {
+                            AppLogger.info("ToolPreflight", "[ToolAlias] tool=$name id=$id renamed=[${it.joinToString(", ")}]")
                         }
                         // [T-truncated-args-visibility #119] Non-null when THIS call's
                         // arguments arrived truncated and were auto-closed. Only the

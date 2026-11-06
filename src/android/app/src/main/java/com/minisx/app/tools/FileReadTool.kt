@@ -12,7 +12,12 @@ object FileReadTool {
 
     fun definition(): AgentToolDefinition = AgentToolDefinition(
         name = NAME,
-        description = "Read a file from the Linux filesystem. Faster than shell_execute for reading files — no shell overhead. Returns file content with metadata. Rejects binary files.",
+        description = "Read a text file from the Linux filesystem (faster than shell_execute: no shell overhead). Use absolute paths. " +
+            "The result starts with a header [path | size | lines | showing A-B of N] and every line is prefixed with its line number and a tab, " +
+            "like `cat -n`: use the numbers to point at lines, but never include them in file_edit, file_write or apply_patch text. " +
+            "Reads up to 15000 characters by default (80000 at most); a long file ends with next_offset=N in the header: pass it as `offset` for the next page, " +
+            "or use `direction: \"tail\"` for the end of a log. Read a file before you edit it. Binary files are reported, not shown; use read_image for images. " +
+            "To find text across many files use `rg` in shell_execute instead of reading them one by one.",
         parameters = mapOf(
             "tool_title" to AgentToolParam("string", "A concise 5-10 word summary of what this tool call does, shown to the user (e.g. 'Read Python script contents', 'Check system configuration file'). Use the same language as the user."),
             "path" to AgentToolParam("string", "Absolute Linux path to read (e.g. /var/minis/workspace/data.csv)"),
@@ -20,9 +25,10 @@ object FileReadTool {
             "lines" to AgentToolParam("integer", "Maximum number of lines to return (default: all lines up to max_length)"),
             "max_length" to AgentToolParam("integer", "Maximum character length of returned content (default: 15000)"),
             "direction" to AgentToolParam("string", "Read direction: 'head' (from start, default) or 'tail' (from end of file)"),
+            "line_numbers" to AgentToolParam("boolean", "Prefix each line with its line number (default true). Set false to get the plain text."),
         ),
         required = listOf("tool_title", "path"),
-        propertyOrdering = listOf("tool_title", "path", "offset", "lines", "direction", "max_length"),
+        propertyOrdering = listOf("tool_title", "path", "offset", "lines", "direction", "max_length", "line_numbers"),
     )
 
     fun execute(argsJson: String, sessionId: String, context: Context): ToolExecutionResult {
@@ -45,6 +51,7 @@ object FileReadTool {
             val MAX_LENGTH_HARD_CAP = 80_000
             val maxLength = args.optInt("max_length", 15000).coerceAtMost(MAX_LENGTH_HARD_CAP)
             val direction = args.optString("direction", "head")
+            val lineNumbers = args.optBoolean("line_numbers", true)
 
             if (path.isBlank()) {
                 return ToolExecutionResult("Error: 'path' is required", false, toolTitle = toolTitle)
@@ -71,7 +78,7 @@ object FileReadTool {
             // thread with a timeout, and streams the file (see read()).
             try {
                 FileToolIO.run("Reading $path") {
-                    read(file, path, offset, requestedLines, maxLength, direction, toolTitle)
+                    read(file, path, offset, requestedLines, maxLength, direction, toolTitle, lineNumbers)
                 }
             } catch (e: FileToolIO.TimedOut) {
                 ToolExecutionResult("Error: ${e.message}", false, toolTitle = toolTitle, timedOut = true)
@@ -85,6 +92,19 @@ object FileReadTool {
         } catch (e: Exception) {
             ToolExecutionResult("Error reading file: ${e.message}", false)
         }
+    }
+
+    /** [content] with `cat -n` style numbers: right-aligned to 6, a tab, then the line; counting from [first]. */
+    internal fun numbered(content: String, first: Int): String {
+        val lines = content.split("\n")
+        // A trailing newline leaves an empty last element that is not a line of its own.
+        val count = if (lines.size > 1 && lines.last().isEmpty()) lines.size - 1 else lines.size
+        val sb = StringBuilder(content.length + count * 7)
+        for (i in 0 until count) {
+            sb.append(String.format(java.util.Locale.US, "%6d", first + i)).append('\t').append(lines[i])
+            if (i < count - 1 || count < lines.size) sb.append('\n')
+        }
+        return sb.toString()
     }
 
     /**
@@ -106,6 +126,7 @@ object FileReadTool {
         maxLength: Int,
         direction: String,
         toolTitle: String,
+        lineNumbers: Boolean = true,
     ): ToolExecutionResult {
         val size = file.length()
 
@@ -189,6 +210,7 @@ object FileReadTool {
                       else ", retry with a smaller lines value"
         }
         header += "]"
-        return ToolExecutionResult("$header\n$content", true, toolTitle = toolTitle)
+        val body = if (lineNumbers && content.isNotEmpty()) numbered(content, effectiveStart) else content
+        return ToolExecutionResult("$header\n$body", true, toolTitle = toolTitle)
     }
 }

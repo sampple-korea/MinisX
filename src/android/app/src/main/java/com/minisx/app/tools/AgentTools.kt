@@ -130,8 +130,10 @@ object AgentTools {
         name = "shell_execute",
         description = "Execute a command in an isolated Linux process (Alpine Linux via PRoot). " +
             "The command runs via /bin/sh -c with stdout and stderr merged. " +
-            "Each invocation spawns a fresh process — there is no shared terminal session. " +
-            "Default timeout is 15 minutes.",
+            "Each invocation spawns a fresh process — there is no shared terminal session (cd and exported variables do not carry over; chain with && or pass absolute paths). " +
+            "Default timeout is 15 minutes. The command ends when it exits, so do not use it for servers, watchers or programs that wait for input: " +
+            "start those with exec_command. Use file_read, file_write and file_edit for reading and changing files, and `rg` to search; " +
+            "use shell_execute to run things. Quote paths that contain spaces. A non-zero exit code is reported at the end of the output: read the output before retrying.",
         parameters = mapOf(
             "tool_title" to AgentToolParam("string", "A concise 5-10 word summary of what this tool call does, shown to the user (e.g. 'Install Python data analysis packages', 'List files in home directory'). Use the same language as the user."),
             "command" to AgentToolParam("string", "The shell command to execute. Supports multi-line commands directly — no special escaping needed. Keep under 1000 chars; for longer scripts, write to a file with file_write first, then run it."),
