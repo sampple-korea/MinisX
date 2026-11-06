@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.service.voice.VoiceInteractionSession
 import android.view.View
+import android.view.WindowManager
 import com.minisx.app.logging.AppLogger
 import kotlin.concurrent.thread
 
@@ -33,10 +34,33 @@ class AssistantSession(private val ctx: Context) : VoiceInteractionSession(ctx) 
     private var gotAssist = false
     private var gotShot = false
     private var launched = false
+    private var overlay: AssistantOverlay? = null
+    private var controller: AssistantOverlayController? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        // The pill moves above the keyboard.
+        window.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED)
+    }
+
+    override fun onCreateContentView(): View {
+        val o = AssistantOverlay(ctx)
+        overlay = o
+        controller = AssistantOverlayController(ctx, o) { hide() }
+        return o.root
+    }
+
+    override fun onHide() {
+        controller?.end()
+        super.onHide()
+    }
+
+    override fun onBackPressed() { hide() }
 
     override fun onShow(args: Bundle?, showFlags: Int) {
         super.onShow(args, showFlags)
         launched = false
+        overlay?.reset()
         systemShot = null; ownShot = null; ownDone = false
         lines = emptyList(); packageName = null; webUri = null
         gotAssist = false; gotShot = false
@@ -87,9 +111,14 @@ class AssistantSession(private val ctx: Context) : VoiceInteractionSession(ctx) 
         )
         AppLogger.info(TAG, "invocation: shot=${shot != null} text=${invocation.screenText?.length ?: 0} pkg=${invocation.packageName}")
         ScreenCapture.clean(dir)
-        runCatching { startAssistantActivity(AssistantInvoker.intent(ctx, invocation)) }
-            .onFailure { AppLogger.warning(TAG, "could not start MinisX: ${it.message}") }
-        hide()
+        if (AssistantSettings.fullScreen || controller == null) {
+            runCatching { startAssistantActivity(AssistantInvoker.intent(ctx, invocation)) }
+                .onFailure { AppLogger.warning(TAG, "could not start MinisX: ${it.message}") }
+            hide()
+        } else {
+            // The overlay was hidden while the screen was captured; now it can appear.
+            controller?.begin(invocation)
+        }
     }
 
     private fun ownDoneOrNotNeeded() = ownDone || systemShot != null

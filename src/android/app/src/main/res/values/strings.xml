@@ -2809,4 +2809,21 @@
     <string name="assistant_fast_path">Run simple commands directly</string>
     <string name="assistant_fast_path_sub">Faster and works without a model reply</string>
     <string name="assistant_tile_label">Ask MinisX</string>
+
+    <string name="assistant_overlay_hint">Ask MinisX</string>
+    <string name="assistant_overlay_open">Open in app</string>
+    <string name="assistant_overlay_close">Close</string>
+    <string name="assistant_overlay_working">Working…</string>
+    <string name="assistant_overlay_screen">Screen included</string>
+    <string name="assistant_overlay_listening">Listening…</string>
+    <string name="assistant_overlay_mic">Speak</string>
+    <string name="assistant_overlay_send">Send</string>
+    <string name="assistant_overlay_no_model">No model is set up yet. Open the app to choose one.</string>
+    <string name="assistant_overlay_need_app">This needs your approval in the app. Opening it…</string>
+    <string name="assistant_overlay_no_mic">Voice needs the microphone permission. Type instead, or allow it in the app.</string>
+    <string name="assistant_overlay_no_recognizer">No speech recognizer is available. Type instead.</string>
+    <string name="assistant_overlay_no_speech">I did not hear anything. Tap the microphone to try again, or type.</string>
+    <string name="assistant_overlay_voice_error">Voice input failed. Type instead.</string>
+    <string name="assistant_fullscreen">Open the full app instead of the overlay</string>
+    <string name="assistant_fullscreen_sub">Calling the assistant opens MinisX full screen</string>
 </resources>

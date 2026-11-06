@@ -31,6 +31,7 @@ fun AssistantSettingsScreen(onBack: () -> Unit) {
     var screenshot by remember { mutableStateOf(AssistantSettings.screenshot) }
     var screenText by remember { mutableStateOf(AssistantSettings.screenText) }
     var fastPath by remember { mutableStateOf(AssistantSettings.fastPath) }
+    var fullScreen by remember { mutableStateOf(AssistantSettings.fullScreen) }
     // The user changes the default on a system page and comes back.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { isDefault = AssistantRole.isDefault(context) }
 
@@ -44,6 +45,13 @@ fun AssistantSettingsScreen(onBack: () -> Unit) {
                 subtitle = stringResource(if (isDefault) R.string.assistant_default_yes else R.string.assistant_default_no),
                 icon = Icons.Outlined.AutoAwesome,
                 onClick = { AssistantRole.openSettings(context) },
+                showDivider = true,
+            )
+            SettingsSwitchRow(
+                title = stringResource(R.string.assistant_fullscreen),
+                subtitle = stringResource(R.string.assistant_fullscreen_sub),
+                checked = fullScreen,
+                onCheckedChange = { fullScreen = it; AssistantSettings.fullScreen = it },
                 showDivider = false,
             )
         }

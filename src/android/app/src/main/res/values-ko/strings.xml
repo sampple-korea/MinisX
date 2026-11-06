@@ -2485,4 +2485,21 @@
     <string name="assistant_fast_path">단순 명령은 바로 실행</string>
     <string name="assistant_fast_path_sub">더 빠르고 모델 응답 없이도 동작해요</string>
     <string name="assistant_tile_label">MinisX에게 묻기</string>
+
+    <string name="assistant_overlay_hint">MinisX에게 물어보기</string>
+    <string name="assistant_overlay_open">앱에서 열기</string>
+    <string name="assistant_overlay_close">닫기</string>
+    <string name="assistant_overlay_working">작업 중…</string>
+    <string name="assistant_overlay_screen">화면 포함</string>
+    <string name="assistant_overlay_listening">듣는 중…</string>
+    <string name="assistant_overlay_mic">말하기</string>
+    <string name="assistant_overlay_send">보내기</string>
+    <string name="assistant_overlay_no_model">아직 설정된 모델이 없어요. 앱에서 모델을 골라 주세요.</string>
+    <string name="assistant_overlay_need_app">앱에서 승인이 필요해요. 앱을 여는 중…</string>
+    <string name="assistant_overlay_no_mic">음성 입력에는 마이크 권한이 필요해요. 글자로 입력하거나 앱에서 허용해 주세요.</string>
+    <string name="assistant_overlay_no_recognizer">사용할 수 있는 음성 인식기가 없어요. 글자로 입력해 주세요.</string>
+    <string name="assistant_overlay_no_speech">말씀이 들리지 않았어요. 마이크를 눌러 다시 하거나 글자로 입력해 주세요.</string>
+    <string name="assistant_overlay_voice_error">음성 입력에 실패했어요. 글자로 입력해 주세요.</string>
+    <string name="assistant_fullscreen">오버레이 대신 앱을 전체 화면으로 열기</string>
+    <string name="assistant_fullscreen_sub">어시스턴트를 부르면 MinisX가 전체 화면으로 열려요</string>
 </resources>

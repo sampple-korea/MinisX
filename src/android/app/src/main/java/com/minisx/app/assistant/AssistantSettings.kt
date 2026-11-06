@@ -9,6 +9,7 @@ object AssistantSettings {
     private const val K_SCREENSHOT = "screenshot"
     private const val K_SCREEN_TEXT = "screen_text"
     private const val K_FAST_PATH = "fast_path"
+    private const val K_FULLSCREEN = "fullscreen"
 
     private var prefs: SharedPreferences? = null
 
@@ -25,6 +26,11 @@ object AssistantSettings {
     var screenText: Boolean
         get() = prefs?.getBoolean(K_SCREEN_TEXT, true) ?: true
         set(v) { prefs?.edit()?.putBoolean(K_SCREEN_TEXT, v)?.apply() }
+
+    /** Open the whole app when called, instead of the overlay over the current app. */
+    var fullScreen: Boolean
+        get() = prefs?.getBoolean(K_FULLSCREEN, false) ?: false
+        set(v) { prefs?.edit()?.putBoolean(K_FULLSCREEN, v)?.apply() }
 
     /** Run plain phone commands ("turn the flashlight on") without asking the model. */
     var fastPath: Boolean
