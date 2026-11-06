@@ -132,6 +132,8 @@ class BrowserUseManager(
                 val ua = customUA ?: profile.userAgentString
                 if (ua != null) userAgentString = ua
             }
+            // Chrome sends no X-Requested-With; the app's package name in it makes some sites refuse the page.
+            WebViewIdentity.apply(webView, rewriteUserAgent = false)
             // T-android-webview-v3-port: enable first- + third-party cookies.
             // WebView ships with third-party cookies disabled by default; that
             // breaks hCaptcha / Turnstile / reCAPTCHA flows where the

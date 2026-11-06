@@ -96,6 +96,9 @@ class WebViewHolder(
         // implicitly via WebViewAssetLoader's defaults.
         settings.useWideViewPort = true
         settings.loadWithOverviewMode = true
+        // Look like Chrome, not like an embedded WebView: sites that refuse "; wv" or the
+        // X-Requested-With header answer with ERR_HTTP_RESPONSE_CODE_FAILURE otherwise.
+        com.minisx.app.browser.WebViewIdentity.apply(this)
         mobileUserAgent = settings.userAgentString
         // T-android-webview-v3-port: enable first- + third-party cookies so
         // the in-chat preview matches Chrome cookie semantics. Without

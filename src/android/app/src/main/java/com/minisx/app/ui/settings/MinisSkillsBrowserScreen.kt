@@ -143,6 +143,7 @@ fun MinisSkillsBrowserScreen(
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
                         settings.userAgentString = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Mobile Safari/537.36"
+                        com.minisx.app.browser.WebViewIdentity.apply(this, rewriteUserAgent = false)
 
                         webViewClient = object : WebViewClient() {
                             // [T-net-android-phase3] Settings > Network: answer the local entry's
