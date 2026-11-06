@@ -19,6 +19,41 @@ data class UsageLimit(
     val accounts: Int = 1,
 )
 
+/**
+ * The geometry and colour tone of the widgets' gauge, kept free of Glance types so it is unit-tested.
+ *
+ * Glance cannot weight two boxes unevenly, and a Row/Column keeps only its first 10 children, so a
+ * gauge made of many thin segments silently lost everything after the fifth one (every gauge looked
+ * like five full blocks, whatever was left). The widget is laid out at an exact size, so the bar is
+ * drawn as a track of known width with a fill whose width is computed here.
+ */
+object UsageGauge {
+    enum class Tone { HEALTHY, CAUTION, CRITICAL }
+
+    /** At or below this many percent left the gauge is red. */
+    const val CRITICAL_PERCENT = 8.0
+
+    /** Width left for a bar once the fixed-width parts of its row ([reserved]) are taken out of [rowWidth]. */
+    fun barWidth(rowWidth: Float, reserved: Float, slack: Float = 4f, min: Float = 40f): Float =
+        (rowWidth - reserved - slack).coerceAtLeast(min)
+
+    /**
+     * Width of the filled part of a [trackWidth] bar: proportional to what is left, nothing when it is
+     * all gone, and never thinner than [minWidth] (a rounded cap) while anything is left.
+     */
+    fun fillWidth(remainingPercent: Double, trackWidth: Float, minWidth: Float): Float {
+        val remaining = remainingPercent.coerceIn(0.0, 100.0)
+        if (remaining <= 0.0) return 0f
+        return (trackWidth * (remaining / 100.0)).toFloat().coerceIn(minOf(minWidth, trackWidth), trackWidth)
+    }
+
+    fun tone(remainingPercent: Double): Tone = when {
+        remainingPercent <= CRITICAL_PERCENT -> Tone.CRITICAL
+        UsageWidgetModel.isLow(remainingPercent) -> Tone.CAUTION
+        else -> Tone.HEALTHY
+    }
+}
+
 /** What a usage widget shows. Only quota figures: no credentials, prompts or account names. */
 data class UsageWidgetModel(
     val state: State,

@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.ImageProvider
 import androidx.glance.GlanceTheme
 import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
@@ -55,7 +56,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
@@ -99,7 +99,9 @@ abstract class UsageWidget(
         val refresh = model.instanceId?.let {
             actionRunCallback<RefreshUsageAction>(actionParametersOf(RefreshUsageAction.INSTANCE to it))
         }
-        val frame = GlanceModifier.fillMaxSize().background(Palette.background).cornerRadius(22.dp)
+        // Frosted glass (drawable / drawable-night) instead of an opaque card, so the wallpaper shows
+        // through; text and the gauge use the wallpaper-derived Material You colours.
+        val frame = GlanceModifier.fillMaxSize().background(ImageProvider(R.drawable.widget_glass)).cornerRadius(CORNER)
             .clickable(actionStartActivity(UsageWidgets.deepLink(context, link)))
         // Under ~160dp the full layout (title, big number, gauge, extra rows, footer) does not fit. The
         // compact layout shows every window (5h and weekly) as one gauge row each instead.
@@ -131,7 +133,7 @@ abstract class UsageWidget(
                 when (model.state) {
                     UsageWidgetModel.State.NO_PROVIDER -> Message(context.getString(R.string.usage_widget_no_provider, name))
                     UsageWidgetModel.State.NO_DATA -> Message(context.getString(R.string.usage_widget_no_data))
-                    UsageWidgetModel.State.READY -> Ready(context, model, wide, size.height)
+                    UsageWidgetModel.State.READY -> Ready(context, model, size.width, size.height)
                 }
             }
         }
@@ -154,6 +156,12 @@ abstract class UsageWidget(
         val rows = model.limits.sortedBy { UsageWidgetModel.windowMinutes(it.window) }.take(if (height < 90.dp) 2 else 3)
         val titled = height >= 90.dp
         val wide = width >= 200.dp
+        val glyphInRow = !titled && refresh != null
+        // Everything in a row but the bar has a fixed width, so the bar's width is what is left.
+        val bar = UsageGauge.barWidth(
+            rowWidth = width.value - 2 * 12f,
+            reserved = LABEL_W + GAP + PERCENT_W + (if (wide) RESET_W else 0f) + (if (glyphInRow) GLYPH_W else 0f),
+        ).dp
         Column(frame.padding(horizontal = 12.dp, vertical = if (height < 70.dp) 5.dp else 10.dp)) {
             if (titled) {
                 Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -179,36 +187,40 @@ abstract class UsageWidget(
             ) {
                 rows.forEachIndexed { index, limit ->
                     if (index > 0) Spacer(GlanceModifier.height(if (height < 70.dp) 3.dp else 6.dp))
-                    val low = UsageWidgetModel.isLow(limit.remainingPercent)
                     Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             limit.window, maxLines = 1,
                             style = TextStyle(color = Palette.muted, fontSize = 11.sp),
-                            modifier = GlanceModifier.width(28.dp),
+                            modifier = GlanceModifier.width(LABEL_W.dp),
                         )
-                        Gauge(limit.remainingPercent, 10, 6.dp, GlanceModifier.defaultWeight())
-                        Spacer(GlanceModifier.width(6.dp))
+                        Gauge(limit.remainingPercent, bar, 7.dp)
+                        Spacer(GlanceModifier.width(GAP.dp))
                         Text(
                             "${limit.remainingPercent.roundToInt()}%", maxLines = 1,
                             style = TextStyle(
-                                color = if (low) Palette.warn else Palette.text,
+                                color = Palette.value(limit.remainingPercent),
                                 fontSize = 12.sp, fontWeight = FontWeight.Bold,
                             ),
-                            modifier = GlanceModifier.width(36.dp),
+                            modifier = GlanceModifier.width(PERCENT_W.dp),
                         )
                         if (wide) {
                             Text(
                                 limit.resetsAt?.let { QuotaText.relative(context, it) }.orEmpty(), maxLines = 1,
                                 style = TextStyle(color = Palette.muted, fontSize = 10.sp),
-                                modifier = GlanceModifier.width(60.dp),
+                                modifier = GlanceModifier.width(RESET_W.dp),
                             )
                         }
-                        if (!titled && index == 0 && refresh != null) {
-                            Text(
-                                "↻",
-                                style = TextStyle(color = Palette.muted, fontSize = 14.sp),
-                                modifier = GlanceModifier.padding(start = 6.dp).clickable(refresh),
-                            )
+                        if (glyphInRow) {
+                            // Every row keeps the glyph's width so the bars line up; only the first shows it.
+                            if (index == 0) {
+                                Text(
+                                    "↻",
+                                    style = TextStyle(color = Palette.muted, fontSize = 14.sp),
+                                    modifier = GlanceModifier.width(GLYPH_W.dp).padding(start = 6.dp).clickable(refresh),
+                                )
+                            } else {
+                                Spacer(GlanceModifier.width(GLYPH_W.dp))
+                            }
                         }
                     }
                 }
@@ -225,17 +237,18 @@ abstract class UsageWidget(
     }
 
     @Composable
-    private fun Ready(context: Context, model: UsageWidgetModel, wide: Boolean, height: Dp) {
+    private fun Ready(context: Context, model: UsageWidgetModel, width: Dp, height: Dp) {
         val top = model.tightest ?: return
-        val low = UsageWidgetModel.isLow(top.remainingPercent)
+        val inner = width.value - 2 * 14f
         // The rows below the top window that fit: the top block needs about 130dp, each row about 30dp.
-        val extraRows = ((height.value - 130f) / 30f).toInt().coerceIn(0, model.limits.size - 1)
+        // A Glance Row/Column keeps only its first 10 children: the extra rows share one inner column, capped at 4.
+        val extraRows = ((height.value - 130f) / 30f).toInt().coerceIn(0, minOf(model.limits.size - 1, 4))
         val roomy = height >= 200.dp
         Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Text(
                 "${top.remainingPercent.roundToInt()}%",
                 style = TextStyle(
-                    color = if (low) Palette.warn else Palette.text,
+                    color = Palette.value(top.remainingPercent),
                     fontSize = if (roomy) 36.sp else 28.sp, fontWeight = FontWeight.Bold,
                 ),
             )
@@ -247,21 +260,24 @@ abstract class UsageWidget(
             )
         }
         Spacer(GlanceModifier.height(if (roomy) 8.dp else 4.dp))
-        Gauge(top.remainingPercent, if (wide) 10 else 8, if (roomy) 14.dp else 10.dp, GlanceModifier.fillMaxWidth())
-        for (limit in model.limits.drop(1).take(extraRows)) {
-            Spacer(GlanceModifier.height(if (roomy) 10.dp else 6.dp))
-            Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    limit.window, maxLines = 1,
-                    style = TextStyle(color = Palette.muted, fontSize = 11.sp),
-                    modifier = GlanceModifier.width(40.dp),
-                )
-                Gauge(limit.remainingPercent, 10, 6.dp, GlanceModifier.defaultWeight())
-                Spacer(GlanceModifier.width(6.dp))
-                Text(
-                    "${limit.remainingPercent.roundToInt()}%", maxLines = 1,
-                    style = TextStyle(color = Palette.muted, fontSize = 11.sp),
-                )
+        Gauge(top.remainingPercent, UsageGauge.barWidth(inner, reserved = 0f).dp, if (roomy) 12.dp else 9.dp)
+        if (extraRows > 0) Column(GlanceModifier.fillMaxWidth()) {
+            for (limit in model.limits.drop(1).take(extraRows)) {
+                Spacer(GlanceModifier.height(if (roomy) 10.dp else 6.dp))
+                Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        limit.window, maxLines = 1,
+                        style = TextStyle(color = Palette.muted, fontSize = 11.sp),
+                        modifier = GlanceModifier.width(LABEL_W.dp),
+                    )
+                    Gauge(limit.remainingPercent, UsageGauge.barWidth(inner, LABEL_W + GAP + PERCENT_W).dp, 7.dp)
+                    Spacer(GlanceModifier.width(GAP.dp))
+                    Text(
+                        "${limit.remainingPercent.roundToInt()}%", maxLines = 1,
+                        style = TextStyle(color = Palette.value(limit.remainingPercent), fontSize = 11.sp, fontWeight = FontWeight.Medium),
+                        modifier = GlanceModifier.width(PERCENT_W.dp),
+                    )
+                }
             }
         }
         Spacer(GlanceModifier.height(if (roomy) 10.dp else 6.dp))
@@ -274,41 +290,55 @@ abstract class UsageWidget(
     }
 
     /**
-     * A bar made of thin segments, so it reads as one continuous rounded bar in Glance (which
-     * cannot weight two boxes unevenly). The part that is left fills from the start; it turns
-     * amber when low and red when nearly gone.
+     * One rounded bar: a track of exactly [width] with the part that is left drawn over it, green-ish
+     * (the wallpaper accent) while there is plenty, amber when low and red when nearly gone.
      */
     @Composable
-    private fun Gauge(remaining: Double, segments: Int, height: Dp, modifier: GlanceModifier) {
-        val count = segments * 2
-        val filled = if (remaining <= 0.0) 0 else ceil(remaining / 100.0 * count).toInt().coerceIn(1, count)
-        val on = Palette.fill(remaining)
-        Row(modifier) {
-            for (i in 0 until count) {
-                Box(
-                    GlanceModifier.defaultWeight().height(height).cornerRadius(2.dp)
-                        .background(if (i < filled) on else Palette.track),
-                ) {}
-                if (i < count - 1) Spacer(GlanceModifier.width(1.dp))
+    private fun Gauge(remaining: Double, width: Dp, height: Dp) {
+        val fill = UsageGauge.fillWidth(remaining, width.value, height.value)
+        Box(GlanceModifier.width(width).height(height).cornerRadius(height / 2).background(Palette.track)) {
+            if (fill > 0f) {
+                Box(GlanceModifier.width(fill.dp).height(height).cornerRadius(height / 2).background(Palette.fill(remaining))) {}
             }
         }
     }
+
+    private companion object {
+        val CORNER = 28.dp
+        // Fixed widths (dp) of the parts of a gauge row, so the bar can be given exactly what is left.
+        const val LABEL_W = 28f
+        const val GAP = 6f
+        const val PERCENT_W = 36f
+        const val RESET_W = 60f
+        const val GLYPH_W = 24f
+    }
 }
 
-/** The widgets' own palette: the app's violet on near-black, with a light twin for light mode. */
+/**
+ * The widgets' colours. Text and the healthy fill come from the Material You scheme (they follow the
+ * wallpaper); the warning colours are the app's quota colours. The card itself is `widget_glass`.
+ */
 private object Palette {
-    val background = ColorProvider(day = Color(0xFFF6F4FB), night = Color(0xFF141319))
-    val text = ColorProvider(day = Color(0xFF1B1A22), night = Color(0xFFF2F0F8))
-    val muted = ColorProvider(day = Color(0xFF6E6A7C), night = Color(0xFF9C98AD))
-    val track = ColorProvider(day = Color(0xFFE2DEEE), night = Color(0xFF2B2A35))
-    val accent = ColorProvider(day = Color(0xFF7A4DFF), night = Color(0xFF9B7BFF))
-    val warn = ColorProvider(day = Color(0xFFB26A00), night = Color(0xFFFFB020))
-    val danger = ColorProvider(day = Color(0xFFC62828), night = Color(0xFFFF6B6B))
+    val text: ColorProvider @Composable get() = GlanceTheme.colors.onSurface
+    val muted: ColorProvider @Composable get() = GlanceTheme.colors.onSurfaceVariant
+    val accent: ColorProvider @Composable get() = GlanceTheme.colors.primary
+    val track = ColorProvider(day = Color(0x26000000), night = Color(0x33FFFFFF))
+    val warn = ColorProvider(day = Color(0xFFC77700), night = Color(0xFFFF9F0A))
+    val danger = ColorProvider(day = Color(0xFFD92D20), night = Color(0xFFFF453A))
 
-    fun fill(remainingPercent: Double): ColorProvider = when {
-        remainingPercent <= 8.0 -> danger
-        UsageWidgetModel.isLow(remainingPercent) -> warn
-        else -> accent
+    @Composable
+    fun fill(remainingPercent: Double): ColorProvider = when (UsageGauge.tone(remainingPercent)) {
+        UsageGauge.Tone.CRITICAL -> danger
+        UsageGauge.Tone.CAUTION -> warn
+        UsageGauge.Tone.HEALTHY -> accent
+    }
+
+    /** The percentage text: plain while healthy, coloured like the bar once it is low. */
+    @Composable
+    fun value(remainingPercent: Double): ColorProvider = when (UsageGauge.tone(remainingPercent)) {
+        UsageGauge.Tone.CRITICAL -> danger
+        UsageGauge.Tone.CAUTION -> warn
+        UsageGauge.Tone.HEALTHY -> text
     }
 }
 

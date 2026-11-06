@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.ImageProvider
 import androidx.glance.GlanceTheme
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.action.clickable
@@ -66,7 +67,8 @@ class MinisWidget : GlanceAppWidget() {
         provideContent {
             GlanceTheme {
                 Column(
-                    GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground).padding(12.dp),
+                    // Frosted glass like the usage widgets, so the wallpaper shows through.
+                    GlanceModifier.fillMaxSize().background(ImageProvider(R.drawable.widget_glass)).cornerRadius(28.dp).padding(12.dp),
                 ) {
                     Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
