@@ -81,7 +81,8 @@ class ContextUsageReopenCompactedTest {
         val compacted = ContextSizeMeter.estimateTokens(
             RequestContextBuilder.compacted(history, RequestContextBuilder.Compaction(summary = "summary " + "s".repeat(2_000), marker = marker), 3),
         )
-        assertTrue("compacted=$compacted full=$full", compacted < full / 2)
+        // The summary message also carries the user's earlier messages (Codex's 20k token tail).
+        assertTrue("compacted=$compacted full=$full", compacted < full * 3 / 4)
         // A window between the two puts the full history in the warning band
         // and the compacted one below it: the glow on reopen must follow the
         // compacted figure.

@@ -318,7 +318,7 @@ class OffloadWriteIntegrityTest {
     fun `drift guard - refusal, model note and byte report still in production`() {
         val vm = ProductionSources.read("ui/chat/ChatViewModel.kt")
         assertTrue(vm.contains("val truncationRepairTag: String? = repairs.firstOrNull { it.startsWith(\"truncation+\") }"))
-        assertTrue(vm.contains("if (truncationRepairTag != null && (name == \"file_write\" || name == \"file_edit\")) {"))
+        assertTrue(vm.contains("if (truncationRepairTag != null && (name == \"file_write\" || name == \"file_edit\" || name == \"apply_patch\")) {"))
         assertTrue(vm.contains("Error: This call was NOT executed. Its argument stream was truncated "))
         assertTrue(vm.contains("Nothing was written to disk — the target file is unchanged."))
         assertTrue("refused call must be an error tool result", vm.contains("content = modelMessage,\n                                isError = true,"))

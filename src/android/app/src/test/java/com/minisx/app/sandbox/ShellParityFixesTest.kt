@@ -93,7 +93,8 @@ class ShellParityFixesTest {
     @Test
     fun `the fresh-process spawn uses that stdio setup`() {
         val fresh = ProductionSources.read("sandbox/FreshProcessShell.kt")
-        assertTrue(fresh.contains("val pb = ProcessBuilder(cmd)\n        configureStdin(pb)"))
+        assertTrue(fresh.contains("val pb = ProcessBuilder(cmd)"))
+        assertTrue("only an exec session keeps its stdin", fresh.contains("if (!keepStdin) configureStdin(pb)"))
         assertTrue(fresh.contains("pb.redirectInput(ProcessBuilder.Redirect.from(File(\"/dev/null\")))"))
     }
 }
