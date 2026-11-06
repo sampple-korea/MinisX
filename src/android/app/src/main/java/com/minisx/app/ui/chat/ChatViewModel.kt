@@ -19987,6 +19987,13 @@ internal object RequestContextBuilder {
                 trim.kept
             }
             trace?.apply { preAnchorSent = preAnchorPruned.size; warmUpSent = warmUp.size; postAnchorCount = postAnchor.size }
+            // [T-codex-compact-user-tail] The user's own earlier messages (up to Codex's 20k tokens,
+            // fewer when the window is tight) ride inside the summary message, verbatim.
+            val keptIds = warmUp.mapNotNullTo(HashSet()) { it.dbMessageId }
+            val userTailCap = compaction.warmUpBudget()?.let { minOf(CompactUserTail.MAX_TOKENS, it / 4) } ?: CompactUserTail.MAX_TOKENS
+            val earlierUsers = CompactUserTail.render(history, anchorIdx, keptIds, userTailCap)
+            val summaryForRequest = if (earlierUsers == null) summaryWrappedText
+            else summaryWrappedText.removeSuffix("\n</context-summary>") + "\n\n" + earlierUsers + "\n</context-summary>"
             // Step 2 & 3: copy the lookback window (post-prune, trimmed to fit),
             // then splice in the summary as parts[0] of the first post-anchor user msg.
             val result = mutableListOf<LLMMessage>()
@@ -20036,7 +20043,7 @@ internal object RequestContextBuilder {
                     target.contentParts
                 } else if (isToolResultCarrier) {
                     target.contentParts.subList(0, lastToolResultIdx + 1) +
-                        AgentContentPart.Text(summaryWrappedText) +
+                        AgentContentPart.Text(summaryForRequest) +
                         target.contentParts.subList(lastToolResultIdx + 1, target.contentParts.size)
                 } else {
                     val firstTextIdx = target.contentParts.indexOfFirst { it is AgentContentPart.Text }
@@ -20044,18 +20051,18 @@ internal object RequestContextBuilder {
                         // No text part to prepend onto (image/tool-only turn):
                         // add one at the front rather than editing a non-text
                         // part, so nothing already there is disturbed.
-                        listOf(AgentContentPart.Text(summaryWrappedText)) + target.contentParts
+                        listOf(AgentContentPart.Text(summaryForRequest)) + target.contentParts
                     } else {
                         target.contentParts.mapIndexed { i, part ->
                             if (i != firstTextIdx || part !is AgentContentPart.Text) part
-                            else AgentContentPart.Text(summaryWrappedText + "\n\n" + part.text)
+                            else AgentContentPart.Text(summaryForRequest + "\n\n" + part.text)
                         }
                     }
                 }
                 val injected = target.copy(
-                    content = if (!isToolResultCarrier) summaryWrappedText + "\n\n" + target.content
-                    else if (target.content.isEmpty()) summaryWrappedText
-                    else target.content + "\n\n" + summaryWrappedText,
+                    content = if (!isToolResultCarrier) summaryForRequest + "\n\n" + target.content
+                    else if (target.content.isEmpty()) summaryForRequest
+                    else target.content + "\n\n" + summaryForRequest,
                     contentParts = injectedParts,
                 )
                 trace?.apply {
@@ -20078,7 +20085,7 @@ internal object RequestContextBuilder {
                 // alternation.
                 result.addAll(postAnchor)
                 trace?.apply { injectedAt = result.size; mode = CompactionMode.V2_STANDALONE }
-                result.add(LLMMessage(role = LLMMessage.Role.USER, content = summaryWrappedText))
+                result.add(LLMMessage(role = LLMMessage.Role.USER, content = summaryForRequest))
             }
             return result
         }
