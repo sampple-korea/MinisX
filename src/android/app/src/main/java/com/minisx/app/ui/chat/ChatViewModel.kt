@@ -3264,9 +3264,11 @@ class ChatViewModel(
             for (block in msg.toolBlocks) {
                 if (block.kind != "tool_use") continue
                 if (block.toolName != "memory_write") continue
-                val content = try {
-                    JSONObject(block.toolArgs).optString("content", "")
-                } catch (_: Exception) { "" }
+                val blockArgs = try { JSONObject(block.toolArgs) } catch (_: Exception) { JSONObject() }
+                // Only an add leaves something to take back; an update or delete is not undone by text.
+                val blockAction = blockArgs.optString("action", "add").trim().lowercase()
+                if (blockAction.isNotEmpty() && blockAction !in setOf("add", "save", "create")) continue
+                val content = blockArgs.optString("content", "")
                 if (content.isNotBlank()) deletedContents.add(content)
             }
         }
@@ -15859,15 +15861,17 @@ class ChatViewModel(
         }
         val result = MemoryTools.executeMemoryWrite(argsJson, repo)
         // Record for SessionMemorySheet
-        val content = try {
-            JSONObject(argsJson).optString("content", "")
-        } catch (_: Exception) { "" }
+        val writeArgs = try { JSONObject(argsJson) } catch (_: Exception) { JSONObject() }
+        val content = writeArgs.optString("content", "")
+        // Only an add can be undone or edited from the sheet; an update or a delete changed an existing
+        // memory, so it has nothing of its own to revoke (matching its text would hit the wrong entry).
+        val isAdd = writeArgs.optString("action", "add").trim().lowercase().let { it.isEmpty() || it in setOf("add", "save", "create") }
         _memoryToolRecords.value = _memoryToolRecords.value + MemoryToolRecord(
             title = result.toolTitle,
             isWrite = true,
-            preview = content.lines().firstOrNull { it.isNotBlank() }?.take(100) ?: "",
+            preview = (if (isAdd) content else result.output).lines().firstOrNull { it.isNotBlank() }?.take(100) ?: "",
             output = result.output,
-            writtenContent = content,
+            writtenContent = if (isAdd && result.success) content else null,
         )
         return ToolExecutionResult(result.output, result.success, toolTitle = result.toolTitle)
     }
@@ -16483,8 +16487,8 @@ class ChatViewModel(
         val memoryOn = _memoryEnabled.value
         val toolListMemoryBullets = if (memoryOn) {
             """
-${com.minisx.app.agent.jobs.HelperRunner.systemPromptBullet(!isHelper && com.minisx.app.agent.jobs.AgentSettings.isEnabled(context))}${subAgentRosterPromptSection()}- memory_write: Save a memory entry to today's daily log (YYYY-MM-DD.md). Use proactively to note user preferences, project patterns, and important context.
-- memory_get: Recall memories with keyword search. Check memory at the start of new topics to leverage past knowledge."""
+${com.minisx.app.agent.jobs.HelperRunner.systemPromptBullet(!isHelper && com.minisx.app.agent.jobs.AgentSettings.isEnabled(context))}${subAgentRosterPromptSection()}- memory_write: Save, update or delete a memory (a short fact about the user that persists across chats; see "Memory system" below).
+- memory_get: List the saved memories with their ids, or search them and older notes by keyword."""
         } else {
             // Empty — no memory_write / memory_get bullets when disabled.
             // The "Memory system:" section below also collapses, so the
@@ -16496,19 +16500,18 @@ ${com.minisx.app.agent.jobs.HelperRunner.systemPromptBullet(!isHelper && com.min
             """
 
 Memory system (currently ENABLED):
-- memory_write writes to today's daily log (YYYY-MM-DD.md) — use it for session notes, key facts, project context, things learned, and action items.
-- GLOBAL.md (/var/minis/memory/GLOBAL.md) stores persistent preferences, settings, and general-purpose conventions. To read it, use file_read (NOT memory_get). To update it, use file_read first then file_edit. If GLOBAL.md does not exist yet, use file_write to create it directly.
-- IMPORTANT: Only write to GLOBAL.md when the user explicitly asks (e.g. 'remember this globally', 'save to global memory'). Before editing, deduplicate and clean up — avoid ambiguity, repetition, or daily-log-style entries. GLOBAL.md should contain only concise, reusable knowledge (preferences, settings, conventions), NOT session logs or transient context.
-- Use memory_get to recall past knowledge before starting tasks — check if there are relevant memories that can help.
-- Proactively save memories (via memory_write to daily log) when you discover user preferences or important patterns — don't wait to be asked.
-- When the user says 'remember this' or similar, use memory_write to persist to the daily log. Only write to GLOBAL.md if the user specifically asks for global/persistent storage.
-- What NOT to remember: passwords, API keys, tokens, secrets, or any sensitive credentials. Warn the user about the risk first; only proceed if they explicitly confirm.
-- Keep memories concise, factual, and general-purpose — avoid noise that won't be useful later."""
-        } else {
+- Saved memories are short facts about the user that persist across all chats. The current list is in the "Saved memories" section further down (absent when nothing is saved yet). Use it naturally to fit your answers to this user; do not recite it or announce that you remember. What the user says in this conversation always overrides a saved memory.
+- Save with memory_write (action=add) when the user asks you to remember something, or shares a lasting fact, preference, constraint or ongoing project likely to matter in later chats (their name, language, tools and stack, how they like answers, goals, recurring tasks). Do it in the same turn, quietly.
+- Do NOT save: passwords, API keys, tokens or ID numbers (if the user insists, warn about the risk first); sensitive personal data (health, sexuality, religion, politics, precise location, finances) unless the user asks you to keep it; one-off task details, file contents or anything only relevant to this chat; guesses about the user; other people's private details.
+- Write each memory as ONE short, self-contained sentence about the user, in the language they use ("User prefers concise answers", "User is learning Rust"), one fact per call. Look at the Saved memories list first: if a memory already covers it, use action=update with its id (merge instead of duplicating); if a new fact contradicts an old one, update or delete the old one.
+- When the user asks you to forget something or says a memory is wrong, use memory_write action=delete (or update) with its id, and confirm briefly. When asked what you remember, answer from the list (memory_get for the rest) and offer to change anything.
+- Never say you saved, changed or forgot something unless memory_write succeeded. Do not announce routine saves; one short acknowledgement is enough when the user explicitly asked you to remember.
+- GLOBAL.md (/var/minis/memory/GLOBAL.md) is the user's own file of standing preferences, shown below when it has content. Change it only when the user explicitly asks (file_read first, then file_edit; create it with file_write if missing), keeping it concise and free of duplicates.
+- When the user refers to an earlier chat ("what we discussed yesterday"), search it with `minis-sessions-cli search --keywords ...` instead of guessing. Older daily logs (YYYY-MM-DD.md) are no longer written or shown here; memory_get still searches them."""        } else {
             """
 
 Memory system (currently DISABLED):
-- The user has turned OFF memory injection and memory tools for this session. GLOBAL.md and recent daily logs are NOT included in this prompt, and the memory_write / memory_get tools are NOT available — do not attempt to call them.
+- The user has turned OFF memory injection and memory tools for this session. the saved memories and GLOBAL.md are NOT included in this prompt, and the memory_write / memory_get tools are NOT available — do not attempt to call them.
 - If the user asks why earlier memories aren't visible, or asks you to save something, tell them memory is currently disabled and point them at the /memory slash command or [Settings → Memory](minis://settings/memory) to re-enable it.
 - SOUL.md (personality / identity) is unaffected by this toggle; the persona section above still applies."""
         }
@@ -16569,8 +16572,9 @@ Shared directory /var/minis/ (bidirectional read/write between shell and app):
   /var/minis/offloads/    — Auto-saved large outputs. Read with file_read.
   /var/minis/browser/     — Browser screenshots and extracts.
   /var/minis/shared/      — Cross-session shared storage for artifacts and documents. Organize by project or topic (e.g. shared/myproject/, shared/datasets/). Do NOT store temporary files here.
-  /var/minis/memory/GLOBAL.md    — Persistent global memory (writable: the user edits it in Settings, and you may update it when the user asks).
-  /var/minis/memory/YYYY-MM-DD.md — Daily memory log.
+  /var/minis/memory/GLOBAL.md    — The user's standing preferences (writable: the user edits it in Settings, and you may update it when the user asks).
+  /var/minis/memory/MEMORIES.md  — The saved memories (managed with memory_write; the user can edit it in Settings).
+  /var/minis/memory/YYYY-MM-DD.md — Older daily notes (read-only history; search with memory_get).
   /sdcard/                       — The phone's whole shared storage (Download, DCIM, Documents, other apps' public files), read/write. Look here first when the task references the user's own files. It needs "All files access" (Settings → System permissions); if a path is denied, tell the user to grant it.
 
 The minis:// URL scheme:
@@ -16699,7 +16703,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         // tool surface and SOUL.md is part of identity, both orthogonal
         // to the memory feature.
         val globalMemoryFragment = if (memoryOn) memoryRepository?.loadGlobalMemoryFragment() else null
-        val dailyMemoryFragment = if (memoryOn) memoryRepository?.loadRecentDailyMemoryFragment() else null
+        val savedMemoryFragment = if (memoryOn) memoryRepository?.loadSavedMemoriesFragment() else null
         // [XSessionDiag] Hypothesis 3: ties the memory-injection sizes to a
         // SESSION id. MemoryRepository itself has no session context, so its own
         // `memory/daily-inject` line (which names the source files) cannot say who
@@ -16710,7 +16714,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
             "[XSessionDiag] prompt/memory: session=${activeSessionId.take(8)} " +
                 "memoryEnabled=$memoryOn " +
                 "globalChars=${globalMemoryFragment?.length ?: 0} " +
-                "dailyChars=${dailyMemoryFragment?.length ?: 0}",
+                "savedChars=${savedMemoryFragment?.length ?: 0}",
         )
 
         return buildString {
@@ -16747,9 +16751,9 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
                 append("\n\n")
                 append(globalMemoryFragment)
             }
-            if (dailyMemoryFragment != null) {
+            if (savedMemoryFragment != null) {
                 append("\n\n")
-                append(dailyMemoryFragment)
+                append(savedMemoryFragment)
             }
             // Runtime context goes last so the prefix above stays byte-stable
             // across requests within the same day. Keep ordering deterministic
@@ -16772,15 +16776,17 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
             )
         }
         val result = MemoryTools.executeMemoryWrite(argsJson, repo)
-        val content = try {
-            JSONObject(argsJson).optString("content", "")
-        } catch (_: Exception) { "" }
+        val writeArgs = try { JSONObject(argsJson) } catch (_: Exception) { JSONObject() }
+        val content = writeArgs.optString("content", "")
+        // Only an add can be undone or edited from the sheet; an update or a delete changed an existing
+        // memory, so it has nothing of its own to revoke (matching its text would hit the wrong entry).
+        val isAdd = writeArgs.optString("action", "add").trim().lowercase().let { it.isEmpty() || it in setOf("add", "save", "create") }
         _memoryToolRecords.value = _memoryToolRecords.value + MemoryToolRecord(
             title = result.toolTitle,
             isWrite = true,
-            preview = content.lines().firstOrNull { it.isNotBlank() }?.take(100) ?: "",
+            preview = (if (isAdd) content else result.output).lines().firstOrNull { it.isNotBlank() }?.take(100) ?: "",
             output = result.output,
-            writtenContent = content,
+            writtenContent = if (isAdd && result.success) content else null,
         )
         return result
     }

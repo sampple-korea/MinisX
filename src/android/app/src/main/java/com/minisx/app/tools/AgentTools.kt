@@ -210,28 +210,32 @@ object AgentTools {
     // Aligned with iOS AIChatViewModel.swift:5059-5067
     private fun memoryWriteDefinition(): AgentToolDefinition = AgentToolDefinition(
         name = "memory_write",
-        description = "Write a memory entry to today's daily log (YYYY-MM-DD.md). Memories persist across all sessions. " +
-            "Each entry is prepended with a timestamp. " +
-            "Save: user preferences, recurring patterns, key facts, project conventions, reusable knowledge. " +
-            "Avoid saving passwords, API keys, tokens, or secrets unless the user explicitly confirms after being warned. " +
-            "Keep entries concise and general-purpose. GLOBAL.md is writable but not through this tool; update it when the user asks.",
+        description = "Save, change or remove a memory: a short fact about the user that you will see in every later chat (the \"Saved memories\" list in the system prompt). " +
+            "action=add (default): `content` is ONE short, self-contained sentence about the user, in the language they use (\"User prefers concise answers\", \"User is learning Rust\"). " +
+            "Add when the user asks you to remember something, or shares a lasting fact, preference, constraint or ongoing project that will matter later; do it in the same turn without announcing it. " +
+            "If a similar memory already exists, use action=update with its `id` instead of adding a duplicate; if the user says a memory is wrong or asks you to forget it, use action=update or action=delete. " +
+            "Do not save passwords, keys or tokens, sensitive personal data the user did not ask you to keep, one-off task details, or guesses. " +
+            "The result confirms what was saved and gives its id.",
         parameters = mapOf(
-            "tool_title" to AgentToolParam("string", "A concise 5-10 word summary of what this tool call does, shown to the user (e.g. 'Save user preference for Python', 'Note today's project context'). Use the same language as the user."),
-            "content" to AgentToolParam("string", "The memory content to write. Use concise Markdown with a short heading (## Topic) and context about what was done/learned."),
+            "tool_title" to AgentToolParam("string", "A concise 5-10 word summary of what this tool call does, shown to the user (e.g. 'Save user preference for Python', 'Forget the old address'). Use the same language as the user."),
+            "action" to AgentToolParam("string", "\"add\" (default) saves a new memory, \"update\" rewrites the memory `id`, \"delete\" removes the memory `id`.", enumValues = listOf("add", "update", "delete")),
+            "content" to AgentToolParam("string", "add / update: the memory, one short sentence (at most 400 characters). Not used by delete."),
+            "id" to AgentToolParam("string", "update / delete: the id shown in the Saved memories list or returned by memory_get, e.g. m3f9a2. delete also takes several ids separated by commas, or \"all\" (only when the user asked you to forget everything)."),
         ),
-        required = listOf("tool_title", "content"),
-        propertyOrdering = listOf("tool_title", "content"),
+        required = listOf("tool_title"),
+        propertyOrdering = listOf("tool_title", "action", "content", "id"),
     )
 
     // Aligned with iOS AIChatViewModel.swift:5069-5078
     private fun memoryGetDefinition(): AgentToolDefinition = AgentToolDefinition(
         name = "memory_get",
-        description = "Retrieve memories from persistent storage. Supports keyword-based fuzzy search across memory files. " +
-            "Returns matching lines with surrounding context. Use this to recall previous knowledge, user preferences, or past notes.",
+        description = "Look up memories. With no keywords it lists every saved memory with its id (use the ids with memory_write). " +
+            "With keywords it searches the saved memories, GLOBAL.md and older daily notes, and returns matching lines with their surroundings. " +
+            "The saved memories are already in your system prompt, so use this for older notes, for the ids when the list was cut short, or when the user asks what you remember.",
         parameters = mapOf(
             "tool_title" to AgentToolParam("string", "A concise 5-10 word summary of what this tool call does, shown to the user (e.g. 'Recall user preferences', 'Search past notes'). Use the same language as the user."),
-            "scope" to AgentToolParam("string", "Memory scope to search: 'daily' for daily logs only, 'all' for daily logs + GLOBAL.md.", enumValues = listOf("daily", "all")),
-            "keywords" to AgentToolParam("string", "Space-separated keywords for fuzzy matching (e.g. 'python preference' or 'API key setup'). All keywords must appear in a line or its surrounding context for a match. Leave empty to return full memory files."),
+            "scope" to AgentToolParam("string", "'all' (default): saved memories, GLOBAL.md and older daily notes. 'daily': the older daily notes only.", enumValues = listOf("daily", "all")),
+            "keywords" to AgentToolParam("string", "Space-separated keywords for fuzzy matching (e.g. 'python preference' or 'API key setup'). All keywords must appear in a line or its surrounding context for a match. Leave empty to list the saved memories."),
         ),
         required = listOf("tool_title"),
         propertyOrdering = listOf("tool_title", "scope", "keywords"),

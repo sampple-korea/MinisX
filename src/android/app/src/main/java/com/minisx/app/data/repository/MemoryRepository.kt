@@ -52,7 +52,76 @@ class MemoryRepository(private val memoryDir: File) {
         // back into the next LLM call. Counted as UTF-8 bytes (matches
         // what the provider sees over the wire).
         private const val MAX_OUTPUT_BYTES = 30 * 1024  // 30 KB
+
+        /**
+         * Process-wide: several chats and sub agents can write memories at once, and a change is a
+         * read-modify-write of one file. Held for the whole change, never across a model call.
+         */
+        private val SAVED_LOCK = Any()
     }
+
+    // -- Saved memories (MEMORIES.md): the ChatGPT-style list --
+
+    private fun savedFile() = File(memoryDir, com.minisx.app.agent.memory.SavedMemories.FILE)
+
+    private fun readSavedItems(): List<com.minisx.app.agent.memory.SavedMemories.Item> {
+        val f = savedFile()
+        val text = if (f.exists()) try { f.readText() } catch (_: Exception) { "" } else ""
+        return com.minisx.app.agent.memory.SavedMemories.parse(text)
+    }
+
+    /** Written to a temp file and renamed, so a crash or a second writer never leaves half a file. */
+    private fun writeSavedItems(items: List<com.minisx.app.agent.memory.SavedMemories.Item>) {
+        val target = savedFile()
+        val tmp = File(memoryDir, com.minisx.app.agent.memory.SavedMemories.FILE + ".tmp")
+        val text = com.minisx.app.agent.memory.SavedMemories.render(items)
+        tmp.writeText(text)
+        if (!tmp.renameTo(target)) {
+            target.writeText(text)
+            tmp.delete()
+        }
+    }
+
+    private fun todayString(): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+
+    /** The saved memories, oldest first. */
+    fun savedMemories(): List<com.minisx.app.agent.memory.SavedMemories.Item.Entry> =
+        synchronized(SAVED_LOCK) { com.minisx.app.agent.memory.SavedMemories.entries(readSavedItems()) }
+
+    /**
+     * memory_write: [action] is add, update or delete. Under the lock; the file is only rewritten when
+     * something changed. The outcome's message is what the model reads.
+     */
+    fun applyMemoryAction(action: String, content: String, id: String): com.minisx.app.agent.memory.SavedMemories.Outcome =
+        synchronized(SAVED_LOCK) {
+            val items = readSavedItems()
+            val outcome = when (action.trim().lowercase().ifEmpty { "add" }) {
+                "add", "save", "create" -> com.minisx.app.agent.memory.SavedMemories.add(items, content, todayString(), System.nanoTime())
+                "update", "edit", "replace" -> {
+                    if (id.isBlank()) com.minisx.app.agent.memory.SavedMemories.Outcome(items, "Error: 'id' is required to update a memory (memory_get lists them).", false, false)
+                    else com.minisx.app.agent.memory.SavedMemories.update(items, id.trim(), content, todayString())
+                }
+                "delete", "remove", "forget" -> com.minisx.app.agent.memory.SavedMemories.delete(items, id)
+                else -> com.minisx.app.agent.memory.SavedMemories.Outcome(items, "Error: action must be add, update or delete.", false, false)
+            }
+            if (outcome.changed) {
+                try {
+                    writeSavedItems(outcome.items)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to write saved memories", e)
+                    return@synchronized com.minisx.app.agent.memory.SavedMemories.Outcome(items, "Error writing memory: ${e.message}", false, false)
+                }
+            }
+            outcome
+        }
+
+    /** The prompt section for the saved memories, or null when there are none. */
+    fun loadSavedMemoriesFragment(): String? =
+        com.minisx.app.agent.memory.SavedMemories.fragment(synchronized(SAVED_LOCK) { readSavedItems() })
+
+    /** memory_get with no keywords: the saved memories with their ids. */
+    fun listSavedMemories(): String =
+        com.minisx.app.agent.memory.SavedMemories.listing(synchronized(SAVED_LOCK) { readSavedItems() })
 
     init {
         memoryDir.mkdirs()
@@ -115,6 +184,8 @@ class MemoryRepository(private val memoryDir: File) {
         // Daily logs sorted descending
         val dailyFiles = memoryDir.listFiles()
             ?.filter { it.extension == "md" && it.name != GLOBAL_FILE }
+            // "daily" means the logs only; the saved memories (MEMORIES.md) come with "all".
+            ?.filter { scope == "all" || it.name != com.minisx.app.agent.memory.SavedMemories.FILE }
             ?.sortedByDescending { it.name }
             ?: emptyList()
 
@@ -444,6 +515,18 @@ class MemoryRepository(private val memoryDir: File) {
      * memory and shouldn't be silently mutated by an undo button.
      */
     fun revokeEntry(writtenContent: String): EntryMutationResult {
+        // The saved-memories list first (an undo of memory_write action=add); then the older daily logs.
+        synchronized(SAVED_LOCK) {
+            val out = com.minisx.app.agent.memory.SavedMemories.revoke(readSavedItems(), writtenContent)
+            if (out.ok) {
+                return try {
+                    writeSavedItems(out.items)
+                    EntryMutationResult.Success(com.minisx.app.agent.memory.SavedMemories.FILE)
+                } catch (e: Exception) {
+                    EntryMutationResult.IOError(e.message ?: "Unknown I/O error")
+                }
+            }
+        }
         val trimmedTarget = writtenContent.trim()
         val candidates = candidateDateStrings()
         val markerRegex = Regex("""<!-- \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} -->\n""")
@@ -482,6 +565,17 @@ class MemoryRepository(private val memoryDir: File) {
      * [revokeEntry]. Mirrors iOS `MemoryWriteDetailView.replaceEntryInLog()`.
      */
     fun replaceEntryBody(oldContent: String, newContent: String): EntryMutationResult {
+        synchronized(SAVED_LOCK) {
+            val out = com.minisx.app.agent.memory.SavedMemories.replace(readSavedItems(), oldContent, newContent)
+            if (out.ok) {
+                return try {
+                    writeSavedItems(out.items)
+                    EntryMutationResult.Success(com.minisx.app.agent.memory.SavedMemories.FILE)
+                } catch (e: Exception) {
+                    EntryMutationResult.IOError(e.message ?: "Unknown I/O error")
+                }
+            }
+        }
         val trimmedOld = oldContent.trim()
         val trimmedNew = newContent.trim()
         val candidates = candidateDateStrings()

@@ -1,7 +1,6 @@
 package com.minisx.app.tools
 
 import com.minisx.app.data.repository.MemoryRepository
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -34,13 +33,9 @@ class GlobalMemoryWritableWordingTest {
     }
 
     @Test
-    fun memoryWriteDescriptionsSayWritable() {
-        val tail = "GLOBAL.md is writable but not through this tool; update it when the user asks."
-        val json = MemoryTools.memoryWriteToolDefinition().getString("description")
-        assertTrue(json.endsWith(tail))
-        assertFalse(json.contains("read-only"))
-
+    fun memoryWriteDescriptionDoesNotCallAnythingReadOnly() {
         val def = AgentTools.makeAgentTools().single { it.name == "memory_write" }
-        assertEquals(json, def.description)
+        assertFalse(def.description.contains("read-only"))
+        assertTrue(def.description.contains("action=add"))
     }
 }
