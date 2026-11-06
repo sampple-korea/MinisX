@@ -48,11 +48,12 @@ class OverlayCompletionKeepAliveTest {
     }
 
     @Test
-    fun `the home-button case already worked and must keep working`() {
-        // Home leaves the Activity STOPPED, not destroyed, so presence is still
-        // held and the service survived on its own. The new flag must not be
-        // required for this path (it is a widening, not a replacement).
-        assertTrue(shouldRunService(activeSessions = 0, presentSessions = 1, overlayCompletionPending = false))
+    fun `the home-button case with nothing running no longer holds the service`() {
+        // Home leaves the Activity stopped with the chat still "present". Presence used to keep the
+        // service (and its "in session" notification) up with nothing running; it no longer does. A turn
+        // that ends meanwhile is covered by the overlay-completion flag, not by presence.
+        assertFalse(shouldRunService(activeSessions = 0, presentSessions = 1, overlayCompletionPending = false))
+        assertTrue(shouldRunService(activeSessions = 0, presentSessions = 1, overlayCompletionPending = true))
     }
 
     @Test
