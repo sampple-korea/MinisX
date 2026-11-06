@@ -337,9 +337,9 @@ class UserAskCoreTest {
         // the user to confirm" contradicted user_ask's confirm rule. When to ask
         // lives only in the tool description, so the general rules name no tool.
         val vm = com.minisx.app.ProductionSources.read("ui/chat/ChatViewModel.kt")
-        assertTrue(vm.contains("- When a tool exists for an action, use it directly instead of explaining what you plan to do.\n"))
+        assertTrue(vm.contains("when a tool exists for an action, use it directly."))
         assertFalse(vm.contains("asking the user to confirm"))
-        val style = vm.substringAfter("Tool call style:\n").substringBefore("\n\n")
+        val style = vm.substringAfter("How you work:\n").substringBefore("\n\n")
         assertFalse(style.contains("user_ask"))
     }
 
