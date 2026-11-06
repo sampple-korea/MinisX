@@ -13925,7 +13925,20 @@ class ChatViewModel(
                             outputForLLM
                         }
 
-                        resultParts.add(ToolResultWrap.part(id, name, outputForLLMWithNote, result))
+                        // [T-codex-tool-output-budget] What one tool result may cost the model: Codex
+                        // keeps the head and the tail of anything over ~12k tokens. The full text goes
+                        // to disk and the note says where; the UI block above already holds it whole.
+                        val outputForModel = com.minisx.app.agent.ToolOutputBudget.capped(
+                            toolName = name,
+                            text = outputForLLMWithNote,
+                            alreadyOffloaded = com.minisx.app.data.ContextOffload::isOffloadPlaceholder,
+                            save = { full ->
+                                com.minisx.app.data.ContextOffload
+                                    .offloadContent(context, activeSessionId, full, id, name)
+                                    .takeIf { it.isNotEmpty() }
+                            },
+                        )
+                        resultParts.add(ToolResultWrap.part(id, name, outputForModel, result))
                             } finally {
                                 SessionActivityTracker.toolFinished()
                             }
