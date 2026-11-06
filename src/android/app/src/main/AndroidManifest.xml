@@ -83,6 +83,15 @@
     <!-- "Take Photo" composer entry. We never use the camera background; the
          permission is requested at the moment the user taps the menu item. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- android-control: vibration, Wi-Fi state, Do Not Disturb, system settings, wallpaper, uninstall dialog. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <!-- T262-1: required to dispatch AlarmClock.ACTION_SET_ALARM to
@@ -160,6 +169,11 @@
     <!-- Package visibility for speech recognition services + Custom Tabs
          (Android 11+ scoped queries). -->
     <queries>
+        <!-- android-control app list / launch by name: every app with a launcher icon. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
         <!-- [T-android-health] Health Connect provider app (Android 13 and below). -->
         <package android:name="com.google.android.apps.healthdata" />
         <intent>

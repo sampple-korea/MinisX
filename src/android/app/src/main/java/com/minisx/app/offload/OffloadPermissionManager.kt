@@ -100,6 +100,9 @@ object OffloadPermissionManager {
         // NOT_ALLOWED until the user picks otherwise even when the
         // underlying system layer (Shizuku binder / Accessibility service)
         // is already authorized.
+        // android-control: flashlight, volume, brightness, switches, apps. Allowed by default; what needs
+        // privilege still goes through the Shizuku / root policies below.
+        ToolPermissionInfo("device_control", "android-control", PermissionCategory.INTEGRATIONS, PermissionLevel.BYPASS),
         ToolPermissionInfo("a11y_cli", "android-a11y-cli", PermissionCategory.INTEGRATIONS, PermissionLevel.NOT_ALLOWED),
         ToolPermissionInfo("shizuku_cli", "android-shizuku-cli", PermissionCategory.INTEGRATIONS, PermissionLevel.NOT_ALLOWED),
         // Root through su: every command is asked about, with the command shown, until the user picks otherwise.
