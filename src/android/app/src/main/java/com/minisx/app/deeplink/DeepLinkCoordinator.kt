@@ -107,4 +107,19 @@ object DeepLinkCoordinator {
         _pendingPrompt.value = null
         return current
     }
+
+    /**
+     * An assistant invocation (power-button long press etc.) for the new chat that is opening. Set only
+     * by MainActivity after redeeming the one-time token the assistant session registered in this
+     * process; there is no URL for it (see AssistantInvocations).
+     */
+    private val _pendingAssistant = MutableStateFlow<com.minisx.app.assistant.AssistantInvocation?>(null)
+
+    fun setPendingAssistant(invocation: com.minisx.app.assistant.AssistantInvocation?) { _pendingAssistant.value = invocation }
+
+    fun consumePendingAssistant(): com.minisx.app.assistant.AssistantInvocation? {
+        val current = _pendingAssistant.value
+        _pendingAssistant.value = null
+        return current
+    }
 }

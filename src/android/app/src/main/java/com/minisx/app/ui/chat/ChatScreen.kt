@@ -1193,6 +1193,7 @@ fun ChatScreen(
     LaunchedEffect(sessionId) {
         if (sessionId.startsWith("__new__")) {
             com.minisx.app.deeplink.DeepLinkCoordinator.consumePendingPrompt()?.let { viewModel.setInputText(it) }
+            com.minisx.app.deeplink.DeepLinkCoordinator.consumePendingAssistant()?.let { viewModel.setAssistantInvocation(it) }
         }
     }
 

@@ -822,6 +822,7 @@ class MinisApp : Application(), ImageLoaderFactory {
         // android-control: the assistant's device controls (flashlight, volume, screen, Wi-Fi, apps, ...).
         NativeOffloadServer.register("android-control", com.minisx.app.sandbox.offload.ControlOffloadHandler(this))
         com.minisx.app.offload.ShizukuManager.init(this)
+        com.minisx.app.assistant.AssistantSettings.init(this)
 
         // T-android-minis-debug-cli: shell-side CLI wrapper around the in-app
         // DebugServer (127.0.0.1:5321) JSON-RPC. DEBUG-only — Release builds

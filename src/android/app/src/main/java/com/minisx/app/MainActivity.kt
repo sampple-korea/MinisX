@@ -508,7 +508,13 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         // while inside a chat, synthesise an OpenSession deep-link so
         // the navigation stack lands on that chat instead of the
         // sessions list. T166.
-        val explicitDeepLink = DeepLinkHandler.parse(intent?.data)
+        // An assistant invocation (power-button long press etc.): the session registered it in this
+        // process and sent only a one-time token. Never a URL: those are public.
+        val assistantInvocation = com.minisx.app.assistant.AssistantInvocations.redeem(
+            intent?.getStringExtra(com.minisx.app.assistant.AssistantInvocations.EXTRA_TOKEN),
+        )
+        if (assistantInvocation != null) DeepLinkCoordinator.setPendingAssistant(assistantInvocation)
+        val explicitDeepLink = if (assistantInvocation != null) DeepLinkAction.NewChat else DeepLinkHandler.parse(intent?.data)
         val launchDeepLink = if (explicitDeepLink !is DeepLinkAction.Unknown) {
             explicitDeepLink
         } else {
@@ -778,7 +784,24 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         if (intent.getBooleanExtra("shared_content", false)) {
             com.minisx.app.share.ShareCoordinator.processPendingShare(this)
         }
+        val assistantInvocation = com.minisx.app.assistant.AssistantInvocations.redeem(
+            intent.getStringExtra(com.minisx.app.assistant.AssistantInvocations.EXTRA_TOKEN),
+        )
+        if (assistantInvocation != null) {
+            DeepLinkCoordinator.setPendingAssistant(assistantInvocation)
+            openAssistantChat()
+            return
+        }
         handleDeepLink(intent.data)
+    }
+
+    /** A fresh chat for an assistant invocation, the same way the app-icon "new chat" action opens one. */
+    private fun openAssistantChat() {
+        val nav = navController ?: return
+        nav.navigate(Routes.chat("__new__${java.util.UUID.randomUUID()}")) {
+            popUpTo(Routes.SESSION_LIST) { inclusive = false }
+            launchSingleTop = true
+        }
     }
 
     private fun handleDeepLink(uri: Uri?) {

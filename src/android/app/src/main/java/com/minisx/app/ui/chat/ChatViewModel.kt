@@ -9553,9 +9553,51 @@ class ChatViewModel(
         AppLogger.info(TAG, "[provider-edit] rebuilt provider for edited instance ${id.take(8)} (responses=${instance.useResponsesAPI})")
     }
 
+    /** The assistant invocation this chat was opened with, until its first message takes it. */
+    private var assistantInvocation: com.minisx.app.assistant.AssistantInvocation? = null
+
+    fun setAssistantInvocation(invocation: com.minisx.app.assistant.AssistantInvocation) {
+        assistantInvocation = invocation
+    }
+
+    /**
+     * The first message of an assistant chat carries the screen the user was looking at: the screenshot
+     * (when the model takes images) and a text file saying what it is and what is written on it. The
+     * attachments go through the ordinary pipeline, so they are stored with the message like any other.
+     */
+    private fun attachAssistantContext() {
+        val inv = assistantInvocation ?: return
+        assistantInvocation = null
+        try {
+            var hasImage = false
+            val shot = inv.screenshot
+            if (com.minisx.app.assistant.AssistantSettings.screenshot && currentModelHasNativeVision && shot != null && shot.exists()) {
+                addAttachment(InputAttachment(
+                    fileName = "screen.jpg",
+                    uri = android.net.Uri.fromFile(shot),
+                    mimeType = "image/jpeg",
+                    kind = InputAttachment.Kind.IMAGE,
+                ))
+                hasImage = true
+            }
+            val dir = java.io.File(context.cacheDir, "assistant").apply { mkdirs() }
+            val doc = java.io.File(dir, "screen-context-${System.currentTimeMillis()}.txt")
+            doc.writeText(com.minisx.app.assistant.AssistantContext.screenDocument(inv, hasImage))
+            addAttachment(InputAttachment(
+                fileName = "screen-context.txt",
+                uri = android.net.Uri.fromFile(doc),
+                mimeType = "text/plain",
+                kind = InputAttachment.Kind.DOCUMENT,
+            ))
+        } catch (e: Exception) {
+            AppLogger.warning(TAG, "[Assistant] could not attach the screen: ${e.message}")
+        }
+    }
+
     fun sendMessage(text: String) {
         // [T-android-stop-sibling-subagent] New work in this session lifts the
         // stop: delegations from here on may drive the turn again.
+        attachAssistantContext()
         com.minisx.app.agent.jobs.AgentJobRegistry.clearDelegationMute(activeSessionId)
         sendMessage(text, skipContextCheck = false, headless = false)
     }

@@ -2786,4 +2786,26 @@
     <string name="mcp_dcr_registration_unreadable">The registration response could not be read.</string>
     <string name="mcp_dcr_http_status">%1$s returned HTTP %2$d.</string>
     <string name="mcp_dcr_unreadable">%1$s returned data that could not be read.</string>
+
+    <!-- Assistant -->
+    <string name="assistant_title">Assistant</string>
+    <string name="assistant_settings_subtitle">Power-button long press, screen awareness, quick commands</string>
+    <string name="assistant_section_default">Default assistant</string>
+    <string name="assistant_default_row">Digital assistant app</string>
+    <string name="assistant_default_yes">MinisX is your assistant</string>
+    <string name="assistant_default_no">Not set. Tap to choose MinisX.</string>
+    <string name="assistant_default_footer">Android does not let an app make itself the assistant, so this opens the system page: choose MinisX under "Digital assistant app", and turn on "Use screenshot" there. On Samsung, also set Settings > Advanced features > Side key > Press and hold > Digital assistant. After switching, check that voice input in the chat still works.</string>
+    <string name="assistant_section_screen">Screen</string>
+    <string name="assistant_screen_footer">Each time you call the assistant, the screen as it was just before is captured and sent with your first message. The system screenshot is used when allowed, otherwise the accessibility service, otherwise Shizuku (only when android-shizuku-cli is set to Allow). Apps that block screenshots, and the lock screen, give nothing and the assistant continues with the text alone. A model that takes no images gets the text only.</string>
+    <string name="assistant_screenshot">Always include a screenshot</string>
+    <string name="assistant_screenshot_sub">Capture before MinisX opens; attached to the first message</string>
+    <string name="assistant_screen_text">Include the text on screen</string>
+    <string name="assistant_screen_text_sub">Lets models without image input see the screen too</string>
+    <string name="assistant_capture_methods">Capture without the system screenshot</string>
+    <string name="assistant_capture_a11y_on">Accessibility service is on: screenshots work everywhere</string>
+    <string name="assistant_capture_a11y_off">Accessibility service is off: only the system screenshot or Shizuku can capture</string>
+    <string name="assistant_section_fast">Quick commands</string>
+    <string name="assistant_fast_footer">Plain commands such as "turn on the flashlight", "volume 50", "Wi-Fi off" run on the spot without asking the model. Anything it does not recognise, or that fails, goes to the model as usual.</string>
+    <string name="assistant_fast_path">Run simple commands directly</string>
+    <string name="assistant_fast_path_sub">Faster and works without a model reply</string>
 </resources>

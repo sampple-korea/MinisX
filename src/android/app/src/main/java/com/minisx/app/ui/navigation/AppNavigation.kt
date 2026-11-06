@@ -136,6 +136,7 @@ object Routes {
     const val ENV_VARS = "env_vars"
     /** [T-android-biolock] Settings → Biometric Lock. */
     const val BIOMETRIC_LOCK = "biometric_lock"
+    const val ASSISTANT = "assistant_settings"
     const val NETWORK = "network"
     // [FEAT-261021-04] The other pages of Settings > Network.
     const val NETWORK_TAILSCALE = "network_tailscale"
@@ -655,6 +656,7 @@ fun AppNavigation(
                 onBackupClick = { navController.safeNavigate(Routes.BACKUP) },
                 onEnvVarsClick = { navController.safeNavigate(Routes.ENV_VARS) },
                 onBiometricLockClick = { navController.safeNavigate(Routes.BIOMETRIC_LOCK) },
+                onAssistantClick = { navController.safeNavigate(Routes.ASSISTANT) },
                 onNetworkClick = { navController.safeNavigate(Routes.NETWORK) },
                 onTailscaleClick = { navController.safeNavigate(Routes.NETWORK_TAILSCALE) },
                 onProxiesClick = { navController.safeNavigate(Routes.NETWORK_PROXIES) },
@@ -1314,6 +1316,10 @@ fun AppNavigation(
         }
         composable(Routes.CONTAINER_DNS) {
             com.minisx.app.ui.sandbox.ContainerDnsScreen(onBack = { navController.safePopBackStack() })
+        }
+
+        composable(Routes.ASSISTANT) {
+            com.minisx.app.ui.settings.AssistantSettingsScreen(onBack = { navController.safePopBackStack() })
         }
 
         composable(Routes.BIOMETRIC_LOCK) {

@@ -2462,4 +2462,26 @@
     <plurals name="subagent_detail_turns">
         <item quantity="other">%1$d턴</item>
     </plurals>
+
+    <!-- Assistant -->
+    <string name="assistant_title">어시스턴트</string>
+    <string name="assistant_settings_subtitle">전원 버튼 길게 누르기, 화면 인식, 빠른 명령</string>
+    <string name="assistant_section_default">기본 어시스턴트</string>
+    <string name="assistant_default_row">디지털 어시스턴트 앱</string>
+    <string name="assistant_default_yes">MinisX가 어시스턴트로 설정되어 있어요</string>
+    <string name="assistant_default_no">설정되지 않았어요. 눌러서 MinisX를 선택하세요.</string>
+    <string name="assistant_default_footer">Android에서는 앱이 스스로 어시스턴트가 될 수 없어서 시스템 설정 화면을 열어요. "디지털 어시스턴트 앱"에서 MinisX를 고르고, 같은 화면의 "스크린샷 사용"도 켜 주세요. 삼성 기기는 설정 > 유용한 기능 > 측면 버튼 > 길게 누르기 > 디지털 어시스턴트로도 바꿔야 해요. 바꾼 뒤에는 채팅 음성 입력이 잘 되는지 확인해 주세요.</string>
+    <string name="assistant_section_screen">화면</string>
+    <string name="assistant_screen_footer">어시스턴트를 부를 때마다 바로 직전 화면을 캡처해 첫 메시지와 함께 보내요. 시스템 스크린샷이 허용되면 그걸 쓰고, 아니면 접근성 서비스, 그것도 안 되면 Shizuku(android-shizuku-cli가 "허용"일 때만)를 써요. 스크린샷을 막는 앱과 잠금 화면은 캡처되지 않아서 글자 정보만으로 이어가요. 이미지를 못 받는 모델에는 글자만 보내요.</string>
+    <string name="assistant_screenshot">스크린샷 항상 포함</string>
+    <string name="assistant_screenshot_sub">MinisX가 열리기 전에 캡처해서 첫 메시지에 첨부해요</string>
+    <string name="assistant_screen_text">화면의 글자도 포함</string>
+    <string name="assistant_screen_text_sub">이미지 입력이 없는 모델도 화면을 볼 수 있어요</string>
+    <string name="assistant_capture_methods">시스템 스크린샷 없이 캡처</string>
+    <string name="assistant_capture_a11y_on">접근성 서비스가 켜져 있어요: 어디서든 캡처돼요</string>
+    <string name="assistant_capture_a11y_off">접근성 서비스가 꺼져 있어요: 시스템 스크린샷이나 Shizuku로만 캡처돼요</string>
+    <string name="assistant_section_fast">빠른 명령</string>
+    <string name="assistant_fast_footer">"손전등 켜줘", "볼륨 50", "와이파이 꺼"처럼 단순한 명령은 모델에게 묻지 않고 바로 실행해요. 알아듣지 못했거나 실패하면 평소처럼 모델로 넘어가요.</string>
+    <string name="assistant_fast_path">단순 명령은 바로 실행</string>
+    <string name="assistant_fast_path_sub">더 빠르고 모델 응답 없이도 동작해요</string>
 </resources>

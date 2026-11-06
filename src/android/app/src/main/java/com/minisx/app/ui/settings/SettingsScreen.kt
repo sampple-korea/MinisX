@@ -116,6 +116,7 @@ fun SettingsScreen(
     onPermissionsClick: () -> Unit = {},
     // [T-android-biolock] Biometric Lock (app lock + locked chats).
     onBiometricLockClick: () -> Unit = {},
+    onAssistantClick: () -> Unit = {},
     onUsageClick: () -> Unit = {},
     onAppearanceClick: () -> Unit = {},
     onLogsClick: () -> Unit = {},
@@ -393,6 +394,18 @@ fun SettingsScreen(
                     title = stringResource(R.string.network_container_dns),
                     subtitle = null,
                     onClick = onContainerDnsClick,
+                    showDivider = false,
+                )
+            }
+
+            // -- Assistant --
+            SettingsSection(title = stringResource(R.string.assistant_title)) {
+                SettingsItem(
+                    icon = Icons.Outlined.AutoAwesome,
+                    iconColor = Color(0xFFAF52DE),
+                    title = stringResource(R.string.assistant_title),
+                    subtitle = stringResource(R.string.assistant_settings_subtitle),
+                    onClick = onAssistantClick,
                     showDivider = false,
                 )
             }
