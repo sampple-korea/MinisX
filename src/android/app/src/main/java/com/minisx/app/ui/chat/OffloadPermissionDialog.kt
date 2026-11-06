@@ -87,19 +87,21 @@ fun OffloadPermissionDialog() {
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                // Allow in this session — happy path goes first.
+                // A root command (detail set) leads with "Allow once": the safe choice is the easy one.
+                val onceFirst = req.detail != null
+                val allowSession = OffloadPermissionManager.Response.ALLOW_SESSION
+                val allowOnce = OffloadPermissionManager.Response.ALLOW_ONCE
                 MinisButton(
-                    onClick = { OffloadPermissionManager.respondToRequest(OffloadPermissionManager.Response.ALLOW_SESSION) },
+                    onClick = { OffloadPermissionManager.respondToRequest(if (onceFirst) allowOnce else allowSession) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(stringResource(R.string.offload_perm_allow_session))
+                    Text(stringResource(if (onceFirst) R.string.offload_perm_allow_once else R.string.offload_perm_allow_session))
                 }
-                // Allow once — no caching; next call re-prompts.
                 MinisOutlinedButton(
-                    onClick = { OffloadPermissionManager.respondToRequest(OffloadPermissionManager.Response.ALLOW_ONCE) },
+                    onClick = { OffloadPermissionManager.respondToRequest(if (onceFirst) allowSession else allowOnce) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(stringResource(R.string.offload_perm_allow_once))
+                    Text(stringResource(if (onceFirst) R.string.offload_perm_allow_session else R.string.offload_perm_allow_once))
                 }
                 // Deny in this session — refuse + remember.
                 MinisTextButton(

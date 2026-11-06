@@ -190,12 +190,12 @@ object UserAskParser {
         fun bad(msg: String) = Result.failure<UserAskQuestion>(UserAskParseError(msg))
         // An explicit, valid `type` always wins; inference only fills a
         // missing / unknown one, and everything below validates as before.
-        val type = UserAskQuestionType.parse(str(q.opt("type"))) ?: inferredType(q)
+        var type = UserAskQuestionType.parse(str(q.opt("type"))) ?: inferredType(q)
             ?: return bad(
                 "questions[$i].type must be \"options\" or \"confirm\": options for a decision " +
                     "(or an open-ended question), confirm for approval of one action.",
             )
-        val text = str(q.opt("question")) ?: return bad("questions[$i].question is required.")
+        var text = str(q.opt("question")) ?: return bad("questions[$i].question is required.")
         var options: List<UserAskOption>? = null
         val rawOptions = when (val v = q.opt("options")) {
             is JSONArray -> v
@@ -204,7 +204,16 @@ object UserAskParser {
         }
         if (rawOptions != null && rawOptions.length() > 0) {
             if (type != UserAskQuestionType.OPTIONS) {
-                return bad("questions[$i] is a confirm: it takes no `options` (the card shows Cancel / Allow). Put the exact action in `question` and the consequence in `impact`.")
+                // A confirm that comes with 2-4 choices is a decision, not an approval: models keep
+                // sending "confirm" with options (one session retried it 47 times), and the choices
+                // are the clearest evidence of what was meant. Ask it as an options question, with
+                // the consequence kept in the question text.
+                if (rawOptions.length() in MIN_OPTIONS..MAX_OPTIONS) {
+                    str(q.opt("impact"))?.let { text = "$text\n$it" }
+                    type = UserAskQuestionType.OPTIONS
+                } else {
+                    return bad("questions[$i] is a confirm: it takes no `options` (the card shows Cancel / Allow). Put the exact action in `question` and the consequence in `impact`. To let the user choose between 2-4 choices, use type=\"options\" instead.")
+                }
             }
             if (rawOptions.length() < MIN_OPTIONS) {
                 return bad("questions[$i].options needs at least $MIN_OPTIONS genuinely different choices. With only one sensible choice, do not ask: take it and state the assumption. For an open question, omit `options`.")

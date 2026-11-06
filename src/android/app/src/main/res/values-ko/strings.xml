@@ -736,6 +736,13 @@
     <string name="perm_level_not_allowed">허용 안 함</string>
     <string name="perm_section_config_tool">설정 도구</string>
     <string name="perm_tool_a11y_cli">android-a11y-cli</string>
+    <string name="perm_tool_root_cli">android-root-cli</string>
+    <string name="perm_section_root">루트 (su)</string>
+    <string name="perm_root_description">su로 바로 루트 권한 명령을 실행합니다. KernelSU나 Magisk에서 MinisX에 루트만 허용해 두면 됩니다.</string>
+    <string name="perm_root_section_footer">루트 명령은 실행 전에 매번 명령 내용을 보여 드리고 승인을 받습니다. 묻기: 명령마다 또는 이 대화 동안 승인. 항상 허용: 묻지 않음. 허용 안 함: 에이전트가 루트를 쓸 수 없음.</string>
+    <string name="perm_root_su_found">su 있음</string>
+    <string name="perm_root_su_missing">su 없음</string>
+    <string name="perm_root_recheck">다시 확인</string>
     <string name="perm_tool_shizuku_cli">android-shizuku-cli</string>
     <string name="perm_section_a11y">접근성</string>
     <string name="perm_section_shizuku">Shizuku</string>

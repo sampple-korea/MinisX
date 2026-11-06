@@ -878,6 +878,13 @@
          the system-layer authorization status with an inline action
          row when system Settings need attention. -->
     <string name="perm_tool_a11y_cli">android-a11y-cli</string>
+    <string name="perm_tool_root_cli">android-root-cli</string>
+    <string name="perm_section_root">Root (su)</string>
+    <string name="perm_root_description">Runs commands as root straight through su. KernelSU or Magisk only has to have granted MinisX root.</string>
+    <string name="perm_root_section_footer">Every root command is shown to you for approval before it runs. Ask: approve each command, or for the rest of the chat. Always allow: no prompts. Not allowed: the agent cannot use root.</string>
+    <string name="perm_root_su_found">su found</string>
+    <string name="perm_root_su_missing">su not found</string>
+    <string name="perm_root_recheck">Check again</string>
     <string name="perm_tool_shizuku_cli">android-shizuku-cli</string>
     <string name="perm_section_a11y">Accessibility</string>
     <string name="perm_section_shizuku">Shizuku</string>

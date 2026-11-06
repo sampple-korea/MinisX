@@ -216,6 +216,23 @@ fun OffloadPermissionScreen(
             onStatusRowClick = onOpenPrivilegedBackend,
         )
 
+        // android-root-cli: root straight through su. The root manager grants MinisX; each command is
+        // approved in the app (policy below: ask, always allow, never).
+        var suFound by remember { mutableStateOf(com.minisx.app.offload.RootShell.suPresent()) }
+        Spacer(Modifier.height(16.dp))
+        IntegrationSection(
+            iconVector = Icons.Outlined.Shield,
+            iconTint = Color(0xFFFF3B30),
+            sectionHeaderRes = R.string.perm_section_root,
+            sectionFooterRes = R.string.perm_root_section_footer,
+            toolName = "root_cli",
+            descriptionRes = R.string.perm_root_description,
+            systemReady = suFound,
+            systemStatusTitleRes = if (suFound) R.string.perm_root_su_found else R.string.perm_root_su_missing,
+            systemActionTitleRes = R.string.perm_root_recheck,
+            onSystemAction = { suFound = com.minisx.app.offload.RootShell.suPresent() },
+        )
+
         Spacer(Modifier.height(16.dp))
     }
 
@@ -458,6 +475,7 @@ private fun toolTitleRes(toolName: String): Int = when (toolName) {
     "photos" -> R.string.perm_tool_photos
     "a11y_cli" -> R.string.perm_tool_a11y_cli
     "shizuku_cli" -> R.string.perm_tool_shizuku_cli
+    "root_cli" -> R.string.perm_tool_root_cli
     else -> 0
 }
 

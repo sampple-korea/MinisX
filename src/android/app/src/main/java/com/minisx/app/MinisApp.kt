@@ -817,6 +817,8 @@ class MinisApp : Application(), ImageLoaderFactory {
         // can register unconditionally; ShizukuManager.init below wires
         // up the binder lifecycle listeners + StateFlow.
         NativeOffloadServer.register("android-shizuku-cli", ShizukuOffloadHandler(this))
+        // android-root-cli: root straight through su (KernelSU/Magisk), each command approved in-app.
+        NativeOffloadServer.register("android-root-cli", com.minisx.app.sandbox.offload.RootOffloadHandler())
         com.minisx.app.offload.ShizukuManager.init(this)
 
         // T-android-minis-debug-cli: shell-side CLI wrapper around the in-app

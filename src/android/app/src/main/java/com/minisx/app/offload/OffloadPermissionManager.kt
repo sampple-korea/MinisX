@@ -30,6 +30,8 @@ object OffloadPermissionManager {
         val toolTitle: String,
         val description: String,
         val sessionId: String,
+        /** The exact thing being approved (a root command). Set: the prompt leads with "Allow once". */
+        val detail: String? = null,
     )
 
     enum class PermissionCategory(val displayName: String) {
@@ -96,6 +98,8 @@ object OffloadPermissionManager {
         // is already authorized.
         ToolPermissionInfo("a11y_cli", "android-a11y-cli", PermissionCategory.INTEGRATIONS, PermissionLevel.NOT_ALLOWED),
         ToolPermissionInfo("shizuku_cli", "android-shizuku-cli", PermissionCategory.INTEGRATIONS, PermissionLevel.NOT_ALLOWED),
+        // Root through su: every command is asked about, with the command shown, until the user picks otherwise.
+        ToolPermissionInfo("root_cli", "android-root-cli", PermissionCategory.INTEGRATIONS, PermissionLevel.ASK_ONCE),
     )
 
     /** Stable session-id used by NativeOffloadHandlers when calling
@@ -448,7 +452,7 @@ object OffloadPermissionManager {
      * For ASK_ONCE, suspends until user responds via the dialog.
      * Returns true if allowed.
      */
-    suspend fun checkPermission(toolName: String, toolTitle: String, sessionId: String): Boolean {
+    suspend fun checkPermission(toolName: String, toolTitle: String, sessionId: String, detail: String? = null): Boolean {
         val level = getLevel(toolName)
         return when (level) {
             PermissionLevel.BYPASS -> true
@@ -481,8 +485,9 @@ object OffloadPermissionManager {
                             _pendingRequest.value = PermissionRequest(
                                 toolName = toolName,
                                 toolTitle = toolTitle,
-                                description = "Allow ${info?.displayName ?: toolName} access?",
+                                description = detail ?: "Allow ${info?.displayName ?: toolName} access?",
                                 sessionId = sessionId,
+                                detail = detail,
                             )
                             cont.invokeOnCancellation {
                                 _pendingRequest.value = null

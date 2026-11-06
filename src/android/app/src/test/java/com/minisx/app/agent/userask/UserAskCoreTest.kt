@@ -44,7 +44,8 @@ class UserAskCoreTest {
         assertTrue(err(args(mapOf("type" to "choice", "question" to "x"))).contains("\"options\" or \"confirm\""))
         assertTrue(err(args(mapOf("type" to "options", "question" to "x", "options" to opts("A")))).contains("at least 2"))
         assertTrue(err(args(mapOf("type" to "options", "question" to "x", "options" to (0..4).map { mapOf("label" to "L$it") }))).contains("at most 4"))
-        assertTrue(err(args(mapOf("type" to "confirm", "question" to "rm x", "options" to opts("Y", "N")))).contains("takes no `options`"))
+        assertTrue(err(args(mapOf("type" to "confirm", "question" to "rm x", "options" to opts("Y")))).contains("takes no `options`"))
+        assertTrue(err(args(mapOf("type" to "confirm", "question" to "rm x", "options" to opts("Y")))).contains("use type=\"options\""))
         assertTrue(err(args(mapOf("type" to "options", "question" to "x", "options" to opts("A", "B"), "default" to 5))).contains("0-based index"))
         assertTrue(err(args(mapOf("type" to "options"))).contains("question is required"))
         assertTrue(err(args(mapOf("type" to "options", "question" to "x", "options" to listOf(mapOf("description" to "no label"), mapOf("label" to "B"))))).contains("options[0].label is required"))
@@ -107,7 +108,16 @@ class UserAskCoreTest {
     }
 
     @Test fun `an explicit type is never overridden by inference`() {
-        assertTrue(err(args(mapOf("type" to "confirm", "question" to "x", "options" to twoOpts))).contains("takes no `options`"))
+        // One option is not a choice: still a confirm with options, still rejected.
+        assertTrue(err(args(mapOf("type" to "confirm", "question" to "x", "options" to opts("A")))).contains("takes no `options`"))
+    }
+
+    @Test fun `a confirm that brings 2-4 choices is asked as an options question`() {
+        val q = UserAskParser.parse(args(mapOf("type" to "confirm", "question" to "Open the login page?", "impact" to "Needs the code on screen", "options" to twoOpts))).getOrThrow()
+        val only = q.questions.single()
+        assertEquals(UserAskQuestionType.OPTIONS, only.type)
+        assertEquals(2, only.options?.size)
+        assertTrue(only.question.contains("Open the login page?") && only.question.contains("Needs the code on screen"))
     }
 
     @Test fun `string-encoded options count as options evidence (Android dialect)`() {
