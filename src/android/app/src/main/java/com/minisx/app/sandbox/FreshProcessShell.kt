@@ -250,7 +250,7 @@ internal class FreshProcessShell(
     }
 
     /** Build the argv and environment, mirroring PersistentShell.startProcess. */
-    private fun spawn(command: String, envVars: Map<String, String>, statusGuestPath: String): Process {
+    private fun spawn(command: String, envVars: Map<String, String>, statusGuestPath: String, keepStdin: Boolean = false): Process {
         val rootfsManager = RootfsManager.getInstance(context)
         val cmd = mutableListOf<String>()
         cmd.add(rootfsManager.prootBinary.absolutePath)
@@ -287,7 +287,8 @@ internal class FreshProcessShell(
 
         val debugOffload = com.minisx.app.BuildConfig.DEV_TOOLS
         val pb = ProcessBuilder(cmd)
-        configureStdin(pb)
+        // An exec session keeps its stdin pipe so the model can write to it; every other command reads /dev/null.
+        if (!keepStdin) configureStdin(pb)
         // Separate in debug so proot's [native_offload] lines reach logcat
         // instead of the output — which is why execute() starts a StderrDrain
         // whenever SEPARATE_STDERR is set.
@@ -317,6 +318,37 @@ internal class FreshProcessShell(
         }
         // [T-shell-stall-yes-head] SIGPIPE unblocked in the child; see SpawnSignalMask.
         return SpawnSignalMask.start(pb)
+    }
+
+    /**
+     * Starts [command] and hands back its process without waiting for it: the caller reads the output
+     * and writes to stdin as it likes ([ExecSession]). Same environment, mounts, process group and exit
+     * status file as [execute]. Null when the process could not be started.
+     */
+    internal fun startInteractive(command: String, envVars: Map<String, String>): Process? {
+        val exitDir = File(RootfsManager.getInstance(context).rootfsDir, EXIT_DIR_NAME)
+        runCatching { exitDir.mkdirs(); pruneStaleExitFiles(exitDir) }
+        val token = java.util.UUID.randomUUID().toString()
+        val statusFile = File(exitDir, token)
+        statusHandle = statusFile
+        val process = try {
+            spawn(command, envVars, "/$EXIT_DIR_NAME/$token", keepStdin = true)
+        } catch (e: Exception) {
+            Log.e(TAG, "[$sessionId] exec spawn failed: ${e.message}")
+            return null
+        }
+        live = process
+        if (SEPARATE_STDERR) StderrDrain(process.errorStream) { Log.d("PRootStderr", it) }.start()
+        return process
+    }
+
+    /** The command's exit status once the runner has written it, else null (still running, or killed). */
+    internal fun interactiveExitStatus(): Int? = statusHandle?.let { readStatus(it) }
+
+    /** Kills what [startInteractive] started: the command's whole process group. Safe to call twice. */
+    internal fun killInteractive() {
+        val p = live ?: return
+        killCommand(p, readEof = null)
     }
 
     /**

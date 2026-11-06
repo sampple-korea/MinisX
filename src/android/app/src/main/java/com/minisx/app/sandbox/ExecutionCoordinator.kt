@@ -166,6 +166,23 @@ object ExecutionCoordinator {
     private lateinit var appContext: Context
     var envVarRepository: EnvVarRepository? = null
 
+    /**
+     * [T-codex-unified-exec] Starts [command] as an [ExecSession] that outlives the tool call: its
+     * output is collected as it comes and its stdin stays open. Null when the process could not start.
+     * The session is killed when the conversation is closed ([sessionDidTerminate]).
+     */
+    internal fun startExecSession(sessionId: String, fsSessionId: String?, command: String): ExecSession? =
+        ExecSessionStore.add({ id ->
+            val shell = FreshProcessShell(
+                context = appContext,
+                sessionId = sessionId,
+                sessionBindMounts = buildSessionBindMounts(fsSessionId ?: sessionId),
+                useNoSeccomp = false,
+            )
+            val process = shell.startInteractive(command, envVarRepository?.allAsDict() ?: emptyMap()) ?: return@add null
+            ExecSession(id, sessionId, command, shell, process)
+        }, sessionId)
+
     /** Thread-safe per-session shell registry. */
     private val shells = ConcurrentHashMap<String, PersistentShell>()
 
@@ -680,6 +697,7 @@ object ExecutionCoordinator {
         // group — and keyed on this exact session id, so other sessions'
         // commands are untouched.
         val stoppedFresh = stopFreshShells(sessionId)
+        ExecSessionStore.killAll(sessionId).let { if (it > 0) Log.i(TAG, "[$sessionId] $it exec session(s) killed on terminate") }
         if (stoppedFresh > 0) Log.i(TAG, "[$sessionId] $stoppedFresh fresh-process command(s) killed on terminate")
     }
 

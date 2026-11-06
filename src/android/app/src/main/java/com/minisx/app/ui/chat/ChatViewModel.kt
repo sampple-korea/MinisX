@@ -14309,6 +14309,9 @@ class ChatViewModel(
                 if (it.success) maybeReloadSkillsForPath(argsJson)
             }
             com.minisx.app.tools.ApplyPatchTool.NAME -> com.minisx.app.tools.ApplyPatchTool.execute(argsJson, fsSessionId, context)
+            // [T-codex-unified-exec] A command that may outlive the call, and the stdin of one that did.
+            com.minisx.app.tools.ExecCommandTool.EXEC_NAME -> com.minisx.app.tools.ExecCommandTool.exec(argsJson, activeSessionId, fsSessionId, context)
+            com.minisx.app.tools.ExecCommandTool.STDIN_NAME -> com.minisx.app.tools.ExecCommandTool.writeStdin(argsJson, activeSessionId)
             // T178: pass sessionId + context so read_image routes through
             // resolveSessionHostPath like file_read/write/edit do — without
             // these, the tool consults the global last-writer-wins
@@ -18781,6 +18784,8 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         "file_write" -> "Write File"
         "file_edit" -> "Edit File"
         "apply_patch" -> "Apply Patch"
+        "exec_command" -> "Run Command"
+        "write_stdin" -> "Send Input"
         "browser_use" -> "Browse Web"
         "read_image" -> "Read Image"
         "memory_write" -> "Write Memory"

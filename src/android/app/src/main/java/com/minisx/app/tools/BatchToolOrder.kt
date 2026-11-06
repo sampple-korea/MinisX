@@ -10,7 +10,7 @@ package com.minisx.app.tools
  * before them still start together.
  */
 object BatchToolOrder {
-    val WRITERS: Set<String> = setOf("shell_execute", FileWriteTool.NAME, FileEditTool.NAME, ApplyPatchTool.NAME)
+    val WRITERS: Set<String> = setOf("shell_execute", ExecCommandTool.EXEC_NAME, ExecCommandTool.STDIN_NAME, FileWriteTool.NAME, FileEditTool.NAME, ApplyPatchTool.NAME)
     val READERS: Set<String> = setOf(ReadImageTool.NAME, FileReadTool.NAME)
 
     /** The writers that edit files directly (a shell may do anything, but runs alongside other shells). */
@@ -39,7 +39,7 @@ object BatchToolOrder {
         return when (name) {
             in READERS -> earlier.filter { names[it] in WRITERS }
             in FILE_WRITERS -> earlier.filter { names[it] in WRITERS }
-            "shell_execute" -> earlier.filter { names[it] in FILE_WRITERS }
+            "shell_execute", ExecCommandTool.EXEC_NAME, ExecCommandTool.STDIN_NAME -> earlier.filter { names[it] in FILE_WRITERS }
             else -> emptyList()
         }
     }

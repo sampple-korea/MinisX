@@ -54,7 +54,7 @@ internal fun formatStepDuration(seconds: Long, stillRunning: Boolean): String {
 
 // Helper: tool accent color
 internal fun toolAccentColor(toolName: String): Color = when (toolName) {
-    "shell_execute" -> Color(0xFF34C759)
+    "shell_execute", "exec_command", "write_stdin" -> Color(0xFF34C759)
     "file_read" -> Color(0xFF32ADE6)
     "file_write" -> Color(0xFF007AFF)
     "file_edit", "apply_patch" -> Color(0xFFFF9500)
@@ -69,7 +69,7 @@ internal fun toolAccentColor(toolName: String): Color = when (toolName) {
 
 // Helper: tool icon (iOS: distinct SF Symbols per tool type)
 internal fun toolIconFor(toolName: String) = when (toolName) {
-    "shell_execute" -> Icons.Default.Terminal
+    "shell_execute", "exec_command", "write_stdin" -> Icons.Default.Terminal
     "file_read" -> Icons.Default.Description         // iOS: doc.text
     "file_write" -> Icons.AutoMirrored.Filled.NoteAdd   // iOS: doc.text.fill (filled variant)
     "file_edit", "apply_patch" -> Icons.Default.EditNote             // iOS: square.and.pencil
@@ -89,7 +89,7 @@ internal fun toolIconFor(toolName: String) = when (toolName) {
 // together and cannot silently diverge. Adding a tool means adding it to both.
 @androidx.annotation.DrawableRes
 internal fun toolIconResFor(toolName: String?): Int = when (toolName) {
-    "shell_execute" -> R.drawable.ic_tool_terminal
+    "shell_execute", "exec_command", "write_stdin" -> R.drawable.ic_tool_terminal
     "file_read" -> R.drawable.ic_tool_description
     "file_write" -> R.drawable.ic_tool_note_add
     "file_edit", "apply_patch" -> R.drawable.ic_tool_edit_note
@@ -105,7 +105,7 @@ internal fun toolIconResFor(toolName: String?): Int = when (toolName) {
 // literals, as a packed ARGB Int rather than a Compose Color.
 @androidx.annotation.ColorInt
 internal fun toolAccentColorInt(toolName: String?): Int = when (toolName) {
-    "shell_execute" -> 0xFF34C759.toInt()
+    "shell_execute", "exec_command", "write_stdin" -> 0xFF34C759.toInt()
     "file_read" -> 0xFF32ADE6.toInt()
     "file_write" -> 0xFF007AFF.toInt()
     "file_edit", "apply_patch" -> 0xFFFF9500.toInt()
@@ -133,6 +133,8 @@ internal fun friendlyToolTitleFor(toolName: String?): String = when (toolName) {
     "file_write" -> "Write File"
     "file_edit" -> "Edit File"
     "apply_patch" -> "Apply Patch"
+    "exec_command" -> "Run Command"
+    "write_stdin" -> "Send Input"
     "browser_use" -> "Browse Web"
     "read_image" -> "Read Image"
     "memory_write" -> "Write Memory"
@@ -146,7 +148,7 @@ internal fun friendlyToolTitleFor(toolName: String?): String = when (toolName) {
 
 // Helper: tool display name for "Minis is using X"
 internal fun toolDisplayName(toolName: String): String = when (toolName) {
-    "shell_execute" -> "terminal"
+    "shell_execute", "exec_command", "write_stdin" -> "terminal"
     "file_read" -> "file reader"
     "file_write" -> "file writer"
     "file_edit", "apply_patch" -> "file editor"
@@ -169,6 +171,7 @@ internal fun toolTitleLabel(toolName: String): String = when (toolName) {
     "file_write" -> "MinisX is using Editor"
     "file_edit" -> "MinisX is editing File"
     "apply_patch" -> "MinisX is patching files"
+    "exec_command", "write_stdin" -> "MinisX is using Shell"
     "browser_use" -> "MinisX is using Browser"
     "read_image" -> "MinisX is reading Image"
     "memory_write", "memory_get" -> "MinisX is using Memory"

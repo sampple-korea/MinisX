@@ -67,7 +67,7 @@ internal object LiveDetails {
             keys.firstNotNullOfOrNull { k -> args.optString(k, "").trim().takeIf { it.isNotEmpty() && it != "null" } }
 
         return when (toolName) {
-            "shell_execute" -> str("command", "cmd")?.let { cmd ->
+            "shell_execute", "exec_command" -> str("command", "cmd")?.let { cmd ->
                 // First meaningful line: a heredoc or a long pipeline is noise in a notification.
                 val line = cmd.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() && !it.startsWith("#") } ?: cmd
                 LiveDetail(LiveDetailKind.COMMAND, squash(line))

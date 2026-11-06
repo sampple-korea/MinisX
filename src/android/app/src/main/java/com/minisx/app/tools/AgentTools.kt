@@ -57,6 +57,7 @@ object AgentTools {
         applyPatchEnabled: Boolean = false,
     ): List<AgentToolDefinition> = buildList {
         add(shellExecuteDefinition())
+        addAll(ExecCommandTool.definitions())
         add(FileReadTool.definition())
         add(FileWriteTool.definition())
         add(FileEditTool.definition())
