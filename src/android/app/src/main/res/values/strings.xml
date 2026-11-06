@@ -2808,4 +2808,5 @@
     <string name="assistant_fast_footer">Plain commands such as "turn on the flashlight", "volume 50", "Wi-Fi off" run on the spot without asking the model. Anything it does not recognise, or that fails, goes to the model as usual.</string>
     <string name="assistant_fast_path">Run simple commands directly</string>
     <string name="assistant_fast_path_sub">Faster and works without a model reply</string>
+    <string name="assistant_tile_label">Ask MinisX</string>
 </resources>

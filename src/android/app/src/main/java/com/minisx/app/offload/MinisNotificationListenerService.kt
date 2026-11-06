@@ -111,6 +111,21 @@ class MinisNotificationListenerService : NotificationListenerService() {
             }
         }
 
+        /** One active notification of any app by its system key, or null. */
+        fun find(key: String): StatusBarNotification? =
+            getActiveNotifications()?.firstOrNull { it.key == key }
+
+        /** Swipes one notification away, as the user would. False if the listener is not bound. */
+        fun dismiss(key: String): Boolean {
+            val svc = instance ?: return false
+            return try { svc.cancelNotification(key); true } catch (_: SecurityException) { false }
+        }
+
+        fun dismissAll(): Boolean {
+            val svc = instance ?: return false
+            return try { svc.cancelAllNotifications(); true } catch (_: SecurityException) { false }
+        }
+
         /** True if the user has granted Notification Access for this app. */
         fun isEnabled(context: Context): Boolean {
             val pkg = context.packageName

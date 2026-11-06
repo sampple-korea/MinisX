@@ -67,7 +67,7 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
     }
 
     override fun handle(request: NativeOffloadRequest): NativeOffloadResult {
-        val args = OffloadArgs(request.argv.drop(1), booleanFlags = setOf("all"))
+        val args = OffloadArgs(request.argv.drop(1), booleanFlags = setOf("all", "yes", "y"))
         // [T-offload-defaults-batch-android] Help only on explicit
         // --help/-h; no subcommand defaults to `list`.
         if (args.hasFlag("h", "help")) {
@@ -82,6 +82,10 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
                     NativeOffloadResult(0, OffloadOutput.formatBody("All notifications cleared.", args) + "\n")
                 }
                 "list" -> handleList(args)
+                "reply" -> handleReply(args)
+                "action" -> handleAction(args)
+                "open" -> handleOpen(args)
+                "dismiss" -> handleDismiss(args)
                 "pending" -> handlePending(args)
                 "cancel" -> handleCancel(args)
                 "settings" -> handleSettings(args)
@@ -527,7 +531,13 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
                     pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
                 } catch (_: Throwable) { pkg }
             }
+            val actionsJson = JSONArray()
+            sbn.notification.actions?.forEachIndexed { idx, act ->
+                actionsJson.put(JSONObject().put("index", idx).put("title", act.title?.toString() ?: "")
+                    .put("reply", !act.remoteInputs.isNullOrEmpty()))
+            }
             val obj = JSONObject()
+                .put("key", sbn.key)
                 .put("package", pkg)
                 .put("app", appName)
                 .put("title", title)
@@ -535,6 +545,7 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
                 .put("post_time", sbn.postTime)
             if (!subText.isNullOrEmpty()) obj.put("subtitle", subText)
             if (sbn.isOngoing) obj.put("ongoing", true)
+            if (actionsJson.length() > 0) obj.put("actions", actionsJson)
             arr.put(obj)
             i++
         }
@@ -545,6 +556,90 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
             .put("notifications", arr)
             .toString(2)
         return NativeOffloadResult(0, OffloadOutput.formatBody(out, args) + "\n")
+    }
+
+    // ── reply / action / open / dismiss (other apps' notifications, through Notification access) ──
+
+    private fun fail(args: OffloadArgs, code: String, message: String, exit: Int = 1): NativeOffloadResult =
+        NativeOffloadResult(exit, OffloadOutput.formatBody(JSONObject().put("ok", false).put("error", JSONObject().put("code", code).put("message", message)).toString(2), args) + "\n")
+
+    private fun okOut(args: OffloadArgs, data: JSONObject): NativeOffloadResult =
+        NativeOffloadResult(0, OffloadOutput.formatBody(JSONObject().put("ok", true).put("data", data).toString(2), args) + "\n")
+
+    /** The notification named by `--key`, or the error to answer with. */
+    private fun target(args: OffloadArgs): Pair<StatusBarNotification?, NativeOffloadResult?> {
+        if (!MinisNotificationListenerService.isEnabled(context)) {
+            return null to fail(args, "notification_access_not_granted", "Notification access is off. Run `android-notification list` once: it opens the page where the user turns it on.", 77)
+        }
+        val key = args.get("key") ?: return null to fail(args, "bad_args", "--key <key> is required (take it from `android-notification list`).", 2)
+        val sbn = MinisNotificationListenerService.find(key)
+            ?: return null to fail(args, "not_found", "No active notification with that key; it may have been dismissed. Run `list` again.")
+        return sbn to null
+    }
+
+    private fun handleReply(args: OffloadArgs): NativeOffloadResult {
+        val (sbn, err) = target(args)
+        if (err != null || sbn == null) return err!!
+        val text = args.get("text") ?: return fail(args, "bad_args", "--text \"<reply>\" is required.", 2)
+        if (!args.hasFlag("yes", "y")) {
+            return fail(args, "confirm_required", "This sends \"$text\" as the user, to the other person. Ask the user to confirm the text first, then repeat with --yes.")
+        }
+        val actions = sbn.notification.actions.orEmpty()
+        val idx = com.minisx.app.assistant.NotificationReply.pick(
+            actions.map { com.minisx.app.assistant.NotificationReply.ActionInfo(it.title?.toString() ?: "", !it.remoteInputs.isNullOrEmpty()) },
+            args.getInt("action"),
+        ) ?: return fail(args, "no_reply_action", "This notification has no single reply action (see `actions` in `list`; pick one with --action N).")
+        val action = actions[idx]
+        val inputs = action.remoteInputs
+        val bundle = android.os.Bundle()
+        for (ri in inputs) bundle.putCharSequence(ri.resultKey, text)
+        val fill = android.content.Intent()
+        android.app.RemoteInput.addResultsToIntent(inputs, fill, bundle)
+        return try {
+            action.actionIntent.send(context, 0, fill)
+            okOut(args, JSONObject().put("replied", true).put("app", sbn.packageName).put("action", action.title?.toString() ?: ""))
+        } catch (e: android.app.PendingIntent.CanceledException) {
+            fail(args, "send_failed", "The app cancelled the reply action: ${e.message}")
+        }
+    }
+
+    private fun handleAction(args: OffloadArgs): NativeOffloadResult {
+        val (sbn, err) = target(args)
+        if (err != null || sbn == null) return err!!
+        val idx = args.getInt("index") ?: return fail(args, "bad_args", "--index N is required (see `actions` in `list`).", 2)
+        val act = sbn.notification.actions?.getOrNull(idx) ?: return fail(args, "bad_args", "No action $idx on that notification.", 2)
+        if (!act.remoteInputs.isNullOrEmpty()) return fail(args, "needs_text", "That action takes typed text; use `reply`.")
+        return try {
+            act.actionIntent.send()
+            okOut(args, JSONObject().put("done", act.title?.toString() ?: ""))
+        } catch (e: android.app.PendingIntent.CanceledException) {
+            fail(args, "send_failed", "The app cancelled the action: ${e.message}")
+        }
+    }
+
+    private fun handleOpen(args: OffloadArgs): NativeOffloadResult {
+        val (sbn, err) = target(args)
+        if (err != null || sbn == null) return err!!
+        val pi = sbn.notification.contentIntent ?: return fail(args, "no_target", "That notification opens nothing.")
+        return try {
+            pi.send()
+            okOut(args, JSONObject().put("opened", sbn.packageName))
+        } catch (e: android.app.PendingIntent.CanceledException) {
+            fail(args, "send_failed", e.message ?: "cancelled")
+        }
+    }
+
+    private fun handleDismiss(args: OffloadArgs): NativeOffloadResult {
+        if (!MinisNotificationListenerService.isEnabled(context)) {
+            return fail(args, "notification_access_not_granted", "Notification access is off. Run `android-notification list` once to open the page.", 77)
+        }
+        if (args.hasFlag("all")) {
+            return if (MinisNotificationListenerService.dismissAll()) okOut(args, JSONObject().put("dismissed", "all"))
+            else fail(args, "listener_not_connected", "The notification listener is not connected yet; try again in a moment.")
+        }
+        val key = args.get("key") ?: return fail(args, "bad_args", "--key <key> or --all is required.", 2)
+        return if (MinisNotificationListenerService.dismiss(key)) okOut(args, JSONObject().put("dismissed", key))
+        else fail(args, "listener_not_connected", "The notification listener is not connected yet; try again in a moment.")
     }
 
     companion object {
@@ -566,6 +661,11 @@ Usage:
   android-notification cancel --all
   android-notification clear            Cancel all delivered (legacy)
   android-notification settings         Authorization + channel state
+  android-notification reply --key K --text T --yes   Reply to a chat notification (sends as the user)
+  android-notification action --key K --index N       Press a notification button (e.g. "Mark as read")
+  android-notification open --key K                   Open what the notification points at
+  android-notification dismiss --key K | --all        Swipe notifications away
+  (list prints each notification's `key` and its `actions`; needs Notification access)
 
 Examples:
   android-notification schedule --title "Reminder" --body "Standup" --after 300

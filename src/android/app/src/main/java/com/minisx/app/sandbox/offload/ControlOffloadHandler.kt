@@ -44,6 +44,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import com.minisx.app.accessibility.MinisAccessibilityService
 import com.minisx.app.control.ControlCatalog
+import com.minisx.app.control.ContactMatch
 import com.minisx.app.control.ControlCommands
 import com.minisx.app.logging.AppLogger
 import com.minisx.app.offload.OffloadPermissionManager
@@ -933,10 +934,67 @@ class ControlOffloadHandler(context: Context) : NativeOffloadHandler {
             val n = c.arg(0)
             if (!ControlCommands.isPhone(n)) fail("bad_args", "phone call needs a phone number.")
             else if (!c.yes) fail("confirm_required", "This places a real call to $n. Ask the user to confirm, then repeat with --yes.")
-            else privOnly(c, ControlCommands.call(n!!), "Without Shizuku or root use `phone dial`, which opens the dialer for the user to press call.", null) { good(it) { put("calling", n) } }
+            else placeCall(c, n!!, null)
         }
-        "phone answer" -> privOnly(c, ControlCommands.answerCall(), ENABLE_HINT, null) { good(it) { put("answered", true) } }
-        "phone hangup" -> privOnly(c, ControlCommands.endCall(), ENABLE_HINT, null) { good(it) { put("ended", true) } }
+        "phone find" -> {
+            val q = c.p.joinToString(" ").trim()
+            if (q.isEmpty()) fail("bad_args", "phone find needs a name.")
+            else withContacts {
+                val found = findContacts(q)
+                if (found.isEmpty()) fail("not_found", "No contact matches '$q'.")
+                else good("contacts") { put("matches", contactsJson(found)) }
+            }
+        }
+        "phone call-contact" -> {
+            val q = c.p.joinToString(" ").trim()
+            if (q.isEmpty()) fail("bad_args", "phone call-contact needs a name.")
+            else withContacts {
+                when (val pick = ContactMatch.choose(q, findContacts(q), c.args.getInt("pick"))) {
+                    ContactMatch.Pick.None -> fail("not_found", "No contact matches '$q'.")
+                    is ContactMatch.Pick.Many -> Out(false, "contacts", JSONObject().put("candidates", contactsJson(pick.candidates)), "ambiguous",
+                        "More than one match for '$q'. Ask the user which, then repeat with --pick N (1-based) or use `phone call <number>`.")
+                    is ContactMatch.Pick.One ->
+                        if (!c.yes) fail("confirm_required", "This calls ${pick.contact.name} (${pick.contact.number}). Ask the user to confirm, then repeat with --yes.")
+                        else placeCall(c, pick.contact.number, pick.contact.name)
+                }
+            }
+        }
+        "phone answer" -> {
+            val tm = ctx.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
+            val viaTelecom = hasPermission(Manifest.permission.ANSWER_PHONE_CALLS) && runCatching { tm?.acceptRingingCall(); true }.getOrDefault(false)
+            if (viaTelecom) good("telecom") { put("answered", true) }
+            else privOnly(c, ControlCommands.answerCall(), ENABLE_HINT + " Or allow the Phone permission (and 'Allow restricted settings') for MinisX.", null) { good(it) { put("answered", true) } }
+        }
+        "phone hangup" -> {
+            val tm = ctx.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
+            val viaTelecom = Build.VERSION.SDK_INT >= 28 && hasPermission(Manifest.permission.ANSWER_PHONE_CALLS) && runCatching { tm?.endCall() == true }.getOrDefault(false)
+            if (viaTelecom) good("telecom") { put("ended", true) }
+            else privOnly(c, ControlCommands.endCall(), ENABLE_HINT + " Or allow the Phone permission (and 'Allow restricted settings') for MinisX.", null) { good(it) { put("ended", true) } }
+        }
+        "phone sms-send" -> {
+            val n = c.arg(0)
+            val text = c.args.get("text")
+            if (!ControlCommands.isPhone(n)) fail("bad_args", "phone sms-send needs a phone number.")
+            else if (text.isNullOrBlank()) fail("bad_args", "phone sms-send needs --text \"<message>\".")
+            else if (!c.yes) fail("confirm_required", "This sends \"$text\" to $n as the user. Ask the user to confirm the text, then repeat with --yes.")
+            else sendSms(n!!, text, null)
+        }
+        "phone sms-contact" -> {
+            val q = c.p.joinToString(" ").trim()
+            val text = c.args.get("text")
+            if (q.isEmpty()) fail("bad_args", "phone sms-contact needs a name.")
+            else if (text.isNullOrBlank()) fail("bad_args", "phone sms-contact needs --text \"<message>\".")
+            else withContacts {
+                when (val pick = ContactMatch.choose(q, findContacts(q), c.args.getInt("pick"))) {
+                    ContactMatch.Pick.None -> fail("not_found", "No contact matches '$q'.")
+                    is ContactMatch.Pick.Many -> Out(false, "contacts", JSONObject().put("candidates", contactsJson(pick.candidates)), "ambiguous",
+                        "More than one match for '$q'. Ask the user which, then repeat with --pick N (1-based).")
+                    is ContactMatch.Pick.One ->
+                        if (!c.yes) fail("confirm_required", "This sends \"$text\" to ${pick.contact.name} (${pick.contact.number}) as the user. Ask the user to confirm the text, then repeat with --yes.")
+                        else sendSms(pick.contact.number, text, pick.contact.name)
+                }
+            }
+        }
         "phone sms" -> {
             val n = c.arg(0)
             if (!ControlCommands.isPhone(n)) fail("bad_args", "phone sms needs a phone number.")
@@ -968,6 +1026,62 @@ class ControlOffloadHandler(context: Context) : NativeOffloadHandler {
         "camera video" -> if (startIntent(Intent("android.media.action.VIDEO_CAMERA"))) good("intent") { put("opened", "video camera") } else fail("open_failed", "No camera app could be opened.")
         "wallpaper set" -> setWallpaper(c)
         else -> unsupported(c)
+    }
+
+    private val RESTRICTED_HINT =
+        "On Android 13+ an app installed outside the Play Store cannot be granted Phone/SMS permissions until the user allows restricted settings: Settings > Apps > MinisX > (menu) > Allow restricted settings. Then allow the permission when asked."
+
+    private fun withContacts(block: () -> Out): Out =
+        if (ensureRuntime(Manifest.permission.READ_CONTACTS)) block()
+        else fail("permission_missing", "Looking people up needs the Contacts permission.", "Ask the user to allow Contacts for MinisX.")
+
+    private fun findContacts(query: String): List<ContactMatch.Contact> {
+        val out = ArrayList<ContactMatch.Contact>()
+        val projection = arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
+        ctx.contentResolver.query(
+            android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projection,
+            "${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?", arrayOf("%$query%"),
+            "${android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC",
+        )?.use { cur ->
+            while (cur.moveToNext() && out.size < 200) out += ContactMatch.Contact(cur.getString(0) ?: "", cur.getString(1) ?: "")
+        }
+        // A LIKE with the exact characters misses "Mom" for "mom"-style spacing differences; rank decides, so keep all.
+        return out
+    }
+
+    private fun contactsJson(list: List<ContactMatch.Contact>): JSONArray =
+        JSONArray().also { arr -> list.forEachIndexed { i, ct -> arr.put(JSONObject().put("pick", i + 1).put("name", ct.name).put("number", ct.number)) } }
+
+    private fun placeCall(c: Call, number: String, name: String?): Out {
+        val clean = number.filter { it.isDigit() || it in "+*#,;" }
+        if (!ControlCommands.isPhone(clean)) return fail("bad_args", "'$number' is not a dialable number.")
+        if (ensureRuntime(Manifest.permission.CALL_PHONE)) {
+            if (startIntent(Intent(Intent.ACTION_CALL, Uri.parse("tel:" + Uri.encode(clean))))) {
+                return good("intent") { put("calling", clean); name?.let { put("name", it) } }
+            }
+        }
+        val p = priv(c, ControlCommands.call(clean))
+        if (p.ran && p.ok) return good(p.backend) { put("calling", clean); name?.let { put("name", it) } }
+        // Last resort: the dialer with the number filled in, for the user to press call.
+        val dialed = startIntent(Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(clean))))
+        return Out(false, "intent", JSONObject().put("dialer_opened", dialed), "needs_user",
+            "Calling directly is not allowed yet, so the dialer is open with $clean filled in for the user to press call. $RESTRICTED_HINT", ENABLE_HINT)
+    }
+
+    private fun sendSms(number: String, text: String, name: String?): Out {
+        val clean = number.filter { it.isDigit() || it in "+*#" }
+        if (!ControlCommands.isPhone(clean)) return fail("bad_args", "'$number' is not a phone number.")
+        if (text.length > 1000) return fail("bad_args", "The text is longer than 1000 characters.")
+        if (!ensureRuntime(Manifest.permission.SEND_SMS)) {
+            val composed = startIntent(Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + Uri.encode(clean))).putExtra("sms_body", text))
+            return Out(false, "intent", JSONObject().put("composer_opened", composed).put("sent", false), "needs_user",
+                "Sending texts directly needs the SMS permission, so the message app is open with the text filled in for the user to press send. $RESTRICTED_HINT", ENABLE_HINT)
+        }
+        val sm = if (Build.VERSION.SDK_INT >= 31) ctx.getSystemService(android.telephony.SmsManager::class.java)
+        else @Suppress("DEPRECATION") android.telephony.SmsManager.getDefault()
+        val parts = sm.divideMessage(text)
+        if (parts.size > 1) sm.sendMultipartTextMessage(clean, null, parts, null, null) else sm.sendTextMessage(clean, null, text, null, null)
+        return good("sms-manager") { put("sent_to", clean); name?.let { put("name", it) }; put("parts", parts.size) }
     }
 
     private fun setWallpaper(c: Call): Out {

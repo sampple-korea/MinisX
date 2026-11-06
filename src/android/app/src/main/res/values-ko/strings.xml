@@ -2484,4 +2484,5 @@
     <string name="assistant_fast_footer">"손전등 켜줘", "볼륨 50", "와이파이 꺼"처럼 단순한 명령은 모델에게 묻지 않고 바로 실행해요. 알아듣지 못했거나 실패하면 평소처럼 모델로 넘어가요.</string>
     <string name="assistant_fast_path">단순 명령은 바로 실행</string>
     <string name="assistant_fast_path_sub">더 빠르고 모델 응답 없이도 동작해요</string>
+    <string name="assistant_tile_label">MinisX에게 묻기</string>
 </resources>

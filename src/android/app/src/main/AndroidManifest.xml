@@ -92,6 +92,11 @@
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <!-- android-control phone: call by name, send text messages, answer / end calls. Sideloaded apps on
+         Android 13+ also need "Allow restricted settings" (App info > menu) before these can be granted. -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <!-- T262-1: required to dispatch AlarmClock.ACTION_SET_ALARM to
@@ -344,6 +349,16 @@
             <meta-data
                 android:name="android.speech"
                 android:resource="@xml/assistant_recognition" />
+        </service>
+        <service
+            android:name=".assistant.AssistantTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_assistant_tile"
+            android:label="@string/assistant_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
         </service>
         <!-- android.intent.action.ASSIST: a side key set to "digital assistant", a headset button. -->
         <activity

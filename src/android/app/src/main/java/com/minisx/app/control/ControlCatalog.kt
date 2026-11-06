@@ -140,10 +140,14 @@ object ControlCatalog {
 
         // Communication and sharing.
         add("phone", "dial", "<number>", "Open the dialer with a number (the user presses call)")
-        add("phone", "call", "<number> --yes", "Place a call right away (privileged)")
-        add("phone", "answer", "", "Answer a ringing call (privileged)")
-        add("phone", "hangup", "", "End the current call (privileged)")
-        add("phone", "sms", "<number> [--text T]", "Open a text message ready to send")
+        add("phone", "call", "<number> --yes", "Place a call right away (asks Android for the Phone permission once)")
+        add("phone", "find", "<name>", "Look a person up in the contacts: names and numbers")
+        add("phone", "call-contact", "<name> [--pick N] --yes", "Call a contact by name (several matches: lists them, pick with --pick N)")
+        add("phone", "answer", "", "Answer a ringing call")
+        add("phone", "hangup", "", "End the current call")
+        add("phone", "sms", "<number> [--text T]", "Open a text message ready to send (the user presses send)")
+        add("phone", "sms-send", "<number> --text T --yes", "Send a text message right away")
+        add("phone", "sms-contact", "<name> --text T [--pick N] --yes", "Send a text message to a contact by name")
         add("phone", "email", "<address> [--subject S] [--text T]", "Open an e-mail ready to send")
         add("share", "text", "<text>", "Open the share sheet with some text")
         add("camera", "photo", "", "Open the camera in photo mode")
