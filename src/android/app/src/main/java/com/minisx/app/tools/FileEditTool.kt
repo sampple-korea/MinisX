@@ -16,7 +16,7 @@ object FileEditTool {
         description = "Edit an existing file by exact string replacement: old_string is replaced by new_string. Read the file with file_read first, and copy old_string exactly from it " +
             "(indentation, tabs and all) but WITHOUT file_read's line-number prefix. old_string must match exactly one place, so include enough surrounding lines to make it unique; " +
             "set replace_all=true to change every occurrence (renaming a variable, say). To delete text use an empty new_string. Prefer this over file_write for changes, since only the changed part is sent. " +
-            "On success the result shows the changed lines with their numbers, so there is no need to read the file again. If old_string is not found, the error says where the closest match is; fix old_string from that, do not repeat the same call."
+            "On success the result shows the changed lines with their numbers, so there is no need to read the file again. If old_string is not found, the error says where the closest match is; fix old_string from that, do not repeat the same call.",
         parameters = mapOf(
             "tool_title" to AgentToolParam("string", "A concise 5-10 word summary of what this tool call does, shown to the user (e.g. 'Fix typo in Python script', 'Update config value'). Use the same language as the user."),
             "path" to AgentToolParam("string", "Absolute Linux path to the file to edit (e.g. /root/script.py)"),
