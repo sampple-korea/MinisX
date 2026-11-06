@@ -26,8 +26,16 @@ import java.util.concurrent.Executor
 object WebViewNetworkProxy {
 
     private const val TAG = "Network"
-    /** realm the entry's HTTP front sends in its challenge (nethub/httpentry.go). */
-    private const val REALM = "MinisX"
+    /**
+     * realms the entry's HTTP front may send in its challenge. nethub/httpentry.go sends "Minis" (the
+     * Go core is prebuilt and was not renamed with the app); "MinisX" is accepted too so a later
+     * rename of the core cannot silently break every WebView again. Matching only one of them left
+     * the proxy's 407 unanswered, and every page in every in-app browser failed with
+     * ERR_HTTP_RESPONSE_CODE_FAILURE.
+     */
+    private val ENTRY_REALMS = setOf("Minis", "MinisX")
+
+    internal fun isEntryRealm(realm: String?): Boolean = realm != null && ENTRY_REALMS.any { it.equals(realm, ignoreCase = true) }
 
     private val direct = Executor { it.run() }
 
@@ -85,7 +93,7 @@ object WebViewNetworkProxy {
      */
     fun answerAuth(handler: HttpAuthHandler, host: String?, realm: String?, pageUrl: String?): Boolean {
         val c = credentials ?: return false
-        if (realm != REALM) return false
+        if (!isEntryRealm(realm)) return false
         if (host != null && host != "127.0.0.1" && host != "localhost" && !host.startsWith("127.0.0.1:")) return false
         // Loopback pages bypass the proxy, so a challenge while one is shown
         // comes from a local server, not the entry: never hand it the password.
