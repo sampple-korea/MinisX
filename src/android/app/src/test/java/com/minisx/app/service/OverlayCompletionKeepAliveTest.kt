@@ -29,7 +29,7 @@ class OverlayCompletionKeepAliveTest {
         activeSessions: Int,
         presentSessions: Int,
         overlayCompletionPending: Boolean,
-    ): Boolean = activeSessions > 0 || presentSessions > 0 || overlayCompletionPending
+    ): Boolean = activeSessions > 0 || overlayCompletionPending // presence no longer keeps the service (presentSessions is ignored)
 
     @Test
     fun `the reported case - turn ends with the Activity already gone`() {
@@ -78,11 +78,12 @@ class OverlayCompletionKeepAliveTest {
         ).readText()
         val body = src.substringAfter("private fun shouldRunService(): Boolean =")
             .substringBefore("\n\n")
-        for (term in listOf("_activeSessions", "_presentSessions", "_overlayCompletionPending")) {
+        for (term in listOf("_activeSessions", "_overlayCompletionPending")) {
             assertTrue(
                 "shouldRunService() no longer reads $term — update this test's mirror",
                 body.contains(term),
             )
         }
+        assertFalse("being on a chat screen must not keep the foreground service (and its notification) alive", body.contains("_presentSessions"))
     }
 }

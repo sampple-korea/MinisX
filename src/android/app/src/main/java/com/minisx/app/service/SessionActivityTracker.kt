@@ -491,8 +491,12 @@ object SessionActivityTracker {
      */
     fun shouldRunServiceNow(): Boolean = shouldRunService()
 
+    // Being on a chat screen is NOT a reason to run: an idle chat used to keep the "MinisX Agent running /
+    // 1 session / in session" notification up after everything was done (the process may be reclaimed
+    // while nothing runs; the chat reloads from its database). Only work in flight, a completion the
+    // overlay still owes, or a scheduled task between fires keeps the service.
     private fun shouldRunService(): Boolean =
-        _activeSessions.value.isNotEmpty() || _presentSessions.value.isNotEmpty() ||
+        _activeSessions.value.isNotEmpty() ||
             _overlayCompletionPending.value ||
             // [T-scheduled-active-session-android] A chat waiting on its own
             // scheduled task is not finished: keep the process alive between
@@ -877,11 +881,8 @@ object SessionActivityTracker {
             _lastTaskFinishedAtMs.value = null
         }
         Log.d(TAG, "Presence set: $sessionId (present total: ${_presentSessions.value.size})")
-        if (wasIdle) {
-            startServiceIfNeeded()
-        } else {
-            updateService()
-        }
+        // Presence alone never starts the service; it only refreshes one that is already running.
+        if (!wasIdle) updateService()
     }
 
     /**
