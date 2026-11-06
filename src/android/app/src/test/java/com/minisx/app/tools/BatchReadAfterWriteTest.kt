@@ -46,6 +46,21 @@ class BatchReadAfterWriteTest {
         assertEquals(listOf(0), BatchToolOrder.writersBefore(1, listOf("file_edit", "read_image")))
     }
 
+    @Test
+    fun `file writers and shells run in the order they were written`() {
+        // [T-codex-exclusive-writers]
+        val n = listOf("shell_execute", "file_write", "shell_execute", "apply_patch", "file_edit", "browser_use", "shell_execute")
+        assertEquals(emptyList<Int>(), BatchToolOrder.waitsFor(0, n))
+        assertEquals("a file write waits for the shell before it", listOf(0), BatchToolOrder.waitsFor(1, n))
+        assertEquals("a shell waits for file writers, not for shells", listOf(1), BatchToolOrder.waitsFor(2, n))
+        assertEquals(listOf(0, 1, 2), BatchToolOrder.waitsFor(3, n))
+        assertEquals(listOf(0, 1, 2, 3), BatchToolOrder.waitsFor(4, n))
+        assertEquals("a browser call starts at once", emptyList<Int>(), BatchToolOrder.waitsFor(5, n))
+        assertEquals("the last shell waits for the three file writers only", listOf(1, 3, 4), BatchToolOrder.waitsFor(6, n))
+        // Readers still wait for every earlier writer.
+        assertEquals(listOf(0, 3), BatchToolOrder.waitsFor(4, listOf("shell_execute", "x", "x", "file_write", "file_read")).let { listOf(it[0], it[1]) })
+    }
+
     /**
      * The dispatcher shape of ChatViewModel's tool batch, reduced to its
      * ordering parts (guarded against production below): every call is an
@@ -63,7 +78,7 @@ class BatchReadAfterWriteTest {
         coroutineScope {
             names.mapIndexed { slotIndex, name ->
                 async {
-                    BatchToolOrder.writersBefore(slotIndex, names).forEach { slotJobs[it]?.join() }
+                    BatchToolOrder.waitsFor(slotIndex, names).forEach { slotJobs[it]?.join() }
                     slots.withPermit { results[slotIndex] = body(slotIndex, name) }
                 }.also { slotJobs[slotIndex] = it }
             }.awaitAll()
@@ -90,7 +105,7 @@ class BatchReadAfterWriteTest {
     fun `unrelated calls still overlap and results stay in call order`() = runBlocking {
         val running = java.util.concurrent.atomic.AtomicInteger()
         val peak = java.util.concurrent.atomic.AtomicInteger()
-        val out = runBatch(listOf("shell_execute", "browser_use", "shell_execute", "file_write"), slotsCount = 10) { i, _ ->
+        val out = runBatch(listOf("shell_execute", "browser_use", "shell_execute", "subagent_task"), slotsCount = 10) { i, _ ->
             peak.accumulateAndGet(running.incrementAndGet(), ::maxOf)
             delay(100L * (4 - i)) // finish in reverse order
             running.decrementAndGet()
@@ -122,7 +137,7 @@ class BatchReadAfterWriteTest {
         val vm = ProductionSources.read("ui/chat/ChatViewModel.kt")
         val batch = vm.substringAfter("val batchNames = toolCalls.map { it.second }").substringBefore("}.awaitAll()")
         assertTrue(batch.contains("val slotJobs = arrayOfNulls<kotlinx.coroutines.Job>(toolCalls.size)"))
-        val wait = batch.indexOf("BatchToolOrder.writersBefore(slotIndex, batchNames)")
+        val wait = batch.indexOf("BatchToolOrder.waitsFor(slotIndex, batchNames)")
         val join = batch.indexOf("earlierWriters.forEach { slotJobs[it]?.join() }")
         val permit = batch.indexOf("slots.withPermit {")
         assertTrue("wait, then join, then slot", wait in 0 until join && join < permit)

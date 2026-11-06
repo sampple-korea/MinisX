@@ -1096,6 +1096,7 @@ class ChatRepository(internal val dao: ChatDao) {
                 "file_read" -> str("path")?.let { return cap(cleanPreview("Reading $it")) }
                 "file_write" -> str("path")?.let { return cap(cleanPreview("Writing $it")) }
                 "file_edit" -> str("path")?.let { return cap(cleanPreview("Editing $it")) }
+                "apply_patch" -> str("input")?.let { com.minisx.app.tools.ApplyPatchTool.firstPath(it) }?.let { return cap(cleanPreview("Patching $it")) }
                 "browser_use" -> {
                     val action = str("action") ?: "browse"
                     val url = str("url")

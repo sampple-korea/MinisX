@@ -53,11 +53,14 @@ object AgentTools {
         // The advisor: a stronger model the agent may consult. Present only while the user has
         // picked an advisor model, never for a sub agent.
         advisorEnabled: Boolean = false,
+        // Codex's patch tool, for the model families trained on it (GPT, o-series, Codex).
+        applyPatchEnabled: Boolean = false,
     ): List<AgentToolDefinition> = buildList {
         add(shellExecuteDefinition())
         add(FileReadTool.definition())
         add(FileWriteTool.definition())
         add(FileEditTool.definition())
+        if (applyPatchEnabled) add(ApplyPatchTool.definition())
         if (supportsImageInput || visionGroupConfigured) {
             add(ReadImageTool.definition())
         }

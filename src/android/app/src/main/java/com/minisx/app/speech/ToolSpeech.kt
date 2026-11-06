@@ -61,6 +61,10 @@ object ToolSpeech {
                 val d = detail ?: fileName(args?.optString("path"), ko)
                 if (ko) "파일 편집 중: $d" else "Editing file: $d"
             }
+            "apply_patch" -> {
+                val d = detail ?: fileName(args?.optString("input")?.let { com.minisx.app.tools.ApplyPatchTool.firstPath(it) }, ko)
+                if (ko) "패치 적용 중: $d" else "Applying patch: $d"
+            }
             "browser_use" -> {
                 val d = detail ?: clip(args?.optString("action")) ?: ""
                 if (ko) "브라우저 사용 중: $d" else "Using browser: $d"

@@ -72,6 +72,8 @@ internal object LiveDetails {
                 val line = cmd.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() && !it.startsWith("#") } ?: cmd
                 LiveDetail(LiveDetailKind.COMMAND, squash(line))
             }
+            "apply_patch" -> str("input")?.let { com.minisx.app.tools.ApplyPatchTool.firstPath(it) }
+                ?.let { LiveDetail(LiveDetailKind.TARGET, squash(shortPath(it))) }
             "file_read", "file_write", "file_edit", "read_image" ->
                 str("path", "file_path")?.let { LiveDetail(LiveDetailKind.TARGET, squash(shortPath(it))) }
             "browser_use" -> {

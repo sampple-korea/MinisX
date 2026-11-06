@@ -2524,6 +2524,7 @@ class ChatViewModel(
             rosterNames = providerRepository.subAgents.map { it.name },
             userAskExposed = userAskExposedThisRun,
             advisorEnabled = advisorEntry() != null,
+            applyPatchEnabled = com.minisx.app.tools.ApplyPatchTool.suits(currentModel?.id),
         )
 
     /** `update_plan`: validate, remember the current step for the notification, echo the checklist. */
@@ -12331,7 +12332,7 @@ class ChatViewModel(
                             // gate eventually opens — or ToolCallComplete force-flushes —
                             // the latest accumulated args are pushed.
                             val toolName = prev.toolName
-                            val isHeavyFileTool = toolName == "file_write" || toolName == "file_edit"
+                            val isHeavyFileTool = toolName == "file_write" || toolName == "file_edit" || toolName == "apply_patch"
                             val gateMs = if (isHeavyFileTool) 1_000L else 200L
                             val nowMs = System.currentTimeMillis()
                             val lastTs = if (isHeavyFileTool) lastFileToolInputMs else lastOtherToolInputMs
@@ -13570,7 +13571,7 @@ class ChatViewModel(
             kotlinx.coroutines.coroutineScope {
                 toolCalls.mapIndexed { slotIndex, (id, name, args) ->
                     async {
-                        val earlierWriters = BatchToolOrder.writersBefore(slotIndex, batchNames)
+                        val earlierWriters = BatchToolOrder.waitsFor(slotIndex, batchNames)
                         if (earlierWriters.isNotEmpty()) {
                             val waitStart = System.currentTimeMillis()
                             earlierWriters.forEach { slotJobs[it]?.join() }
@@ -13649,7 +13650,7 @@ class ChatViewModel(
                         // partial artifact is silent corruption of user data and is worse
                         // than no write at all; read-only and shell tools keep the
                         // repair-and-run behaviour. Mirrors iOS ConcurrentTools.
-                        if (truncationRepairTag != null && (name == "file_write" || name == "file_edit")) {
+                        if (truncationRepairTag != null && (name == "file_write" || name == "file_edit" || name == "apply_patch")) {
                             val path = args.optString("path", "").ifBlank { args.optString("file_path", "") }
                             AppLogger.warning(
                                 "ToolPreflight",
@@ -14307,6 +14308,7 @@ class ChatViewModel(
             FileEditTool.NAME -> FileEditTool.execute(argsJson, fsSessionId, context).also {
                 if (it.success) maybeReloadSkillsForPath(argsJson)
             }
+            com.minisx.app.tools.ApplyPatchTool.NAME -> com.minisx.app.tools.ApplyPatchTool.execute(argsJson, fsSessionId, context)
             // T178: pass sessionId + context so read_image routes through
             // resolveSessionHostPath like file_read/write/edit do — without
             // these, the tool consults the global last-writer-wins
@@ -18778,6 +18780,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         "file_read" -> "Read File"
         "file_write" -> "Write File"
         "file_edit" -> "Edit File"
+        "apply_patch" -> "Apply Patch"
         "browser_use" -> "Browse Web"
         "read_image" -> "Read Image"
         "memory_write" -> "Write Memory"

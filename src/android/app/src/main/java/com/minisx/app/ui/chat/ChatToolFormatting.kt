@@ -57,7 +57,7 @@ internal fun toolAccentColor(toolName: String): Color = when (toolName) {
     "shell_execute" -> Color(0xFF34C759)
     "file_read" -> Color(0xFF32ADE6)
     "file_write" -> Color(0xFF007AFF)
-    "file_edit" -> Color(0xFFFF9500)
+    "file_edit", "apply_patch" -> Color(0xFFFF9500)
     "browser_use" -> Color(0xFF007AFF)
     "read_image" -> Color(0xFFAF52DE)
     "memory_write", "memory_get" -> Color(0xFFFF2D55)
@@ -72,7 +72,7 @@ internal fun toolIconFor(toolName: String) = when (toolName) {
     "shell_execute" -> Icons.Default.Terminal
     "file_read" -> Icons.Default.Description         // iOS: doc.text
     "file_write" -> Icons.AutoMirrored.Filled.NoteAdd   // iOS: doc.text.fill (filled variant)
-    "file_edit" -> Icons.Default.EditNote             // iOS: square.and.pencil
+    "file_edit", "apply_patch" -> Icons.Default.EditNote             // iOS: square.and.pencil
     "browser_use" -> Icons.Default.Language            // iOS: globe
     "read_image" -> Icons.Default.Image                // iOS: photo
     "memory_write", "memory_get" -> Icons.Default.Psychology // iOS: brain.head.profile
@@ -92,7 +92,7 @@ internal fun toolIconResFor(toolName: String?): Int = when (toolName) {
     "shell_execute" -> R.drawable.ic_tool_terminal
     "file_read" -> R.drawable.ic_tool_description
     "file_write" -> R.drawable.ic_tool_note_add
-    "file_edit" -> R.drawable.ic_tool_edit_note
+    "file_edit", "apply_patch" -> R.drawable.ic_tool_edit_note
     "browser_use" -> R.drawable.ic_tool_globe
     "read_image" -> R.drawable.ic_tool_image
     "memory_write", "memory_get" -> R.drawable.ic_tool_psychology
@@ -108,7 +108,7 @@ internal fun toolAccentColorInt(toolName: String?): Int = when (toolName) {
     "shell_execute" -> 0xFF34C759.toInt()
     "file_read" -> 0xFF32ADE6.toInt()
     "file_write" -> 0xFF007AFF.toInt()
-    "file_edit" -> 0xFFFF9500.toInt()
+    "file_edit", "apply_patch" -> 0xFFFF9500.toInt()
     "browser_use" -> 0xFF007AFF.toInt()
     "read_image" -> 0xFFAF52DE.toInt()
     "memory_write", "memory_get" -> 0xFFFF2D55.toInt()
@@ -132,6 +132,7 @@ internal fun friendlyToolTitleFor(toolName: String?): String = when (toolName) {
     "file_read" -> "Read File"
     "file_write" -> "Write File"
     "file_edit" -> "Edit File"
+    "apply_patch" -> "Apply Patch"
     "browser_use" -> "Browse Web"
     "read_image" -> "Read Image"
     "memory_write" -> "Write Memory"
@@ -148,7 +149,7 @@ internal fun toolDisplayName(toolName: String): String = when (toolName) {
     "shell_execute" -> "terminal"
     "file_read" -> "file reader"
     "file_write" -> "file writer"
-    "file_edit" -> "file editor"
+    "file_edit", "apply_patch" -> "file editor"
     "browser_use" -> "browser"
     "read_image" -> "image viewer"
     "memory_write" -> "memory"
@@ -167,6 +168,7 @@ internal fun toolTitleLabel(toolName: String): String = when (toolName) {
     "file_read" -> "MinisX is reading File"
     "file_write" -> "MinisX is using Editor"
     "file_edit" -> "MinisX is editing File"
+    "apply_patch" -> "MinisX is patching files"
     "browser_use" -> "MinisX is using Browser"
     "read_image" -> "MinisX is reading Image"
     "memory_write", "memory_get" -> "MinisX is using Memory"
