@@ -49,6 +49,10 @@ enum class AgentToolSwitch(val key: String, val defaultValue: Boolean) {
             // shipped builds wrote, so the switch still governs a
             // replayed call from an older transcript.
             "subagent_task", "delegate_task", "agent_status" -> AGENTS
+            // [T-android-shared-notes] The scratchpad belongs to the agents
+            // capability: with delegation off there are no sub agents to share
+            // with, and a replayed call must be refused like the rest.
+            com.minisx.app.agent.jobs.AgentSharedNotes.TOOL_NAME -> AGENTS
             com.minisx.app.agent.userask.UserAskPromptText.TOOL_NAME -> USER_ASK
             else -> null
         }

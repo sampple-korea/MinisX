@@ -44,6 +44,11 @@ fun AgentToolsSettingsScreen(onBack: () -> Unit) {
     var showWaitPicker by remember { mutableStateOf(false) }
     // The advisor: a stronger model the agent can consult (Claude Code's /advisor).
     var advisorEntryId by remember { mutableStateOf(com.minisx.app.agent.advisor.AdvisorSettings.entryId(context)) }
+    // [T-android-advisor-auto-verify] Whether the app asks that model to check the result before
+    // the agent loop ends. Only meaningful with a model picked, so it is shown beneath the picker.
+    var advisorAutoVerify by remember {
+        mutableStateOf(com.minisx.app.agent.advisor.AdvisorSettings.isAutoVerifyChosen(context))
+    }
     var showAdvisorPicker by remember { mutableStateOf(false) }
     val providerRepository = (context.applicationContext as com.minisx.app.MinisApp).providerRepositoryOrNull
     val advisorChoices = remember(showAdvisorPicker) {
@@ -77,8 +82,23 @@ fun AgentToolsSettingsScreen(onBack: () -> Unit) {
                 title = stringResource(R.string.advisor_setting_title),
                 value = advisorName ?: stringResource(R.string.advisor_setting_off),
                 onClick = { showAdvisorPicker = true },
-                showDivider = false,
+                showDivider = advisorEntryId != null,
             )
+            // [T-android-advisor-auto-verify] The switch the agent cannot pull for itself: a model
+            // that believes it is finished does not call a review tool. Shown only while a model is
+            // picked, because with none there is nothing to ask and a live-looking switch would lie.
+            if (advisorEntryId != null) {
+                SettingsSwitchRow(
+                    title = stringResource(R.string.advisor_auto_verify_title),
+                    subtitle = stringResource(R.string.advisor_auto_verify_subtitle),
+                    checked = advisorAutoVerify,
+                    onCheckedChange = {
+                        advisorAutoVerify = it
+                        com.minisx.app.agent.advisor.AdvisorSettings.setAutoVerify(context, it)
+                    },
+                    showDivider = false,
+                )
+            }
         }
         if (showAdvisorPicker) {
             androidx.compose.material3.AlertDialog(

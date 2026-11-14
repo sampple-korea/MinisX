@@ -73,6 +73,13 @@ object AgentTools {
         if (!isHelper && delegateEnabled) {
             add(subAgentTaskDefinition(rosterNames))
         }
+        // [T-android-shared-notes] The scratchpad a conversation shares with the sub agents it
+        // delegates to. Presented to the parent AND to the children — the whole point is that both
+        // ends read the same board — so it is gated on the agents capability, not on isHelper.
+        // Unconditional within that gate (rather than "only once a fan-out starts") because a tool
+        // that appears mid-conversation changes the cached prompt prefix for every request after it,
+        // and the parent must be able to seed the board BEFORE it delegates.
+        if (delegateEnabled) add(com.minisx.app.agent.jobs.AgentSharedNotes.definition())
         // Like Codex's plan tool: a checklist the model keeps up to date (sub agents work on one step).
         if (!isHelper) add(com.minisx.app.agent.plan.PlanTool.definition())
         if (advisorEnabled && !isHelper) add(com.minisx.app.agent.advisor.Advisor.definition())

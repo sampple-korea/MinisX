@@ -2552,6 +2552,89 @@ class ChatViewModel(
     }
 
     /**
+     * [T-android-shared-notes] The board this session reads and writes.
+     *
+     * A sub agent's own session id is a hidden child of the parent, so keying on it would give every
+     * child a board of its own and defeat the point. The PARENT's id is the conversation, and a
+     * helper reaches it through its config — the same id [fsSessionId] uses for the shared workspace.
+     */
+    private val sharedNotesBoardId: String
+        get() = (helperConfig?.parentSessionId ?: activeSessionId).orEmpty()
+
+    /**
+     * [T-android-shared-notes] `shared_notes`: the scratchpad the parent and its sub agents share.
+     * Pure bookkeeping — no tools, no model call, and nothing leaves the process.
+     */
+    private fun executeSharedNotes(argsJson: String): ToolExecutionResult {
+        val notes = com.minisx.app.agent.jobs.AgentSharedNotes
+        val o = runCatching { JSONObject(argsJson) }.getOrElse { JSONObject() }
+        val title = o.optString("tool_title", "").ifBlank { "Shared notes" }
+        val boardId = sharedNotesBoardId
+        if (boardId.isBlank()) {
+            return ToolExecutionResult(
+                "Shared notes are unavailable here: this run has no conversation to share them in.",
+                false, toolTitle = title,
+            )
+        }
+        val action = o.optString("action", "").trim().lowercase().ifBlank { "list" }
+        val key = o.optString("key", "").trim()
+        val value = o.optString("value", "").trim()
+        val author = if (isHelper) "sub agent" else "agent"
+        return when (action) {
+            "write" -> when {
+                key.isBlank() -> ToolExecutionResult(
+                    "Nothing written: `key` is required, a short label such as `api-paths`. " +
+                        "Existing keys: " + existingKeysHint(boardId),
+                    false, toolTitle = title,
+                )
+                value.isBlank() -> ToolExecutionResult(
+                    "Nothing written: `value` is empty.", false, toolTitle = title,
+                )
+                notes.write(boardId, key, value, author) -> ToolExecutionResult(
+                    "Saved `${key.trim().take(notes.MAX_KEY_CHARS)}` on the shared notes board, " +
+                        "which the sub agents of this conversation read.\n\n" + notes.render(boardId),
+                    true, toolTitle = title,
+                )
+                else -> ToolExecutionResult(
+                    "Nothing written: the board holds the maximum of ${notes.MAX_ENTRIES} notes. " +
+                        "Replace one instead of adding a key — send action=write with one of the " +
+                        "existing keys and the corrected text: " + existingKeysHint(boardId),
+                    false, toolTitle = title,
+                )
+            }
+            "read" -> {
+                if (key.isBlank()) {
+                    ToolExecutionResult(
+                        "`key` is required for action=read. Existing keys: " + existingKeysHint(boardId),
+                        false, toolTitle = title,
+                    )
+                } else {
+                    val hit = notes.read(boardId, key)
+                    if (hit == null) {
+                        ToolExecutionResult(
+                            "No note named `${key.trim()}`. Existing keys: " + existingKeysHint(boardId),
+                            false, toolTitle = title,
+                        )
+                    } else {
+                        ToolExecutionResult("[${hit.key}] (${hit.author})\n${hit.value}", true, toolTitle = title)
+                    }
+                }
+            }
+            "list", "" -> ToolExecutionResult(notes.render(boardId), true, toolTitle = title)
+            else -> ToolExecutionResult(
+                "Unknown action \"$action\": use write, read or list. Existing keys: " + existingKeysHint(boardId),
+                false, toolTitle = title,
+            )
+        }
+    }
+
+    /** The keys on a board, or a note that it is empty — the line a refusing message ends with. */
+    private fun existingKeysHint(boardId: String): String {
+        val keys = com.minisx.app.agent.jobs.AgentSharedNotes.list(boardId).map { it.key }
+        return if (keys.isEmpty()) "none yet" else keys.joinToString(", ")
+    }
+
+    /**
      * The `advisor` tool: forward the conversation so far to the advisor model and return its advice.
      * Read-only for the agent: it changes nothing and costs one extra model call.
      */
@@ -2591,6 +2674,58 @@ class ChatViewModel(
         } catch (e: Exception) {
             AppLogger.warning(TAG, "[Advisor] call failed: ${e.javaClass.simpleName}: ${e.message?.take(200)}")
             fail("the call failed (${e.message?.take(120) ?: e.javaClass.simpleName}).")
+        }
+    }
+
+    /**
+     * [T-android-advisor-auto-verify] One automatic review of the work, for the switch in Settings ›
+     * Agent tools › Advisor. Unlike [executeAdvisorTool] this is not a tool call: the app asks, so the
+     * answer must be a verdict, and the wording is [AdvisorAutoVerify]'s.
+     *
+     * Null when the review could not happen at all (no model, its provider is gone or signed out, the
+     * call failed, it timed out, it returned nothing). A quiet null is the right answer: the user's
+     * turn must not fail because the REVIEW failed.
+     */
+    private suspend fun advisorAutoVerifyNow(): com.minisx.app.agent.advisor.AdvisorAutoVerify.Review? {
+        val entry = advisorEntry() ?: return null
+        val instance = providerRepository.instance(entry.providerInstanceId) ?: return null
+        if (!providerRepository.hasAnyCredential(instance)) return null
+        val apiKey = providerRepository.usableApiKey(instance) ?: ""
+        val provider = ProviderFactory.create(
+            instance, apiKey, entry.model, context, sessionId = activeSessionId, overrides = entry.overrides,
+        )
+        val transcript = com.minisx.app.agent.advisor.Advisor.transcript(agentHistory.toList())
+        val answer = StringBuilder()
+        return try {
+            withTimeout(ADVISOR_TIMEOUT_MS) {
+                provider.streamMessage(
+                    messages = listOf(
+                        LLMMessage(
+                            role = LLMMessage.Role.USER,
+                            content = com.minisx.app.agent.advisor.AdvisorAutoVerify.userMessage(transcript),
+                        ),
+                    ),
+                    systemPrompt = com.minisx.app.agent.advisor.AdvisorAutoVerify.SYSTEM_PROMPT,
+                    maxTokens = com.minisx.app.agent.advisor.AdvisorAutoVerify.MAX_OUTPUT_TOKENS,
+                    temperature = null,
+                    imageParts = emptyList(),
+                    tools = emptyList(),
+                    thinkingLevel = ThinkingLevel.MEDIUM,
+                ).collect { chunk -> if (chunk is LLMStreamChunk.Text) answer.append(chunk.text) }
+            }
+            val text = answer.toString().trim()
+            if (text.isEmpty()) null else com.minisx.app.agent.advisor.AdvisorAutoVerify.review(text)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // The user stopped the turn, or the run was torn down: nothing to review any more.
+            if (e is kotlinx.coroutines.TimeoutCancellationException) {
+                AppLogger.warning(TAG, "[AdvisorAutoVerify] no answer within ${ADVISOR_TIMEOUT_MS / 1000}s — finishing without the review")
+                null
+            } else {
+                throw e
+            }
+        } catch (e: Exception) {
+            AppLogger.warning(TAG, "[AdvisorAutoVerify] call failed: ${e.javaClass.simpleName}: ${e.message?.take(200)}")
+            null
         }
     }
 
@@ -4366,7 +4501,30 @@ class ChatViewModel(
                 // FallbackStrategy.always. Reusing it is what keeps compact and
                 // normal turns agreeing about what "worth switching" means.
                 var summary = ""
-                run {
+                // [T-android-compact-digest] True when the text below came from the deterministic
+                // digest instead of a model, so the divider can say so and the reader is not
+                // misled about what kind of summary it just gained.
+                var digestUsed = false
+                /**
+                 * [T-android-compact-digest] The fallback, and why it exists: compaction is this
+                 * app's only way to make a long run fit again, and it used to depend entirely on a
+                 * model call. A rate limit, an exhausted account or a provider outage therefore
+                 * left the context full and every later message meeting the same wall, even though
+                 * the history itself has everything needed to shorten it. The digest is worse than
+                 * a summary and says so in its first line, but a turn that continues on a worse
+                 * summary beats a turn that cannot continue at all.
+                 *
+                 * This does NOT let a provider error TRIGGER a compaction — the decision to compact
+                 * stays where it was (the context policy crossed its threshold, or the user asked),
+                 * and that distinction is the whole of [T-compact-last-resort-removed]. An
+                 * automatic rewrite of the conversation must not hang off a dead proxy; here it
+                 * already happened, and only the wording of the summary was missing.
+                 */
+                fun useDigest() {
+                    summary = com.minisx.app.agent.ContextDigest.digest(toCompact, previousSummary = existing)
+                    digestUsed = summary.isNotBlank()
+                }
+                runCatching {
                     val strategy = _selectedGroupId.value
                         ?.let { gid ->
                             providerRepository.config.value.modelGroups
@@ -4421,6 +4579,19 @@ class ChatViewModel(
                             compactCallsIssued.set(0)
                         }
                     }
+                }.onFailure { e ->
+                    // A cancel (including the idle/total timeout) is still a cancel: those arms
+                    // above turn it into their own message and must not be swallowed by a digest.
+                    if (e is CancellationException) throw e
+                    AppLogger.warning(
+                        TAG,
+                        "[Compact] no summary from any model (${e.javaClass.simpleName}) — " +
+                            "falling back to the deterministic digest",
+                    )
+                }
+                if (summary.isEmpty()) {
+                    // Either every model failed, or the one that answered returned nothing.
+                    useDigest()
                 }
                 if (summary.isEmpty()) {
                     withContext(Dispatchers.Main) {
@@ -4597,7 +4768,11 @@ class ChatViewModel(
                     val dividerBlock = AssistantBlock(
                         id = "sysinfo_${System.currentTimeMillis()}",
                         kind = "info",
-                        content = "$compactedUICount messages compacted",
+                        // [T-android-compact-digest] Says which kind of summary this is: a digest
+                        // is a structured extract, and the user's "the summary is worse than
+                        // usual" should have an explanation waiting for it.
+                        content = if (digestUsed) "$compactedUICount messages compacted (digest — no model summary)"
+                        else "$compactedUICount messages compacted",
                         toolName = "compact",
                         toolArgs = summary,
                     )
@@ -11423,6 +11598,13 @@ class ChatViewModel(
         // [T-android-dsml-leak] Resends spent on DeepSeek tool calls that
         // leaked into the reasoning channel (see DsmlLeak). Per run.
         var dsmlLeakRetries = 0
+        // [T-android-advisor-auto-verify] Tool calls this run actually dispatched. Auto-verify only
+        // judges work: a run that answered from what it already knew did nothing a reviewer could
+        // find incomplete, and checking it would double the cost of every ordinary reply.
+        var runToolCallCount = 0
+        // [T-android-advisor-auto-verify] Reviews spent in THIS run — the cap that stops an
+        // app-driven continuation from keeping a turn alive on its own.
+        var autoVerifyRounds = 0
         // [T-android-scheduled-resume-nudge] Set when a scheduled fire was
         // inserted at a tool gap of THIS loop. If the model then answers it and
         // stops while the interrupted task is unfinished, one hidden resume
@@ -13586,6 +13768,79 @@ class ChatViewModel(
                     _canResume.value = false
                     continue
                 }
+                // [T-android-advisor-auto-verify] Settings › Agent tools › Advisor › Auto-verify:
+                // the app asks the advisor to CHECK the result at exactly the moment the model has no
+                // reason to ask itself. A FAIL hands the critique back as a hidden user turn and the
+                // loop runs on, so the model fixes what the reviewer named before it finishes.
+                //
+                // Deliberately AFTER the steer and scheduled-resume branches above: both of those
+                // already mean "another turn is owed", and reviewing work that is about to be
+                // rewritten would spend a model call on a draft.
+                //
+                // Not for a helper (its parent judges the result), not for an empty turn (there is
+                // nothing to review), not for a run that only talked (see runToolCallCount), not
+                // while the user's own message waits in the queue (they decide, not the reviewer),
+                // and never past MAX_ROUNDS.
+                if (autoVerifyRounds < com.minisx.app.agent.advisor.AdvisorAutoVerify.MAX_ROUNDS &&
+                    !isHelper && !isEmptyTurn && runToolCallCount > 0 && !userPromptWaiting &&
+                    com.minisx.app.agent.advisor.AdvisorSettings.autoVerify(context) &&
+                    advisorEntry() != null
+                ) {
+                    // Show the wait: the review is a full model call, and the bubble has already
+                    // been marked finished by the no-tool-call path above.
+                    withContext(Dispatchers.Main) {
+                        updateAssistantMessage(
+                            assistantId, accumulatedText, true, allToolBlocks,
+                            isAwaitingModelResponse = true,
+                        )
+                    }
+                    val review = advisorAutoVerifyNow()
+                    withContext(Dispatchers.Main) {
+                        updateAssistantMessage(assistantId, accumulatedText, false, allToolBlocks)
+                    }
+                    var reviewFailed = false
+                    if (review != null && review.verdict == com.minisx.app.agent.advisor.AdvisorAutoVerify.Verdict.FAIL &&
+                        review.critique.isNotBlank()
+                    ) {
+                        autoVerifyRounds++
+                        reviewFailed = true
+                        val note = com.minisx.app.agent.advisor.AdvisorAutoVerify.feedback(review.critique)
+                        // Persisted as a user-role row so a reload keeps user/assistant
+                        // alternation and the correction survives it. A row that is only a
+                        // <system-reminder> renders as nothing (same rule as the scheduled nudge).
+                        val noteRow = runCatching {
+                            chatRepository.appendMessage(
+                                activeSessionId, "user",
+                                """[{"type":"text","value":${escapeJson(note)}}]""",
+                            )
+                        }.onFailure {
+                            AppLogger.warning(TAG, "[AdvisorAutoVerify] feedback persist failed: ${it.message}")
+                        }.getOrNull()
+                        agentHistory.add(
+                            LLMMessage(
+                                role = LLMMessage.Role.USER,
+                                content = note,
+                                contentParts = listOf(AgentContentPart.Text(note)),
+                                dbMessageId = noteRow?.id,
+                            ),
+                        )
+                        AppLogger.info(
+                            TAG,
+                            "[AdvisorAutoVerify] round $autoVerifyRounds/" +
+                                "${com.minisx.app.agent.advisor.AdvisorAutoVerify.MAX_ROUNDS} — " +
+                                "the reviewer found the work incomplete; the loop continues",
+                        )
+                    } else {
+                        AppLogger.info(
+                            TAG,
+                            "[AdvisorAutoVerify] verdict=${review?.verdict ?: "unavailable"} — finishing",
+                        )
+                    }
+                    if (reviewFailed) {
+                        _canResume.value = false
+                        continue
+                    }
+                }
                 // Auto-title after first exchange
                 if (turn == 0) generateSessionTitleIfNeeded()
                 stopDiagExit = if (isEmptyTurn) "empty-turn" else "no-tool-calls"
@@ -13593,6 +13848,9 @@ class ChatViewModel(
                 break
             }
             AppLogger.info(TAG_STREAM, "runAgentLoop turn=$turn dispatching ${toolCalls.size} tool call(s), continuing")
+            // [T-android-advisor-auto-verify] Counted before the calls run: what matters is that the
+            // turn did work, and a call that then failed is still work a reviewer may want to see.
+            runToolCallCount += toolCalls.size
 
             // [T-android-session-last-message-live-tool-call] Push a live
             // preview to the session list NOW, before the (possibly long-
@@ -14475,6 +14733,15 @@ class ChatViewModel(
                 }
             "memory_get" -> executeMemoryGetTool(argsJson)
             com.minisx.app.agent.advisor.Advisor.TOOL_NAME -> executeAdvisorTool(argsJson)
+            // [T-android-shared-notes] The board a conversation and its sub agents share. Gated like
+            // the agent tools it belongs to, so a replayed call cannot write into a capability the
+            // user has since turned off.
+            com.minisx.app.agent.jobs.AgentSharedNotes.TOOL_NAME ->
+                if (com.minisx.app.tools.AgentToolSwitch.AGENTS.isEnabled(context)) {
+                    executeSharedNotes(argsJson)
+                } else {
+                    toolDisabledResult(com.minisx.app.agent.jobs.AgentSharedNotes.TOOL_NAME)
+                }
             com.minisx.app.agent.plan.PlanTool.TOOL_NAME -> executePlanTool(argsJson)
             // [T-port-user-ask] Card in the chat, then wait for the user.
             // [T-user-ask-exposure-guard] A run that does not offer the tool (the

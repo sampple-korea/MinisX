@@ -139,6 +139,8 @@
     <string name="advisor_setting_title">Advisor</string>
     <string name="advisor_setting_off">Off</string>
     <string name="advisor_setting_footer">Pick a stronger model the agent can consult. It sees the whole conversation and answers with advice; the agent is told to ask it before substantive work and before declaring a task done. Each consultation is one extra model call.</string>
+    <string name="advisor_auto_verify_title">Auto-verify the result</string>
+    <string name="advisor_auto_verify_subtitle">Before the agent finishes, the advisor checks the work. If it finds the task unfinished, the agent keeps going and fixes it (at most 2 rounds). One extra model call each time.</string>
     <string name="settings_search_hint">Search settings</string>
     <string name="settings_search_clear">Clear search</string>
     <string name="appearance_section_accent">Accent color</string>

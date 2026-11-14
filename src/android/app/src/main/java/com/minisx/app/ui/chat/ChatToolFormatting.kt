@@ -64,6 +64,8 @@ internal fun toolAccentColor(toolName: String): Color = when (toolName) {
     "web_search" -> Color(0xFF32ADE6)    // iOS: .cyan for search
     // [T-sub-agents-v1] Current name + the pre-rename one still in shipped transcripts.
     "subagent_task", "delegate_task", "agent_status" -> HelperAccentStatic  // iOS: HelperAccent.color (electric violet)
+    // [T-android-shared-notes] The board the agents share: indigo, next to the agents' violet.
+    "shared_notes" -> Color(0xFF5856D6)
     else -> Color(0xFF8E8E93)
 }
 
@@ -114,6 +116,7 @@ internal fun toolAccentColorInt(toolName: String?): Int = when (toolName) {
     "memory_write", "memory_get" -> 0xFFFF2D55.toInt()
     "web_search" -> 0xFF32ADE6.toInt()
     "subagent_task", "delegate_task", "agent_status" -> 0xFFAF52DE.toInt()
+    "shared_notes" -> 0xFF5856D6.toInt()
     else -> 0xFF8E8E93.toInt()
 }
 
@@ -158,6 +161,7 @@ internal fun toolDisplayName(toolName: String): String = when (toolName) {
     "memory_get" -> "memory"
     "web_search" -> "search"
     "subagent_task", "delegate_task", "agent_status" -> "agent"
+    "shared_notes" -> "shared notes"
     else -> toolName
 }
 
@@ -177,6 +181,7 @@ internal fun toolTitleLabel(toolName: String): String = when (toolName) {
     "memory_write", "memory_get" -> "MinisX is using Memory"
     "web_search" -> "MinisX is using Search"
     "subagent_task", "delegate_task", "agent_status" -> "MinisX is using an Agent"
+    "shared_notes" -> "MinisX is using Shared Notes"
     else -> "MinisX is using ${toolDisplayName(toolName)}"
 }
 

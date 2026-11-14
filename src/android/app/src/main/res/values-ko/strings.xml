@@ -2029,6 +2029,8 @@
     <string name="advisor_setting_title">어드바이저</string>
     <string name="advisor_setting_off">끔</string>
     <string name="advisor_setting_footer">에이전트가 자문할 수 있는 더 강력한 모델을 고릅니다. 어드바이저는 대화 전체를 보고 조언만 돌려주며, 에이전트는 본격적인 작업 전과 작업을 끝냈다고 말하기 전에 물어보도록 안내받습니다. 자문할 때마다 모델 호출이 한 번 더 일어납니다.</string>
+    <string name="advisor_auto_verify_title">자동 조언자 검수</string>
+    <string name="advisor_auto_verify_subtitle">에이전트가 답을 끝내기 직전에 어드바이저가 결과를 검수합니다. 미완료로 판정하면 에이전트가 계속 작업해 고친 뒤 다시 끝냅니다(최대 2회). 검수할 때마다 모델 호출이 한 번 더 일어납니다.</string>
     <string name="settings_search_hint">설정 검색</string>
     <string name="settings_search_clear">검색어 지우기</string>
     <string name="backup_dest_details">서버 세부정보</string>

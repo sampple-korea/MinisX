@@ -18,6 +18,14 @@ import com.minisx.app.tools.AgentToolSwitch
 object AdvisorSettings {
     private const val KEY_ENTRY = "agent.advisor.entry_id"
 
+    /**
+     * [T-android-advisor-auto-verify] Whether the advisor reviews the result before the agent
+     * loop ends, without being asked by the model. Separate from [KEY_ENTRY]: the model picker
+     * decides WHICH model, this decides whether the app spends a call on its own. Off by default —
+     * it is an extra model call per turn, so it is the user's choice to make.
+     */
+    private const val KEY_AUTO_VERIFY = "agent.advisor.auto_verify"
+
     /** The chosen model entry's id, or null while the advisor is off. */
     fun entryId(context: Context): String? =
         AgentToolSwitch.prefs(context).getString(KEY_ENTRY, null)?.takeIf { it.isNotBlank() }
@@ -26,6 +34,18 @@ object AdvisorSettings {
         AgentToolSwitch.prefs(context).edit().apply {
             if (id.isNullOrBlank()) remove(KEY_ENTRY) else putString(KEY_ENTRY, id)
         }.apply()
+    }
+
+    /** Auto-verify is only ever on WITH a model to run it: no model means nothing to ask. */
+    fun autoVerify(context: Context): Boolean =
+        entryId(context) != null && AgentToolSwitch.prefs(context).getBoolean(KEY_AUTO_VERIFY, false)
+
+    /** Remembers the user's choice; still needs a model picked before it takes effect. */
+    fun isAutoVerifyChosen(context: Context): Boolean =
+        AgentToolSwitch.prefs(context).getBoolean(KEY_AUTO_VERIFY, false)
+
+    fun setAutoVerify(context: Context, enabled: Boolean) {
+        AgentToolSwitch.prefs(context).edit().putBoolean(KEY_AUTO_VERIFY, enabled).apply()
     }
 }
 
