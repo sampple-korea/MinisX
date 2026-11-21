@@ -192,5 +192,5 @@ object ContextDigest {
         "refused", "cannot", "can't", "unable to",
     )
 
-    private val PATH = Regex("""(?:^|[\s"'`(=:,[])((?:~|\.{1,2})?(?:/[A-Za-z0-9_.\-]+)+)""")
+    private val PATH = Regex("""(?:^|[\s"'`(=:,\[])((?:~|\.{1,2})?(?:/[A-Za-z0-9_.\-]+)+)""")
 }
