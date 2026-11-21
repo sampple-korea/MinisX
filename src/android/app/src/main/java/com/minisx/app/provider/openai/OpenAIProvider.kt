@@ -307,8 +307,27 @@ class OpenAIProvider private constructor(
          * CodexModelsApi) and the quota probe (User-Agent, QuotaStore) — so
          * the listed models and the models a send will accept cannot diverge.
          * The UA shape `codex_cli_rs/<v> (Android; arm64)` is unchanged.
+         *
+         * [T-codex-client-0171] 0.159.0 → 0.171.0, the current stable
+         * openai/codex (tag rust-v0.171.0; 0.172/0.173 exist only as alphas).
+         * Checked against the upstream sources of both tags, not assumed:
+         *  - what we send is unchanged between them: originator `codex_cli_rs`
+         *    (DEFAULT_ORIGINATOR), the `Version` header, `session-id` /
+         *    `x-client-request-id` handling in codex-api's request headers, and
+         *    the discovery route `/models?client_version=`. The UA shape stays.
+         *  - 0.171 adds things we do not send because they are not ours to
+         *    claim: `x-openai-agent-assertion` (a signed agent identity),
+         *    `X-OpenAI-Product-Sku`, residency and noise-stream headers, and
+         *    the optional body fields `prompt_cache_options` / `request_country`.
+         *  - the bundled catalog (codex-rs/models-manager/models.json) gains
+         *    gpt-6.2-sol and gpt-6.2-astra with `minimal_client_version`
+         *    0.166.0, so 0.159.0 sat BELOW their floor, plus gpt-6.1-terra.
+         *    Same reason as the earlier bumps: the backend filters by this number.
+         * NOT verified against a live account here (no Codex OAuth token in
+         * this environment). If a discovered model is listed and then refused,
+         * or discovery stops listing a model, this constant is the first suspect.
          */
-        internal const val CODEX_CLIENT_VERSION = "0.159.0"
+        internal const val CODEX_CLIENT_VERSION = "0.171.0"
 
         /** [T-codex-routing-hint] Header name, as the official client spells it. */
         internal const val CODEX_ROUTING_HINT_HEADER = "x-codex-routing-hint"

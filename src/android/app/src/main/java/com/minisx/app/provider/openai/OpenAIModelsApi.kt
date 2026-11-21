@@ -42,6 +42,14 @@ object OpenAIModelsApi {
         // enriches the flag later, and the Responses builder's "Codex OAuth
         // needs a reasoning object" fallback hard-codes effort "low" — the
         // exact data gap GPT6AstraReasoningTest exists to pin.
+        // [T-codex-client-0171] GPT-6.2 Sol / Astra, new in the bundled catalog of
+        // openai/codex 0.171.0 (codex-rs/models-manager/models.json): minimal client
+        // version 0.166.0, effort tiers low..max (+ ultra, which MAX already covers on
+        // the wire), image input, Fast tier. Windows are the catalog's `context_window`
+        // (Sol 500K, Astra 272K). supportsReasoning is explicit for the same reason as
+        // its siblings: the ids are not in the bundled models.dev snapshot.
+        LLMModel("gpt-6.2-sol", "GPT-6.2 Sol", "OpenAI", contextWindow = 500_000, supportsReasoning = true),
+        LLMModel("gpt-6.2-astra", "GPT-6.2 Astra", "OpenAI", contextWindow = 272_000, supportsReasoning = true),
         LLMModel("gpt-6-sol", "GPT-6 Sol", "OpenAI", supportsReasoning = true),
         LLMModel("gpt-6-luna", "GPT-6 Luna", "OpenAI", supportsReasoning = true),
         LLMModel("gpt-6-astra", "GPT-6 Astra", "OpenAI", supportsReasoning = true),
@@ -51,7 +59,7 @@ object OpenAIModelsApi {
         // PR #6207 (its Codex catalog): 272K context, 128K max output, effort
         // tiers low/medium/high/xhigh/max (ceiling set by ThinkingLevelCatalog,
         // not declared here, same pattern as its siblings), Team/Plus/Pro — not
-        // assumed on Free. OpenAIProvider.CODEX_CLIENT_VERSION (0.159.0)
+        // assumed on Free. OpenAIProvider.CODEX_CLIENT_VERSION (0.171.0)
         // clears its minimal_client_version of 0.155.0.
         // supportsReasoning is explicit for the same reason as gpt-6-sol: the id
         // is not in the bundled models.dev snapshot. The window is explicit
@@ -62,6 +70,8 @@ object OpenAIModelsApi {
             maxOutputTokens = 128_000,
             supportsReasoning = true,
         ),
+        // [T-codex-client-0171] GPT-6.1 Terra, in the same catalog (0.153.0 floor, 500K window).
+        LLMModel("gpt-6.1-terra", "GPT-6.1 Terra", "OpenAI", contextWindow = 500_000, supportsReasoning = true),
         LLMModel("gpt-5.6-sol", "GPT-5.6 Sol", "OpenAI", supportsReasoning = true),
         LLMModel("gpt-5.6-terra", "GPT-5.6 Terra", "OpenAI", supportsReasoning = true),
         LLMModel("gpt-5.6-luna", "GPT-5.6 Luna", "OpenAI", supportsReasoning = true),

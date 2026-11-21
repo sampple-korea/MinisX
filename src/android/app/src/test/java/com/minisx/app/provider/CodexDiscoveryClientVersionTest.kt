@@ -14,12 +14,15 @@ import org.junit.Test
  * [T-codex-discovery-client-version] Codex OAuth discovery never listed
  * gpt-6.1-sol. CLIProxyAPI, which does, moved its Codex client to 0.159.0 in
  * the commit that added the model (c8a2bfe8f) and sends a smaller header set.
+ *
+ * [T-codex-client-0171] The constant is now 0.171.0, the current stable openai/codex
+ * (gpt-6.2-sol / gpt-6.2-astra need 0.166.0 or newer); the test pins the one constant.
  */
 class CodexDiscoveryClientVersionTest {
 
     @Test
-    fun `the codex client version is 0_159_0 and every codex call uses the one constant`() {
-        assertEquals("0.159.0", OpenAIProvider.CODEX_CLIENT_VERSION)
+    fun `the codex client version is 0_171_0 and every codex call uses the one constant`() {
+        assertEquals("0.171.0", OpenAIProvider.CODEX_CLIENT_VERSION)
         val provider = ProductionSources.read("provider/openai/OpenAIProvider.kt")
         assertTrue(provider.contains(".header(\"Version\", CODEX_CLIENT_VERSION)"))
         assertTrue(provider.contains(".header(\"User-Agent\", \"codex_cli_rs/\$CODEX_CLIENT_VERSION (Android; arm64)\")"))
@@ -36,12 +39,12 @@ class CodexDiscoveryClientVersionTest {
     @Test
     fun `discovery sends the CLIProxyAPI header set with the shared version`() {
         val req = CodexModelsApi.discoveryRequest("TOKEN", "acct-1", OpenAIProvider.CODEX_CLIENT_VERSION).build()
-        assertEquals("https://chatgpt.com/backend-api/codex/models?client_version=0.159.0", req.url.toString())
+        assertEquals("https://chatgpt.com/backend-api/codex/models?client_version=0.171.0", req.url.toString())
         assertEquals("GET", req.method)
         assertEquals("application/json", req.header("Accept"))
         assertEquals("Bearer TOKEN", req.header("Authorization"))
         assertEquals("codex_cli_rs", req.header("Originator"))
-        assertEquals("codex_cli_rs/0.159.0 (Android; arm64)", req.header("User-Agent"))
+        assertEquals("codex_cli_rs/0.171.0 (Android; arm64)", req.header("User-Agent"))
         assertEquals("acct-1", req.header("Chatgpt-Account-Id"))
         // Responses-only headers are not part of the discovery request.
         assertNull(req.header("Version"))
@@ -54,7 +57,7 @@ class CodexDiscoveryClientVersionTest {
 
     @Test
     fun `no account id means no account header`() {
-        val req = CodexModelsApi.discoveryRequest("T", "  ", "0.159.0").build()
+        val req = CodexModelsApi.discoveryRequest("T", "  ", "0.171.0").build()
         assertNull(req.header("Chatgpt-Account-Id"))
     }
 

@@ -41,6 +41,15 @@ object ThinkingLevelCatalog {
         // The dash spelling covers relays that normalise dots to dashes (same
         // pair iOS ThinkingLevelCatalog.swift matches).
         Rule({ it.startsWith("gpt-6.1-sol") || it.startsWith("gpt-6-1-sol") }, ThinkingLevel.MAX),
+        // [T-codex-client-0171] gpt-6.2-sol / gpt-6.2-astra / gpt-6.1-terra: the catalog declares
+        // low..max (+ ultra, which serializes to "max" like MAX does), so MAX. Dot spellings and
+        // the dash spelling relays use, each its own prefix so a later, lower-ceiling gpt-6.x
+        // member is not lifted by a family-wide match.
+        Rule({
+            it.startsWith("gpt-6.2-sol") || it.startsWith("gpt-6-2-sol") ||
+                it.startsWith("gpt-6.2-astra") || it.startsWith("gpt-6-2-astra") ||
+                it.startsWith("gpt-6.1-terra") || it.startsWith("gpt-6-1-terra")
+        }, ThinkingLevel.MAX),
         Rule({ it.startsWith("gpt-5.6-sol") || it.startsWith("gpt-5.6-terra") }, ThinkingLevel.MAX),
         Rule({ it.startsWith("gpt-5.6-luna") }, ThinkingLevel.MAX),
         Rule({ it.startsWith("gpt-5.5") }, ThinkingLevel.XHIGH),
