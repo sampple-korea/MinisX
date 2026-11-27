@@ -7692,10 +7692,15 @@ class ChatViewModel(
      * The rest of the prompt is not model-specific on Android.
      */
     private fun systemPromptFor(provider: LLMProvider, prompt: String?): String? {
-        val prefix = com.minisx.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-        if (prompt == null || prefix.isEmpty()) return prompt
-        val bare = if (prompt.startsWith(prefix)) prompt.removePrefix(prefix).trimStart('\n') else prompt
+        if (prompt == null) return prompt
         val oauth = (provider as? com.minisx.app.provider.anthropic.AnthropicProvider)?.isOAuth == true
+        // Only an OAuth request needs the identifier (and the read throws when the build has none).
+        // Every other provider just drops it if the prompt carries one, and must work without it:
+        // this runs on every retry and failover, for any provider.
+        val prefix = (if (oauth) com.minisx.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
+        else com.minisx.app.auth.ClaudeOAuthManager.identifierPromptOrNull) ?: return prompt
+        if (prefix.isEmpty()) return prompt
+        val bare = if (prompt.startsWith(prefix)) prompt.removePrefix(prefix).trimStart('\n') else prompt
         return if (oauth) "$prefix\n\n$bare" else bare
     }
 

@@ -62,6 +62,15 @@ class ClaudeOAuthManager(context: Context, instanceId: String) : OAuthManager(co
             }
 
         /**
+         * The same value without the throw: null when this build has none configured. For code that
+         * runs for EVERY provider (retry, failover, prompt building) and only needs to strip the prefix
+         * if one exists. Only a request that actually authenticates with Claude Code OAuth may use
+         * [ANTHROPIC_OAUTH_IDENTIFIER_PROMPT], which throws when it is missing, by design.
+         */
+        val identifierPromptOrNull: String?
+            get() = BuildConfig.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT.takeIf { it.isNotEmpty() }
+
+        /**
          * How long before expiry we proactively refresh. Mirrors iOS
          * `ClaudeOAuthManager.refreshBuffer` (5 minutes) — significantly tighter
          * than OAuthManager's 4-hour default, which burns refresh cycles.
