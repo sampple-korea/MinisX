@@ -25,6 +25,29 @@ class OAuthIdentifierNotNeededTest {
         assertEquals(null, provider.resolveSystemPrompt(null))
     }
 
+    @Test fun `a Claude Code OAuth request works on a build with no configured identifier`() {
+        val provider = AnthropicProvider(apiKey = "oauth-token", model = LLMModel.claudeHaiku45, basePath = "http://localhost", isOAuth = true)
+        // Never throws, and is what Claude Code opens its prompt with unless the build set its own.
+        val prefix = ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
+        assertTrue(prefix.isNotEmpty())
+        val blocks = provider.resolveSystemPrompt("You are helpful.")!!
+        assertEquals(2, blocks.length())
+        assertEquals(prefix, blocks.getJSONObject(0).getString("text"))
+        assertEquals("You are helpful.", blocks.getJSONObject(1).getString("text"))
+        // No prompt of its own: the identifier block alone.
+        assertEquals(1, provider.resolveSystemPrompt(null)!!.length())
+        // A prompt that already opens with the identifier is not doubled.
+        val again = provider.resolveSystemPrompt("$prefix\n\nYou are helpful.")!!
+        assertEquals(2, again.length())
+        assertEquals("You are helpful.", again.getJSONObject(1).getString("text"))
+    }
+
+    @Test fun `without a configured value the Claude Code line is the default`() {
+        if (ClaudeOAuthManager.identifierPromptOrNull == null) {
+            assertEquals("You are Claude Code, Anthropic's official CLI for Claude.", ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT)
+        }
+    }
+
     @Test fun `the safe accessor never throws, and is null or non-empty`() {
         val v = ClaudeOAuthManager.identifierPromptOrNull
         assertTrue(v == null || v.isNotEmpty())

@@ -43,29 +43,29 @@ class ClaudeOAuthManager(context: Context, instanceId: String) : OAuthManager(co
          * System prompt prefix required by Anthropic for Claude Code OAuth
          * credentials.
          *
-         * The value is not hardcoded: it is supplied at build time via the
-         * `ANTHROPIC_OAUTH_IDENTIFIER_PROMPT` BuildConfig field, populated from
-         * `app/provider-customization.properties`. That file is tracked in the private
-         * repo (filled in) but excluded from the public mirror, which ships
-         * only `provider-customization.properties.example` with an empty value. Reading
-         * it without a configured value throws — by design — the first time an
-         * OAuth (Claude Code) request needs the prompt.
+         * A value set at build time wins: the `ANTHROPIC_OAUTH_IDENTIFIER_PROMPT` BuildConfig field,
+         * populated from `app/provider-customization.properties`. A build that sets none (the public
+         * one) uses [DEFAULT_IDENTIFIER_PROMPT], so this never throws.
          */
         val ANTHROPIC_OAUTH_IDENTIFIER_PROMPT: String
-            get() = BuildConfig.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT.ifEmpty {
-                throw IllegalStateException(
-                    "ANTHROPIC_OAUTH_IDENTIFIER_PROMPT is not configured. Copy "
-                        + "app/provider-customization.properties.example to "
-                        + "app/provider-customization.properties and set "
-                        + "ANTHROPIC_OAUTH_IDENTIFIER_PROMPT before using Claude Code OAuth."
-                )
-            }
+            get() = identifierPromptOrNull ?: DEFAULT_IDENTIFIER_PROMPT
 
         /**
-         * The same value without the throw: null when this build has none configured. For code that
-         * runs for EVERY provider (retry, failover, prompt building) and only needs to strip the prefix
-         * if one exists. Only a request that actually authenticates with Claude Code OAuth may use
-         * [ANTHROPIC_OAUTH_IDENTIFIER_PROMPT], which throws when it is missing, by design.
+         * What Claude Code itself opens its system prompt with, and what the OAuth endpoint expects an
+         * OAuth request to open with. Used when the build supplies no value of its own. A public build has
+         * none (see above), and without a fallback every Claude Code OAuth request failed with
+         * "ANTHROPIC_OAUTH_IDENTIFIER_PROMPT is not configured" (the old behaviour). The line is the one other open-source
+         * clients of the same endpoint declare (see provider-customization.properties.example).
+         * A value set at build time still wins.
+         */
+        private const val DEFAULT_IDENTIFIER_PROMPT = "You are Claude Code, Anthropic's official CLI for Claude."
+
+        /**
+         * The value the build configured, or null when it set none (then [ANTHROPIC_OAUTH_IDENTIFIER_PROMPT]
+         * falls back to the Claude Code default). For code that runs for EVERY provider (retry, failover,
+         * prompt building) and only needs to strip a configured prefix if one exists: other providers
+         * must not be handed the Claude Code line. Only a request that authenticates with Claude Code
+         * OAuth uses [ANTHROPIC_OAUTH_IDENTIFIER_PROMPT].
          */
         val identifierPromptOrNull: String?
             get() = BuildConfig.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT.takeIf { it.isNotEmpty() }

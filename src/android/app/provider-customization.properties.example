@@ -9,7 +9,9 @@
 # Only needed to sign in with Claude OAuth credentials (API keys do not need
 # it). Requests authenticated with OAuth must open their system prompt with
 # the identifying line Claude Code itself sends, or the endpoint rejects them.
-# We ship no value — supply your own. Other open-source projects talking to
+# Optional: when this is left empty the app uses Claude Code's own opening line
+# ("You are Claude Code, Anthropic's official CLI for Claude."). Set a value here only to
+# override it. Other open-source projects talking to
 # the same endpoint declare the same identifier, e.g.
 # https://github.com/Wei-Shaw/claude-relay-service
 ANTHROPIC_OAUTH_IDENTIFIER_PROMPT=
